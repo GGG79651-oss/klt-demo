@@ -21,6 +21,7 @@
       --max: 1120px;
     }
     *{box-sizing:border-box}
+    html, body{max-width:100%; overflow-x:hidden;} /* ✅ anti “page slide” */
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
@@ -94,6 +95,7 @@
       border:1px solid var(--border);
       border-radius: var(--r2);
       box-shadow: var(--shadow);
+      min-width:0; /* ✅ allow grid items to shrink */
     }
     .crumbs{color:var(--muted); font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.22px}
     .pageTitle{margin:6px 0 8px; font-size:28px; letter-spacing:-.4px}
@@ -122,7 +124,7 @@
       font-weight:800;
       line-height:1.5;
       margin-top:12px;
-      word-break: break-word;
+      word-break:break-word;
     }
     .notice.ok{border-color: rgba(37,194,110,.35)}
     .notice.bad{border-color: rgba(255,77,109,.35)}
@@ -138,7 +140,7 @@
 
     .kpiGrid{
       display:grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr)); /* ✅ prevent grid blowout */
       gap:10px;
       margin-top:12px;
     }
@@ -155,15 +157,16 @@
 
     .dash{
       display:grid;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); /* ✅ */
       gap:12px;
       margin-top:12px;
       align-items:stretch;
     }
 
+    /* ✅ desktop: 2 cols; mobile will override, and we also reset inline grid placement */
     .chartRow{
       display:grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       grid-template-rows: auto auto;
       gap:12px;
       margin-top:12px;
@@ -178,25 +181,21 @@
       min-width:0;
     }
     .chartTitle{font-weight:1000; margin:0 0 10px}
-
-    /* canvases */
-    canvas{
-      width:100%;
-      height:260px;
-      display:block;
-      max-width:100%;
-    }
+    canvas{width:100%; height:260px; display:block}
     #top3Chart{height:240px;}
 
-    /* tables */
-    .table{
-      width:100%;
-      border-collapse: collapse;
-      margin-top:12px;
-      overflow:hidden;
+    .tableWrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
       border-radius: 16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.02);
+    }
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      margin-top:0;
+      min-width: 760px; /* ✅ table scroll instead of breaking layout */
     }
     .table th, .table td{
       padding:10px 10px;
@@ -204,26 +203,10 @@
       text-align:left;
       font-size: 13px;
       vertical-align: top;
+      white-space:nowrap;
     }
     .table th{color: var(--muted); font-weight:1000; letter-spacing:.2px}
-
-    /* ✅ NEW: table horizontal scroll wrapper to stop page "sliding" on mobile */
-    .tableWrap{
-      width:100%;
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.02);
-      margin-top:12px;
-    }
-    .tableWrap .table{
-      min-width: 860px; /* prevents crushing and layout break */
-      margin-top:0;
-      border:0;
-      border-radius:0;
-      background: transparent;
-    }
+    .table td.mwrap{white-space:normal; min-width:240px;}
 
     .badge{
       display:inline-flex; align-items:center; gap:6px;
@@ -272,45 +255,39 @@
       color: var(--muted);
       font-weight:800;
       line-height:1.6;
+      word-break:break-word;
     }
     .supportBox a{
       text-decoration: underline;
       text-underline-offset: 3px;
     }
 
+    /* ---------------------------
+       Responsive fixes
+       --------------------------- */
     @media (max-width: 980px){
-      .kpiGrid{grid-template-columns: 1fr 1fr}
+      .wrap{padding:16px}
+      .nav{padding:12px 16px}
+      .kpiGrid{grid-template-columns: repeat(2, minmax(0, 1fr))}
       .dash{grid-template-columns: 1fr}
-      .chartRow{grid-template-columns: 1fr; grid-template-rows: auto;}
+      .chartRow{grid-template-columns: 1fr; grid-template-rows:auto}
+
+      /* ✅ CRITICAL FIX: reset inline grid placement on mobile */
+      .chartRow > .chartCard{
+        grid-column: auto !important;
+        grid-row: auto !important;
+      }
+
+      input[type="text"]{min-width: 180px}
+      canvas{height:240px}
     }
     @media (max-width: 520px){
       .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
-    }
-
-    /* ✅ NEW: stronger mobile rules to prevent “layout drift” */
-    @media (max-width: 720px){
-      .wrap{padding:14px}
-      .nav{padding:12px 14px}
-      .topbar{position:relative} /* disable sticky on phones */
-      .brand .logo{width:34px;height:34px;border-radius:10px}
-
-      input[type="text"]{min-width: 100%; width:100%}
-      .formRow{gap:8px}
-
-      /* Buttons become full width on phone */
-      .btn{width:100%}
-      .btn.secondary{width:100%}
-
       .pageTitle{font-size:24px}
-      .crumbs{letter-spacing:.12px}
-
-      .kpiGrid{grid-template-columns: 1fr; gap:10px}
-      .dash{grid-template-columns: 1fr}
-      .chartRow{grid-template-columns: 1fr; grid-template-rows:auto; gap:12px}
-      .chartCard{padding:12px}
-      canvas{height:220px}
-      #top3Chart{height:220px}
+      .btn{width:100%}
+      .formRow{align-items:stretch}
+      input[type="text"]{width:100%}
     }
   </style>
 </head>
@@ -414,7 +391,6 @@
       return isNaN(+d) ? null : d;
     }
 
-    // ✅ invalid -> "—"
     function formatDateRU(s){
       const raw = String(s ?? "").trim();
       const d = parseISODateMaybe(raw);
@@ -1183,6 +1159,7 @@
         tip.style.fontWeight = "900";
         tip.style.display = "none";
         tip.style.maxWidth = "360px";
+        tip.style.wordBreak = "break-word";
         document.body.appendChild(tip);
       }
       return tip;
@@ -1296,11 +1273,11 @@
         const stuHeader = stuRows.shift().map(normalizeHeader);
         const sesHeader = sesRows.shift().map(normalizeHeader);
 
-        // ✅ students WITHOUT name_full
+        // ---- LOAD: site_students.csv (без name_full) ----
         const s_id = findHeader(stuHeader, ["id"]);
-        const s_ns = findHeader(stuHeader, ["name_short","кратко"]);
-        const s_gr = findHeader(stuHeader, ["group","группа"]);
-        const s_st = findHeader(stuHeader, ["status","статус","статус обучения"]);
+        const s_ns = findHeader(stuHeader, ["name_short", "кратко"]);
+        const s_gr = findHeader(stuHeader, ["group", "группа"]);
+        const s_st = findHeader(stuHeader, ["status", "статус", "статус обучения"]);
 
         if (s_id < 0) throw new Error("students: нет колонки id");
         if (s_ns < 0) throw new Error("students: нет колонки name_short");
@@ -1553,7 +1530,7 @@
           out.innerHTML = `
             <div class="notice bad">
               CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b><br/>
-              Проверь, что файлы лежат рядом с <b>index.html</b> в репозитории.
+              Проверь, что сайт открыт через <b>http://localhost:8000</b> или GitHub Pages, и файлы CSV лежат рядом с index.html.
             </div>
           `;
           return;
@@ -1686,7 +1663,7 @@
                     <th>Сессия</th>
                     <th>Результат/место</th>
                     <th>Баллы</th>
-                    <th>Как посчитали</th>
+                    <th style="min-width:260px">Как посчитали</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1699,7 +1676,7 @@
                           <td class="muted">${esc(s.stage || s.label || "—")}</td>
                           <td class="muted">${esc(s.place_or_result || s.score_or_attendance || "—")}</td>
                           <td><b>${esc(s.points)}</b></td>
-                          <td class="muted">${esc(s.explain)}</td>
+                          <td class="muted mwrap">${esc(s.explain)}</td>
                         </tr>
                       `).join("")
                       : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
@@ -1722,7 +1699,7 @@
                     <th>Игра</th>
                     <th>Очки/Посещаемость</th>
                     <th>Место/Результат</th>
-                    <th>Комментарий</th>
+                    <th style="min-width:220px">Комментарий</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1737,7 +1714,7 @@
                           <td class="muted">${esc(s.game_no || "—")}</td>
                           <td class="muted">${esc(s.score_or_attendance || "—")}</td>
                           <td class="muted">${esc(s.place_or_result || "—")}</td>
-                          <td class="muted">${esc(s.comment || s.extra || "")}</td>
+                          <td class="muted mwrap">${esc(s.comment || s.extra || "")}</td>
                         </tr>
                       `).join("")
                       : `<tr><td colspan="8" class="muted">Нет записей.</td></tr>`
