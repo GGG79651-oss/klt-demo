@@ -49,6 +49,7 @@
       width:38px; height:38px; border-radius:12px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       box-shadow: 0 10px 25px rgba(124,92,255,.25);
+      flex:0 0 auto;
     }
     .menu{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill{
@@ -57,6 +58,7 @@
       background: rgba(255,255,255,.03);
       font-weight:800; font-size:14px;
       transition: .15s ease;
+      white-space:nowrap;
     }
     .pill:hover{transform: translateY(-1px); color:var(--text); border-color: rgba(255,255,255,.18)}
     .pill.active{
@@ -76,6 +78,7 @@
       transition:.15s ease;
       cursor:pointer;
       user-select:none;
+      white-space:nowrap;
     }
     .btn:hover{transform: translateY(-1px)}
     .btn.secondary{
@@ -105,6 +108,7 @@
       letter-spacing:.6px;
       outline:none;
       min-width: 240px;
+      max-width:100%;
     }
     input[type="text"]::placeholder{color: rgba(169,180,214,.65); letter-spacing:.2px}
     .formRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
@@ -118,6 +122,7 @@
       font-weight:800;
       line-height:1.5;
       margin-top:12px;
+      word-break: break-word;
     }
     .notice.ok{border-color: rgba(37,194,110,.35)}
     .notice.bad{border-color: rgba(255,77,109,.35)}
@@ -142,6 +147,7 @@
       border-radius: 16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
+      min-width:0;
     }
     .kpi .k{color:var(--muted); font-weight:900; font-size:12px}
     .kpi .v{font-weight:1100; font-size:18px; margin-top:6px}
@@ -152,6 +158,7 @@
       grid-template-columns: 1.2fr .8fr;
       gap:12px;
       margin-top:12px;
+      align-items:stretch;
     }
 
     .chartRow{
@@ -168,11 +175,20 @@
       border-radius: 18px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
+      min-width:0;
     }
     .chartTitle{font-weight:1000; margin:0 0 10px}
-    canvas{width:100%; height:260px; display:block}
+
+    /* canvases */
+    canvas{
+      width:100%;
+      height:260px;
+      display:block;
+      max-width:100%;
+    }
     #top3Chart{height:240px;}
 
+    /* tables */
     .table{
       width:100%;
       border-collapse: collapse;
@@ -190,6 +206,24 @@
       vertical-align: top;
     }
     .table th{color: var(--muted); font-weight:1000; letter-spacing:.2px}
+
+    /* ✅ NEW: table horizontal scroll wrapper to stop page "sliding" on mobile */
+    .tableWrap{
+      width:100%;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      margin-top:12px;
+    }
+    .tableWrap .table{
+      min-width: 860px; /* prevents crushing and layout break */
+      margin-top:0;
+      border:0;
+      border-radius:0;
+      background: transparent;
+    }
 
     .badge{
       display:inline-flex; align-items:center; gap:6px;
@@ -226,6 +260,7 @@
       border-bottom: 1px dashed rgba(255,255,255,.28);
       cursor:pointer;
       user-select:none;
+      white-space:nowrap;
     }
     .supportBox{
       display:none;
@@ -251,6 +286,31 @@
     @media (max-width: 520px){
       .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
+    }
+
+    /* ✅ NEW: stronger mobile rules to prevent “layout drift” */
+    @media (max-width: 720px){
+      .wrap{padding:14px}
+      .nav{padding:12px 14px}
+      .topbar{position:relative} /* disable sticky on phones */
+      .brand .logo{width:34px;height:34px;border-radius:10px}
+
+      input[type="text"]{min-width: 100%; width:100%}
+      .formRow{gap:8px}
+
+      /* Buttons become full width on phone */
+      .btn{width:100%}
+      .btn.secondary{width:100%}
+
+      .pageTitle{font-size:24px}
+      .crumbs{letter-spacing:.12px}
+
+      .kpiGrid{grid-template-columns: 1fr; gap:10px}
+      .dash{grid-template-columns: 1fr}
+      .chartRow{grid-template-columns: 1fr; grid-template-rows:auto; gap:12px}
+      .chartCard{padding:12px}
+      canvas{height:220px}
+      #top3Chart{height:220px}
     }
   </style>
 </head>
@@ -317,7 +377,7 @@
       return raw.padStart(4,"0").slice(-4);
     };
 
-    // ✅ updated: strict parsing, rejects 1900-01-00 and any day/month 00
+    // ✅ strict parsing, rejects 1900-01-00 and any day/month 00
     function parseISODateMaybe(s){
       const t = String(s ?? "").trim();
       if (!t) return null;
@@ -354,7 +414,7 @@
       return isNaN(+d) ? null : d;
     }
 
-    // ✅ updated: invalid -> "—"
+    // ✅ invalid -> "—"
     function formatDateRU(s){
       const raw = String(s ?? "").trim();
       const d = parseISODateMaybe(raw);
@@ -1236,9 +1296,7 @@
         const stuHeader = stuRows.shift().map(normalizeHeader);
         const sesHeader = sesRows.shift().map(normalizeHeader);
 
-        // ============================
-        // ✅ CHANGE HERE: students loader without name_full
-        // ============================
+        // ✅ students WITHOUT name_full
         const s_id = findHeader(stuHeader, ["id"]);
         const s_ns = findHeader(stuHeader, ["name_short","кратко"]);
         const s_gr = findHeader(stuHeader, ["group","группа"]);
@@ -1251,15 +1309,13 @@
         for (const r of stuRows){
           const id = normalizeId(r[s_id]);
           if (!id) continue;
-
           DB.studentsById.set(id, {
             id,
-            name_short: String(r[s_ns] ?? "").trim(),
-            group: (s_gr >= 0 ? String(r[s_gr] ?? "").trim() : ""),
-            status: (s_st >= 0 ? String(r[s_st] ?? "").trim() : ""),
+            name_short: (r[s_ns] ?? "").toString().trim(),
+            group: (s_gr >= 0 ? (r[s_gr] ?? "").toString().trim() : ""),
+            status: (s_st >= 0 ? (r[s_st] ?? "").toString().trim() : ""),
           });
         }
-        // ============================
 
         const c_id = findHeader(sesHeader, ["id"]);
         const c_t = findHeader(sesHeader, ["tournament","турнир"]);
@@ -1497,7 +1553,7 @@
           out.innerHTML = `
             <div class="notice bad">
               CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b><br/>
-              Проверь, что сайт открыт через <b>http://localhost:8000</b> и файлы лежат рядом с index.html.
+              Проверь, что файлы лежат рядом с <b>index.html</b> в репозитории.
             </div>
           `;
           return;
@@ -1544,7 +1600,6 @@
 
         out.innerHTML = html`
           <div class="notice ${isExpelled ? "expelled" : "ok"}">
-            <!-- ✅ CHANGE HERE: показываем только краткое имя (без ФИО) -->
             <b>${esc(student.name_short || "Студент")}</b> ·
             ID: <b>${esc(student.id)}</b> ·
             Группа: <b>${esc(student.group || "—")}</b>
@@ -1622,70 +1677,74 @@
 
           <div class="chartCard" style="margin-top:12px">
             <p class="chartTitle">Начисление баллов</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Дата</th>
-                  <th>Этап</th>
-                  <th>Сессия</th>
-                  <th>Результат/место</th>
-                  <th>Баллы</th>
-                  <th>Как посчитали</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  scored.length
-                    ? scored.map(s=>html`
-                      <tr>
-                        <td>${esc(formatDateRU(s.date || "—"))}</td>
-                        <td><b>${esc(s.tournamentKey)}</b></td>
-                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || s.score_or_attendance || "—")}</td>
-                        <td><b>${esc(s.points)}</b></td>
-                        <td class="muted">${esc(s.explain)}</td>
-                      </tr>
-                    `).join("")
-                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
-                }
-              </tbody>
-            </table>
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Этап</th>
+                    <th>Сессия</th>
+                    <th>Результат/место</th>
+                    <th>Баллы</th>
+                    <th>Как посчитали</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    scored.length
+                      ? scored.map(s=>html`
+                        <tr>
+                          <td>${esc(formatDateRU(s.date || "—"))}</td>
+                          <td><b>${esc(s.tournamentKey)}</b></td>
+                          <td class="muted">${esc(s.stage || s.label || "—")}</td>
+                          <td class="muted">${esc(s.place_or_result || s.score_or_attendance || "—")}</td>
+                          <td><b>${esc(s.points)}</b></td>
+                          <td class="muted">${esc(s.explain)}</td>
+                        </tr>
+                      `).join("")
+                      : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div class="chartCard" style="margin-top:12px">
             <p class="chartTitle">Все сессии студента</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Дата</th>
-                  <th>Турнир</th>
-                  <th>Этап</th>
-                  <th>Сессия</th>
-                  <th>Игра</th>
-                  <th>Очки/Посещаемость</th>
-                  <th>Место/Результат</th>
-                  <th>Комментарий</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  sessions.length
-                    ? sessions.map(s=>html`
-                      <tr>
-                        <td>${esc(formatDateRU(s.date || "—"))}</td>
-                        <td><b>${esc(normTournamentKey(s.tournament))}</b></td>
-                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                        <td class="muted">${esc(s.session_no || "—")}</td>
-                        <td class="muted">${esc(s.game_no || "—")}</td>
-                        <td class="muted">${esc(s.score_or_attendance || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || "—")}</td>
-                        <td class="muted">${esc(s.comment || s.extra || "")}</td>
-                      </tr>
-                    `).join("")
-                    : `<tr><td colspan="8" class="muted">Нет записей.</td></tr>`
-                }
-              </tbody>
-            </table>
+            <div class="tableWrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Турнир</th>
+                    <th>Этап</th>
+                    <th>Сессия</th>
+                    <th>Игра</th>
+                    <th>Очки/Посещаемость</th>
+                    <th>Место/Результат</th>
+                    <th>Комментарий</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    sessions.length
+                      ? sessions.map(s=>html`
+                        <tr>
+                          <td>${esc(formatDateRU(s.date || "—"))}</td>
+                          <td><b>${esc(normTournamentKey(s.tournament))}</b></td>
+                          <td class="muted">${esc(s.stage || s.label || "—")}</td>
+                          <td class="muted">${esc(s.session_no || "—")}</td>
+                          <td class="muted">${esc(s.game_no || "—")}</td>
+                          <td class="muted">${esc(s.score_or_attendance || "—")}</td>
+                          <td class="muted">${esc(s.place_or_result || "—")}</td>
+                          <td class="muted">${esc(s.comment || s.extra || "")}</td>
+                        </tr>
+                      `).join("")
+                      : `<tr><td colspan="8" class="muted">Нет записей.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         `;
 
