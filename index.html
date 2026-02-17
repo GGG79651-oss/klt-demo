@@ -1518,7 +1518,84 @@
           out.innerHTML = `<div class="notice bad">Введите ID (4 цифры).</div>`;
           return;
         }
+// ✅ SECRET: 9999 — показать топ лучших (только обучающиеся)
+if (id === "9999") {
+  // список обучающихся
+  const activeIds = Array.from(DB.studentsById.keys())
+    .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status));
 
+  // считаем сумму баллов каждому (по тем же правилам)
+  const ranking = activeIds
+    .map(sid => ({
+      id: sid,
+      total: computeStudentTotalPoints(sid),
+      student: DB.studentsById.get(sid)
+    }))
+    .sort((a,b)=> b.total - a.total);
+
+  const TOP_N = 25;
+  const top = ranking.slice(0, TOP_N);
+
+  out.innerHTML = html`
+    <div class="notice ok">
+      <b>Секретный режим:</b> Топ-${esc(TOP_N)} участников (только обучающиеся)
+    </div>
+
+    <div class="chartCard" style="margin-top:12px">
+      <p class="chartTitle">Топ лучших игроков</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Участник</th>
+            <th>ID</th>
+            <th>Группа</th>
+            <th>Лига</th>
+            <th>Баллы</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${
+            top.length
+              ? top.map((x, i) => {
+                  const league = DB.leagueById.get(x.id) || "Бронзовая";
+                  const b = leagueBadge(league);
+                  return html`
+                    <tr>
+                      <td><b>${esc(i+1)}</b></td>
+                      <td><b>${esc((x.student?.name_short || "—").toString().trim() || "—")}</b></td>
+                      <td class="muted">${esc(x.id)}</td>
+                      <td class="muted">${esc((x.student?.group || "—").toString().trim() || "—")}</td>
+                      <td><span class="badge ${esc(b.cls)}">${esc(b.label)}</span></td>
+                      <td><b>${esc(x.total)}</b></td>
+                    </tr>
+                  `;
+                }).join("")
+              : `<tr><td colspan="6" class="muted">Нет данных для рейтинга.</td></tr>`
+          }
+        </tbody>
+      </table>
+
+      <div class="small" style="margin-top:10px">
+        Подсказка: нажми на ID (можно скопировать) и введи его в поле сверху, чтобы открыть дашборд участника.
+      </div>
+    </div>
+  `;
+
+  // Небольшой UX: клик по строке подставляет ID в поле
+  const rows = out.querySelectorAll("tbody tr");
+  rows.forEach((tr, idx)=>{
+    const rec = top[idx];
+    if (!rec) return;
+    tr.style.cursor = "pointer";
+    tr.addEventListener("click", ()=>{
+      idInput.value = rec.id;
+      show();
+    });
+  });
+
+  return;
+}
         const student = DB.studentsById.get(id);
         const sessions = DB.sessionsById.get(id) || [];
         if (!student){
