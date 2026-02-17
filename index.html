@@ -1518,6 +1518,7 @@
           out.innerHTML = `<div class="notice bad">Введите ID (4 цифры).</div>`;
           return;
         }
+        
 // ✅ SECRET: 9999 — показать топ лучших (только обучающиеся)
 if (id === "9999") {
   // список обучающихся
@@ -1596,6 +1597,7 @@ if (id === "9999") {
 
   return;
 }
+        
         const student = DB.studentsById.get(id);
         const sessions = DB.sessionsById.get(id) || [];
         if (!student){
