@@ -21,7 +21,6 @@
       --max: 1120px;
     }
     *{box-sizing:border-box}
-    html, body{max-width:100%; overflow-x:hidden;} /* ✅ anti “page slide” */
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
@@ -50,7 +49,6 @@
       width:38px; height:38px; border-radius:12px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       box-shadow: 0 10px 25px rgba(124,92,255,.25);
-      flex:0 0 auto;
     }
     .menu{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
     .pill{
@@ -59,7 +57,6 @@
       background: rgba(255,255,255,.03);
       font-weight:800; font-size:14px;
       transition: .15s ease;
-      white-space:nowrap;
     }
     .pill:hover{transform: translateY(-1px); color:var(--text); border-color: rgba(255,255,255,.18)}
     .pill.active{
@@ -79,7 +76,6 @@
       transition:.15s ease;
       cursor:pointer;
       user-select:none;
-      white-space:nowrap;
     }
     .btn:hover{transform: translateY(-1px)}
     .btn.secondary{
@@ -95,7 +91,6 @@
       border:1px solid var(--border);
       border-radius: var(--r2);
       box-shadow: var(--shadow);
-      min-width:0; /* ✅ allow grid items to shrink */
     }
     .crumbs{color:var(--muted); font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.22px}
     .pageTitle{margin:6px 0 8px; font-size:28px; letter-spacing:-.4px}
@@ -110,7 +105,6 @@
       letter-spacing:.6px;
       outline:none;
       min-width: 240px;
-      max-width:100%;
     }
     input[type="text"]::placeholder{color: rgba(169,180,214,.65); letter-spacing:.2px}
     .formRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
@@ -124,7 +118,6 @@
       font-weight:800;
       line-height:1.5;
       margin-top:12px;
-      word-break:break-word;
     }
     .notice.ok{border-color: rgba(37,194,110,.35)}
     .notice.bad{border-color: rgba(255,77,109,.35)}
@@ -140,7 +133,7 @@
 
     .kpiGrid{
       display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr)); /* ✅ prevent grid blowout */
+      grid-template-columns: repeat(4, 1fr);
       gap:10px;
       margin-top:12px;
     }
@@ -149,7 +142,6 @@
       border-radius: 16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
-      min-width:0;
     }
     .kpi .k{color:var(--muted); font-weight:900; font-size:12px}
     .kpi .v{font-weight:1100; font-size:18px; margin-top:6px}
@@ -157,16 +149,14 @@
 
     .dash{
       display:grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); /* ✅ */
+      grid-template-columns: 1.2fr .8fr;
       gap:12px;
       margin-top:12px;
-      align-items:stretch;
     }
 
-    /* ✅ desktop: 2 cols; mobile will override, and we also reset inline grid placement */
     .chartRow{
       display:grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: 1fr 1fr;
       grid-template-rows: auto auto;
       gap:12px;
       margin-top:12px;
@@ -178,24 +168,19 @@
       border-radius: 18px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
-      min-width:0;
     }
     .chartTitle{font-weight:1000; margin:0 0 10px}
     canvas{width:100%; height:260px; display:block}
     #top3Chart{height:240px;}
 
-    .tableWrap{
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.02);
-    }
     .table{
       width:100%;
       border-collapse: collapse;
-      margin-top:0;
-      min-width: 760px; /* ✅ table scroll instead of breaking layout */
+      margin-top:12px;
+      overflow:hidden;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
     }
     .table th, .table td{
       padding:10px 10px;
@@ -203,10 +188,8 @@
       text-align:left;
       font-size: 13px;
       vertical-align: top;
-      white-space:nowrap;
     }
     .table th{color: var(--muted); font-weight:1000; letter-spacing:.2px}
-    .table td.mwrap{white-space:normal; min-width:240px;}
 
     .badge{
       display:inline-flex; align-items:center; gap:6px;
@@ -243,7 +226,6 @@
       border-bottom: 1px dashed rgba(255,255,255,.28);
       cursor:pointer;
       user-select:none;
-      white-space:nowrap;
     }
     .supportBox{
       display:none;
@@ -255,39 +237,20 @@
       color: var(--muted);
       font-weight:800;
       line-height:1.6;
-      word-break:break-word;
     }
     .supportBox a{
       text-decoration: underline;
       text-underline-offset: 3px;
     }
 
-    /* ---------------------------
-       Responsive fixes
-       --------------------------- */
     @media (max-width: 980px){
-      .wrap{padding:16px}
-      .nav{padding:12px 16px}
-      .kpiGrid{grid-template-columns: repeat(2, minmax(0, 1fr))}
+      .kpiGrid{grid-template-columns: 1fr 1fr}
       .dash{grid-template-columns: 1fr}
-      .chartRow{grid-template-columns: 1fr; grid-template-rows:auto}
-
-      /* ✅ CRITICAL FIX: reset inline grid placement on mobile */
-      .chartRow > .chartCard{
-        grid-column: auto !important;
-        grid-row: auto !important;
-      }
-
-      input[type="text"]{min-width: 180px}
-      canvas{height:240px}
+      .chartRow{grid-template-columns: 1fr; grid-template-rows: auto;}
     }
     @media (max-width: 520px){
       .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
-      .pageTitle{font-size:24px}
-      .btn{width:100%}
-      .formRow{align-items:stretch}
-      input[type="text"]{width:100%}
     }
   </style>
 </head>
@@ -391,6 +354,7 @@
       return isNaN(+d) ? null : d;
     }
 
+    // ✅ invalid -> "—"
     function formatDateRU(s){
       const raw = String(s ?? "").trim();
       const d = parseISODateMaybe(raw);
@@ -526,7 +490,7 @@
     function parsePlaceNumber(s){
       const txt = String(s ?? "").trim();
       if (!txt) return null;
-      if (txt === "#Н/Д" || txt === "#N/A" || txt.toLowerCase().includes("н/д")) return null;
+      if (txt === "—" || txt === "-" || txt === "#Н/Д" || txt === "#N/A" || txt.toLowerCase().includes("н/д")) return null;
       const m = txt.match(/(\d{1,3})/);
       if (!m) return null;
       const n = Number(m[1]);
@@ -539,13 +503,17 @@
       return clamp(score, 0, 100);
     }
 
+    // ✅ year comes first from label
     function parseYearFromRow(row){
+      const label = String(row.label ?? "");
+      const m1 = label.match(/(16\d{2}|17\d{2}|18\d{2})/);
+      if (m1) return Number(m1[1]);
+
       const s = [
         row.place_or_result,
         row.score_or_attendance,
         row.comment,
         row.extra,
-        row.label,
         row.stage
       ].map(x=>String(x ?? "")).join(" ");
       const m = s.match(/(16\d{2}|17\d{2}|18\d{2})/);
@@ -566,22 +534,25 @@
       return Number.isFinite(denom) ? denom : null;
     }
 
+    // ✅ new scale: best 1660 -> 100, worst 1800 -> 0
     function civYearPointsFromYear(year){
-      const best = 1652;
+      const best = 1660;
       const worst = 1800;
       const y = clamp(year, best, worst);
       const score = 100 - ((y - best) / (worst - best)) * 100;
       return clamp(Math.round(score), 0, 100);
     }
 
+    // ✅ determine revolution win using label ("Не защитился" vs year)
     function revolutionIsWin(row){
+      const label = String(row.label ?? "").toLowerCase();
+      if (label.includes("не защит")) return false;
+
+      const hasYear = /(16\d{2}|17\d{2}|18\d{2})/.test(label);
+      if (hasYear) return true;
+
       const s = [
-        row.place_or_result,
-        row.score_or_attendance,
-        row.comment,
-        row.extra,
-        row.label,
-        row.stage
+        row.place_or_result, row.score_or_attendance, row.comment, row.extra, row.stage, row.label
       ].map(x=>String(x ?? "")).join(" ").toLowerCase();
 
       if (includesAny(s, ["побед", "win", "лучший", "защит"])) return true;
@@ -608,16 +579,19 @@
         return { points: null, explain: "Тренировочная — не в зачёт" };
       }
 
+      // ✅ Business Cats: points ONLY from place_or_result, ignore attendance score
       if (t === "Business Cats"){
         if (!includesAny(stage, ["рейтинг", "рейтин", "rating"])) return { points: null, explain: "Не рейтинговая — не в зачёт" };
 
-        const pRaw = String(placeText || "").trim();
-        if (pRaw === "#Н/Д" || pRaw === "#N/A" || pRaw.toLowerCase().includes("н/д")){
-          return { points: null, explain: "Нет места (#Н/Д) — не начисляем" };
+        const pr = String(row.place_or_result ?? "").trim();
+        if (!pr || pr === "—" || pr === "-" || pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")){
+          return { points: null, explain: "Business Cats: нет места — не начисляем" };
         }
 
-        const p = parsePlaceNumber(placeText) ?? parsePlaceNumber(comment);
-        if (p === null) return { points: null, explain: "Нет места — баллы не посчитаны" };
+        const p = parsePlaceNumber(pr);
+        if (p === null) return { points: null, explain: "Business Cats: место не распознано" };
+        if (p < 1 || p > 20) return { points: null, explain: "Business Cats: место вне диапазона 1–20" };
+
         const pts = bcPointsFromPlace(p);
         return { points: pts, explain: `Business Cats: место ${p} → ${pts} баллов` };
       }
@@ -650,23 +624,31 @@
         return { points: null, explain: "Пейнтбол: не зачётный этап" };
       }
 
+      // ✅ Civ revolution: +100 always for revolution, +0..100 by year (1660 best -> 100, 1800 worst -> 0)
       if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
-        if (!includesAny(stage, ["революц", "revolution"])) return { points: null, explain: "Civ: не революция — не в зачёт" };
+        const stageText = String(row.stage || "").toLowerCase();
+        const labelText = String(row.label || "").toLowerCase();
 
+        const looksLikeRevolution =
+          includesAny(stageText, ["революц", "revolution"]) ||
+          includesAny(labelText, ["не защит", "революц"]) ||
+          /(16\d{2}|17\d{2}|18\d{2})/.test(labelText);
+
+        if (!looksLikeRevolution) return { points: null, explain: "Civ: не революция — не в зачёт" };
+
+        const basePts = 100;
         const y = parseYearFromRow(row);
-        const yearPts = y ? civYearPointsFromYear(y) : null;
+        const yearPts = y ? civYearPointsFromYear(y) : 0;
 
         const win = revolutionIsWin(row);
-        const winPts = win ? 100 : 0;
+        const finalYearPts = win ? yearPts : 0;
 
-        if (yearPts === null){
-          if (win) return { points: 100, explain: "Civ: победа в революции → 100 (год не найден)" };
-          return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
-        }
+        const total = basePts + finalYearPts;
+        const yearText = win
+          ? (y ? `год ${y} → ${finalYearPts}` : "год не найден → 0")
+          : "не защитился → 0";
 
-        const total = winPts + yearPts;
-        const winText = win ? "+ победа 100" : "+ победа 0";
-        return { points: total, explain: `Civ: год ${y} → ${yearPts} ${winText} = ${total}` };
+        return { points: total, explain: `Civ: революция 100 + ${yearText} = ${total}` };
       }
 
       return { points: null, explain: "Пока не начисляем (добавим позже)" };
@@ -674,11 +656,12 @@
 
     function computeScoredSessions(id){
       const sessions = DB.sessionsById.get(id) || [];
-      const out = [];
+      const temp = [];
+
       for (const s of sessions){
         const scored = scoreSession(s);
         if (typeof scored.points === "number" && Number.isFinite(scored.points)){
-          out.push({
+          temp.push({
             ...s,
             tournamentKey: normTournamentKey(s.tournament),
             points: scored.points,
@@ -686,6 +669,32 @@
           });
         }
       }
+
+      // ✅ Dedup for Civ revolutions: count once per tournament (take max points)
+      const out = [];
+      const bestCivByTournament = new Map();
+
+      for (const x of temp){
+        const t = x.tournamentKey;
+        const stage = String(x.stage || x.label || "").toLowerCase();
+        const label = String(x.label || "").toLowerCase();
+        const isCiv = (t === "Civilization: Solo" || t === "Civilization: DUEL");
+        const isRev = isCiv && (includesAny(stage, ["революц", "revolution"]) || label.includes("не защит") || /(16\d{2}|17\d{2}|18\d{2})/.test(label));
+
+        if (!isRev){
+          out.push(x);
+          continue;
+        }
+
+        const key = `${id}__${t}__revolution`;
+        const prev = bestCivByTournament.get(key);
+        if (!prev || (x.points || 0) > (prev.points || 0)){
+          bestCivByTournament.set(key, x);
+        }
+      }
+
+      for (const v of bestCivByTournament.values()) out.push(v);
+
       out.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
       return out;
     }
@@ -695,8 +704,14 @@
       return scored.reduce((sum, x)=> sum + (x.points || 0), 0);
     }
 
+    // ✅ leagues exclude expelled
     function recomputeLeagues(){
-      const ids = Array.from(DB.studentsById.keys());
+      const idsAll = Array.from(DB.studentsById.keys());
+      const ids = idsAll.filter(id=>{
+        const st = DB.studentsById.get(id)?.status || "";
+        return String(st).trim() !== "В списках отчисленных";
+      });
+
       const totals = ids.map(id => ({ id, total: computeStudentTotalPoints(id) }));
       totals.sort((a,b)=> b.total - a.total);
 
@@ -1119,7 +1134,7 @@
         ctx.fill();
 
         const title = `${item.tournamentKey || normTournamentKey(item.tournament)} • ${formatDateRU(item.date || "—")}`;
-        const sub = `${item.stage || item.label || "—"} • ${item.place_or_result || item.score_or_attendance || "—"}`;
+        const sub = `${item.stage || item.label || "—"} • ${item.place_or_result || item.label || item.score_or_attendance || "—"}`;
 
         ctx.fillStyle = "rgba(234,240,255,.95)";
         ctx.font = "1000 13px ui-sans-serif, system-ui";
@@ -1159,7 +1174,6 @@
         tip.style.fontWeight = "900";
         tip.style.display = "none";
         tip.style.maxWidth = "360px";
-        tip.style.wordBreak = "break-word";
         document.body.appendChild(tip);
       }
       return tip;
@@ -1189,7 +1203,7 @@
         const s = hit.data;
         const title = `${s.tournamentKey || normTournamentKey(s.tournament)} • ${formatDateRU(s.date || "—")}`;
         const stage = (s.stage || s.label || "—");
-        const res = (s.place_or_result || s.score_or_attendance || "—");
+        const res = (s.place_or_result || s.label || s.score_or_attendance || "—");
         tip.innerHTML = `${esc(title)}<br><span style="color:rgba(169,180,214,.9)">${esc(stage)} • ${esc(res)}</span><br><b>${esc(s.points)} баллов</b>`;
         tip.style.display = "block";
         tip.style.left = (e.clientX + 12) + "px";
@@ -1273,12 +1287,11 @@
         const stuHeader = stuRows.shift().map(normalizeHeader);
         const sesHeader = sesRows.shift().map(normalizeHeader);
 
-        // ---- LOAD: site_students.csv (без name_full) ----
+        // ✅ students: no requirement for name_full
         const s_id = findHeader(stuHeader, ["id"]);
-        const s_ns = findHeader(stuHeader, ["name_short", "кратко"]);
-        const s_gr = findHeader(stuHeader, ["group", "группа"]);
-        const s_st = findHeader(stuHeader, ["status", "статус", "статус обучения"]);
-
+        const s_ns = findHeader(stuHeader, ["name_short","кратко"]);
+        const s_gr = findHeader(stuHeader, ["group","группа"]);
+        const s_st = findHeader(stuHeader, ["status","статус","статус обучения"]);
         if (s_id < 0) throw new Error("students: нет колонки id");
         if (s_ns < 0) throw new Error("students: нет колонки name_short");
 
@@ -1288,9 +1301,9 @@
           if (!id) continue;
           DB.studentsById.set(id, {
             id,
-            name_short: (r[s_ns] ?? "").toString().trim(),
-            group: (s_gr >= 0 ? (r[s_gr] ?? "").toString().trim() : ""),
-            status: (s_st >= 0 ? (r[s_st] ?? "").toString().trim() : ""),
+            name_short: (s_ns >= 0 ? (r[s_ns] ?? "") : ""),
+            group: (s_gr >= 0 ? (r[s_gr] ?? "") : ""),
+            status: (s_st >= 0 ? (r[s_st] ?? "") : ""),
           });
         }
 
@@ -1468,7 +1481,12 @@
       `;
     }
 
+    // ✅ rank among обучающихся (and expelled -> "—")
     function getRankPlaceOnly(id){
+      const student = DB.studentsById.get(id);
+      const isExpelled = String(student?.status || "").trim() === "В списках отчисленных";
+      if (isExpelled) return "—";
+
       const list = Array.from(DB.totalsById.entries()).map(([sid, total])=>({ sid, total }));
       list.sort((a,b)=> b.total - a.total);
       const idx = list.findIndex(x=>x.sid===id);
@@ -1530,7 +1548,7 @@
           out.innerHTML = `
             <div class="notice bad">
               CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b><br/>
-              Проверь, что сайт открыт через <b>http://localhost:8000</b> или GitHub Pages, и файлы CSV лежат рядом с index.html.
+              Проверь, что сайт открыт через <b>http://localhost:8000</b> и файлы лежат рядом с index.html.
             </div>
           `;
           return;
@@ -1595,7 +1613,7 @@
             <div class="kpi">
               <div class="k">Баллы (сумма)</div>
               <div class="v">${esc(totalPoints)}</div>
-              <div class="c">за зачётные сессии (только если посещаемость = 0)</div>
+              <div class="c">За зачётные сессии</div>
             </div>
             <div class="kpi">
               <div class="k">Посещаемость</div>
@@ -1605,7 +1623,7 @@
             <div class="kpi">
               <div class="k">Позиция в общем зачёте</div>
               <div class="v">${esc(rankPlace)}</div>
-              <div class="c">место по сумме баллов</div>
+              <div class="c">место по сумме баллов (без отчисленных)</div>
             </div>
           </div>
 
@@ -1654,74 +1672,70 @@
 
           <div class="chartCard" style="margin-top:12px">
             <p class="chartTitle">Начисление баллов</p>
-            <div class="tableWrap">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Дата</th>
-                    <th>Этап</th>
-                    <th>Сессия</th>
-                    <th>Результат/место</th>
-                    <th>Баллы</th>
-                    <th style="min-width:260px">Как посчитали</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${
-                    scored.length
-                      ? scored.map(s=>html`
-                        <tr>
-                          <td>${esc(formatDateRU(s.date || "—"))}</td>
-                          <td><b>${esc(s.tournamentKey)}</b></td>
-                          <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                          <td class="muted">${esc(s.place_or_result || s.score_or_attendance || "—")}</td>
-                          <td><b>${esc(s.points)}</b></td>
-                          <td class="muted mwrap">${esc(s.explain)}</td>
-                        </tr>
-                      `).join("")
-                      : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
-                  }
-                </tbody>
-              </table>
-            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Этап</th>
+                  <th>Сессия</th>
+                  <th>Результат/место</th>
+                  <th>Баллы</th>
+                  <th>Как посчитали</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  scored.length
+                    ? scored.map(s=>html`
+                      <tr>
+                        <td>${esc(formatDateRU(s.date || "—"))}</td>
+                        <td><b>${esc(s.tournamentKey)}</b></td>
+                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
+                        <td class="muted">${esc(s.place_or_result || s.label || s.score_or_attendance || "—")}</td>
+                        <td><b>${esc(s.points)}</b></td>
+                        <td class="muted">${esc(s.explain)}</td>
+                      </tr>
+                    `).join("")
+                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
+                }
+              </tbody>
+            </table>
           </div>
 
           <div class="chartCard" style="margin-top:12px">
             <p class="chartTitle">Все сессии студента</p>
-            <div class="tableWrap">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Дата</th>
-                    <th>Турнир</th>
-                    <th>Этап</th>
-                    <th>Сессия</th>
-                    <th>Игра</th>
-                    <th>Очки/Посещаемость</th>
-                    <th>Место/Результат</th>
-                    <th style="min-width:220px">Комментарий</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${
-                    sessions.length
-                      ? sessions.map(s=>html`
-                        <tr>
-                          <td>${esc(formatDateRU(s.date || "—"))}</td>
-                          <td><b>${esc(normTournamentKey(s.tournament))}</b></td>
-                          <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                          <td class="muted">${esc(s.session_no || "—")}</td>
-                          <td class="muted">${esc(s.game_no || "—")}</td>
-                          <td class="muted">${esc(s.score_or_attendance || "—")}</td>
-                          <td class="muted">${esc(s.place_or_result || "—")}</td>
-                          <td class="muted mwrap">${esc(s.comment || s.extra || "")}</td>
-                        </tr>
-                      `).join("")
-                      : `<tr><td colspan="8" class="muted">Нет записей.</td></tr>`
-                  }
-                </tbody>
-              </table>
-            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Турнир</th>
+                  <th>Этап</th>
+                  <th>Сессия</th>
+                  <th>Игра</th>
+                  <th>Посещаемость</th>
+                  <th>Место/Результат</th>
+                  <th>Комментарий</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  sessions.length
+                    ? sessions.map(s=>html`
+                      <tr>
+                        <td>${esc(formatDateRU(s.date || "—"))}</td>
+                        <td><b>${esc(normTournamentKey(s.tournament))}</b></td>
+                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
+                        <td class="muted">${esc(s.session_no || "—")}</td>
+                        <td class="muted">${esc(s.game_no || "—")}</td>
+                        <td class="muted">${esc(s.score_or_attendance || "—")}</td>
+                        <td class="muted">${esc(s.place_or_result || s.label || "—")}</td>
+                        <td class="muted">${esc(s.comment || s.extra || "")}</td>
+                      </tr>
+                    `).join("")
+                    : `<tr><td colspan="8" class="muted">Нет записей.</td></tr>`
+                }
+              </tbody>
+            </table>
           </div>
         `;
 
