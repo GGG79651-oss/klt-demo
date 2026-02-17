@@ -370,17 +370,9 @@
       return needles.some(n => s.includes(String(n).toLowerCase()));
     }
 
-    // ✅ NEW: label может быть пустым, а революции лежат в extra
+    // ✅ label может быть пустым, а революции лежат в extra
     function effLabel(row){
       return String(row?.label ?? "").trim() || String(row?.extra ?? "").trim();
-    }
-
-    // ✅ NEW: революции для Civ кодируются в label/extra при stage=week
-    function isCivRevolutionRow(row){
-      const t = normTournamentKey(row.tournament);
-      if (t !== "Civilization: Solo" && t !== "Civilization: DUEL") return false;
-      const lab = effLabel(row).toLowerCase();
-      return lab.includes("не защит") || /(16\d{2}|17\d{2}|18\d{2})/.test(lab);
     }
 
     function detectDelimiter(firstLine){
@@ -475,20 +467,6 @@
       return null;
     }
 
-    // ✅ strict eligibility: points only if attendance == "0", BUT Civ-revolution is special case
-    function eligibleForScoring(row){
-      // Civ revolution rows: ignore attendance field (may be #Н/Д) — they are encoded in label/extra
-      if (isCivRevolutionRow(row)) return true;
-
-      const a = String(row.score_or_attendance ?? "").trim();
-      if (a !== "0") return false;
-
-      const pr = String(row.place_or_result ?? "").trim();
-      if (!pr) return true;
-      if (pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")) return false;
-      return true;
-    }
-
     function normTournamentKey(name){
       const s = String(name ?? "").toLowerCase();
       if (s.includes("business") || s.includes("cats") || s.includes("бизнес")) return "Business Cats";
@@ -501,6 +479,28 @@
       if (s.includes("бенди") || s.includes("bandy")) return "Бенди";
       if (s.includes("feudal")) return "Life is Feudal";
       return (name || "—").trim() || "—";
+    }
+
+    // ✅ революции для Civ: stage=week, в label/extra лежит "Не защитился" или год
+    function isCivRevolutionRow(row){
+      const t = normTournamentKey(row.tournament);
+      if (t !== "Civilization: Solo" && t !== "Civilization: DUEL") return false;
+      const lab = effLabel(row).toLowerCase();
+      return lab.includes("не защит") || /(16\d{2}|17\d{2}|18\d{2})/.test(lab);
+    }
+
+    // ✅ strict eligibility: points only if attendance == "0", BUT Civ-revolution is special case
+    function eligibleForScoring(row){
+      // Civ revolution rows: they are encoded in label/extra; attendance/date may be empty/#Н/Д
+      if (isCivRevolutionRow(row)) return true;
+
+      const a = String(row.score_or_attendance ?? "").trim();
+      if (a !== "0") return false;
+
+      const pr = String(row.place_or_result ?? "").trim();
+      if (!pr) return true;
+      if (pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")) return false;
+      return true;
     }
 
     function parsePlaceNumber(s){
@@ -519,7 +519,7 @@
       return clamp(score, 0, 100);
     }
 
-    // ✅ updated: for Civ revolution year parsing, prefer label/extra
+    // ✅ For Civ revolution year parsing, prefer label/extra
     function parseYearFromRow(row){
       const lab = effLabel(row);
       const m1 = lab.match(/(16\d{2}|17\d{2}|18\d{2})/);
@@ -551,7 +551,7 @@
       return Number.isFinite(denom) ? denom : null;
     }
 
-    // ✅ NEW SCALE: best 1660 -> 100, worst 1800 -> 0
+    // ✅ SCALE: best 1660 -> 100, worst 1800 -> 0
     function civYearPointsFromYear(year){
       const best = 1660;
       const worst = 1800;
@@ -575,7 +575,6 @@
         return { points: null, explain: "Не начисляем: нет подтверждения участия (нужно 0 в посещаемости)" };
       }
 
-      // training не в зачёт (для Business Cats / Paintball)
       if (includesAny(stage, ["трен", "training"])) {
         return { points: null, explain: "Тренировочная — не в зачёт" };
       }
@@ -622,30 +621,37 @@
         return { points: null, explain: "Пейнтбол: не зачётный этап" };
       }
 
-      // ✅ Civ revolution logic: stage may be week; data in label/extra
+      // ✅ FIXED: Civ “Не защитился” => 0 points (no +100)
+      // ✅ Civ “год” => 100 (революция) + yearPoints
       if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
         if (!isCivRevolutionRow(row)){
           return { points: null, explain: "Civ: не революция — не в зачёт" };
         }
 
-        const lab = effLabel(row).toLowerCase();
-        const failed = lab.includes("не защит");
-        if (failed){
-          // революция не совершена -> 0
-          return { points: 0, explain: "Civ: не защитился — 0" };
+        const labRaw = effLabel(row);
+        const lab = labRaw.toLowerCase();
+
+        // 1) If "Не защитился" => 0
+        if (lab.includes("не защит")){
+          return { points: 0, explain: "Civ: не защитился → 0" };
         }
 
+        // 2) Otherwise, we need a year to treat it as a successful revolution
         const y = parseYearFromRow(row);
-        const yearPts = y ? civYearPointsFromYear(y) : 0;
-        const total = 100 + yearPts;
+        if (!y){
+          // If not "не защитился" but also no year -> don't score (safer than awarding)
+          return { points: null, explain: "Civ: год защиты не найден — не начисляем" };
+        }
 
-        return { points: total, explain: `Civ: революция 100 + год ${y || "—"} → ${yearPts} = ${total}` };
+        const yearPts = civYearPointsFromYear(y);
+        const total = 100 + yearPts;
+        return { points: total, explain: `Civ: революция 100 + год ${y} → ${yearPts} = ${total}` };
       }
 
       return { points: null, explain: "Пока не начисляем (добавим позже)" };
     }
 
-    // ✅ UPDATED: Civ revolution counted once per tournament per student
+    // ✅ Civ revolution counted once per tournament per student
     function computeScoredSessions(id){
       const sessions = DB.sessionsById.get(id) || [];
       const out = [];
