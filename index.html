@@ -317,6 +317,12 @@
       return raw.padStart(4,"0").slice(-4);
     };
 
+    // ✅ NEW: robust expelled detection (fixes rank counting)
+    function isExpelledStatus(status){
+      const s = String(status ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+      return s.includes("отчисл");
+    }
+
     // ✅ updated: strict parsing, rejects 1900-01-00 and any day/month 00
     function parseISODateMaybe(s){
       const t = String(s ?? "").trim();
@@ -659,12 +665,11 @@
       return scored.reduce((sum, x)=> sum + (x.points || 0), 0);
     }
 
-    // ✅ UPDATED: exclude expelled from leagues & totals
+    // ✅ UPDATED: leagues/thresholds only among обучающихся (exclude expelled)
     function recomputeLeagues(){
-      // считаем только обучающихся
       const ids = Array.from(DB.studentsById.keys()).filter(id=>{
-        const st = String(DB.studentsById.get(id)?.status || "").trim();
-        return st !== "В списках отчисленных";
+        const st = DB.studentsById.get(id)?.status;
+        return !isExpelledStatus(st);
       });
 
       const totals = ids.map(id => ({ id, total: computeStudentTotalPoints(id) }));
@@ -766,6 +771,7 @@
       else if (t < 75) focus = "аналитики и планирования";
       else focus = "тактики и принятия решений";
 
+      // ✅ updated text: no “2–3 games”, no mention of “cats”
       advice.push({
         title: "План на следующую неделю",
         text: `Ваш текущий темп — в среднем ${track.recentAvg} баллов. Выберите один фокус: ${focus}. Сделайте его вашей сильной привычкой недели — фиксируйте лучшие решения и повторяйте их. Так результат будет расти устойчиво и предсказуемо.`,
@@ -1243,6 +1249,7 @@
         const sesHeader = sesRows.shift().map(normalizeHeader);
 
         const s_id = findHeader(stuHeader, ["id"]);
+        const s_nf = findHeader(stuHeader, ["name_full","фио","ф.и.о","ф.и.о.","фамилия имя"]);
         const s_ns = findHeader(stuHeader, ["name_short","кратко"]);
         const s_gr = findHeader(stuHeader, ["group","группа"]);
         const s_st = findHeader(stuHeader, ["status","статус","статус обучения"]);
@@ -1254,6 +1261,7 @@
           if (!id) continue;
           DB.studentsById.set(id, {
             id,
+            name_full: (s_nf >= 0 ? (r[s_nf] ?? "") : ""),
             name_short: (s_ns >= 0 ? (r[s_ns] ?? "") : ""),
             group: (s_gr >= 0 ? (r[s_gr] ?? "") : ""),
             status: (s_st >= 0 ? (r[s_st] ?? "") : ""),
@@ -1434,10 +1442,13 @@
       `;
     }
 
-    // ✅ UPDATED: rank among обучающихся only
+    // ✅ UPDATED: rank place only among обучающихся (exclude expelled)
     function getRankPlaceOnly(id){
-      const list = Array.from(DB.totalsById.entries()).map(([sid, total])=>({ sid, total }));
-      list.sort((a,b)=> b.total - a.total);
+      const list = Array.from(DB.studentsById.keys())
+        .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status))
+        .map(sid => ({ sid, total: computeStudentTotalPoints(sid) }))
+        .sort((a,b)=> b.total - a.total);
+
       const idx = list.findIndex(x=>x.sid===id);
       if (idx < 0) return "—";
       return String(idx+1);
@@ -1515,7 +1526,8 @@
           return;
         }
 
-        const isExpelled = String(student.status || "").trim() === "В списках отчисленных";
+        // ✅ UPDATED: robust expelled detection
+        const isExpelled = isExpelledStatus(student.status);
 
         const attSessions = sessions.filter(s=> isAttendanceValue(s.score_or_attendance));
         const presentCount = attSessions.reduce((acc, s)=> acc + (attendanceIsPresent(s.score_or_attendance) === true ? 1 : 0), 0);
@@ -1528,8 +1540,7 @@
         const scored = computeScoredSessions(id);
         const totalPoints = scored.reduce((sum,x)=> sum + (x.points || 0), 0);
 
-        // ✅ league/rank now based on обучающихся only
-        const league = DB.leagueById.get(id) || "—";
+        const league = DB.leagueById.get(id) || "Бронзовая";
         const rankPlace = getRankPlaceOnly(id);
 
         const track = calcTrackers(student, sessions, scored);
@@ -1545,7 +1556,7 @@
 
         out.innerHTML = html`
           <div class="notice ${isExpelled ? "expelled" : "ok"}">
-            <b>${esc(student.name_short || "Студент")}</b> ·
+            <b>${esc(student.name_short || student.name_full || "Студент")}</b> ·
             ID: <b>${esc(student.id)}</b> ·
             Группа: <b>${esc(student.group || "—")}</b>
             ${student.status ? ` · Статус: <b>${esc(student.status)}</b>` : ""}
@@ -1558,7 +1569,7 @@
           <div class="kpiGrid">
             <div class="kpi">
               <div class="k">Лига</div>
-              <div class="v">${league !== "—" ? leagueText(league) : `<span class="badge b-warn">—</span><div class="small" style="margin-top:16px">Оценка САОК КЛТ</div>`}</div>
+              <div class="v">${leagueText(league)}</div>
             </div>
             <div class="kpi">
               <div class="k">Баллы (сумма)</div>
@@ -1573,7 +1584,7 @@
             <div class="kpi">
               <div class="k">Позиция в общем зачёте</div>
               <div class="v">${esc(rankPlace)}</div>
-              <div class="c">место по сумме баллов (среди обучающихся)</div>
+              <div class="c">место по сумме баллов</div>
             </div>
           </div>
 
