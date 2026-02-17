@@ -317,7 +317,7 @@
       return raw.padStart(4,"0").slice(-4);
     };
 
-    // ✅ strict parsing, rejects 1900-01-00 and any day/month 00
+    // ✅ updated: strict parsing, rejects 1900-01-00 and any day/month 00
     function parseISODateMaybe(s){
       const t = String(s ?? "").trim();
       if (!t) return null;
@@ -354,7 +354,7 @@
       return isNaN(+d) ? null : d;
     }
 
-    // ✅ invalid -> "—"
+    // ✅ updated: invalid -> "—"
     function formatDateRU(s){
       const raw = String(s ?? "").trim();
       const d = parseISODateMaybe(raw);
@@ -368,6 +368,19 @@
     function includesAny(hay, needles){
       const s = String(hay ?? "").toLowerCase();
       return needles.some(n => s.includes(String(n).toLowerCase()));
+    }
+
+    // ✅ NEW: label может быть пустым, а революции лежат в extra
+    function effLabel(row){
+      return String(row?.label ?? "").trim() || String(row?.extra ?? "").trim();
+    }
+
+    // ✅ NEW: революции для Civ кодируются в label/extra при stage=week
+    function isCivRevolutionRow(row){
+      const t = normTournamentKey(row.tournament);
+      if (t !== "Civilization: Solo" && t !== "Civilization: DUEL") return false;
+      const lab = effLabel(row).toLowerCase();
+      return lab.includes("не защит") || /(16\d{2}|17\d{2}|18\d{2})/.test(lab);
     }
 
     function detectDelimiter(firstLine){
@@ -462,8 +475,11 @@
       return null;
     }
 
-    // ✅ strict eligibility: points only if score_or_attendance === "0"
+    // ✅ strict eligibility: points only if attendance == "0", BUT Civ-revolution is special case
     function eligibleForScoring(row){
+      // Civ revolution rows: ignore attendance field (may be #Н/Д) — they are encoded in label/extra
+      if (isCivRevolutionRow(row)) return true;
+
       const a = String(row.score_or_attendance ?? "").trim();
       if (a !== "0") return false;
 
@@ -490,7 +506,7 @@
     function parsePlaceNumber(s){
       const txt = String(s ?? "").trim();
       if (!txt) return null;
-      if (txt === "—" || txt === "-" || txt === "#Н/Д" || txt === "#N/A" || txt.toLowerCase().includes("н/д")) return null;
+      if (txt === "#Н/Д" || txt === "#N/A" || txt.toLowerCase().includes("н/д")) return null;
       const m = txt.match(/(\d{1,3})/);
       if (!m) return null;
       const n = Number(m[1]);
@@ -503,10 +519,10 @@
       return clamp(score, 0, 100);
     }
 
-    // ✅ year comes first from label
+    // ✅ updated: for Civ revolution year parsing, prefer label/extra
     function parseYearFromRow(row){
-      const label = String(row.label ?? "");
-      const m1 = label.match(/(16\d{2}|17\d{2}|18\d{2})/);
+      const lab = effLabel(row);
+      const m1 = lab.match(/(16\d{2}|17\d{2}|18\d{2})/);
       if (m1) return Number(m1[1]);
 
       const s = [
@@ -514,7 +530,8 @@
         row.score_or_attendance,
         row.comment,
         row.extra,
-        row.stage
+        row.stage,
+        row.label
       ].map(x=>String(x ?? "")).join(" ");
       const m = s.match(/(16\d{2}|17\d{2}|18\d{2})/);
       if (!m) return null;
@@ -534,7 +551,7 @@
       return Number.isFinite(denom) ? denom : null;
     }
 
-    // ✅ new scale: best 1660 -> 100, worst 1800 -> 0
+    // ✅ NEW SCALE: best 1660 -> 100, worst 1800 -> 0
     function civYearPointsFromYear(year){
       const best = 1660;
       const worst = 1800;
@@ -543,25 +560,8 @@
       return clamp(Math.round(score), 0, 100);
     }
 
-    // ✅ determine revolution win using label ("Не защитился" vs year)
-    function revolutionIsWin(row){
-      const label = String(row.label ?? "").toLowerCase();
-      if (label.includes("не защит")) return false;
-
-      const hasYear = /(16\d{2}|17\d{2}|18\d{2})/.test(label);
-      if (hasYear) return true;
-
-      const s = [
-        row.place_or_result, row.score_or_attendance, row.comment, row.extra, row.stage, row.label
-      ].map(x=>String(x ?? "")).join(" ").toLowerCase();
-
-      if (includesAny(s, ["побед", "win", "лучший", "защит"])) return true;
-      if (includesAny(s, ["проиг", "loss", "не защит", "выбыл"])) return false;
-      return false;
-    }
-
     // ---------------------------
-    // Scoring (STRICT)
+    // Scoring (STRICT + Civ revolution from label/extra)
     // ---------------------------
     function scoreSession(row){
       const t = normTournamentKey(row.tournament);
@@ -575,23 +575,21 @@
         return { points: null, explain: "Не начисляем: нет подтверждения участия (нужно 0 в посещаемости)" };
       }
 
+      // training не в зачёт (для Business Cats / Paintball)
       if (includesAny(stage, ["трен", "training"])) {
         return { points: null, explain: "Тренировочная — не в зачёт" };
       }
 
-      // ✅ Business Cats: points ONLY from place_or_result, ignore attendance score
       if (t === "Business Cats"){
         if (!includesAny(stage, ["рейтинг", "рейтин", "rating"])) return { points: null, explain: "Не рейтинговая — не в зачёт" };
 
-        const pr = String(row.place_or_result ?? "").trim();
-        if (!pr || pr === "—" || pr === "-" || pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")){
-          return { points: null, explain: "Business Cats: нет места — не начисляем" };
+        const pRaw = String(placeText || "").trim();
+        if (pRaw === "#Н/Д" || pRaw === "#N/A" || pRaw.toLowerCase().includes("н/д") || pRaw === "—"){
+          return { points: null, explain: "Нет места (#Н/Д/—) — не начисляем" };
         }
 
-        const p = parsePlaceNumber(pr);
-        if (p === null) return { points: null, explain: "Business Cats: место не распознано" };
-        if (p < 1 || p > 20) return { points: null, explain: "Business Cats: место вне диапазона 1–20" };
-
+        const p = parsePlaceNumber(placeText) ?? parsePlaceNumber(comment);
+        if (p === null) return { points: null, explain: "Нет места — баллы не посчитаны" };
         const pts = bcPointsFromPlace(p);
         return { points: pts, explain: `Business Cats: место ${p} → ${pts} баллов` };
       }
@@ -624,44 +622,45 @@
         return { points: null, explain: "Пейнтбол: не зачётный этап" };
       }
 
-      // ✅ Civ revolution: +100 always for revolution, +0..100 by year (1660 best -> 100, 1800 worst -> 0)
+      // ✅ Civ revolution logic: stage may be week; data in label/extra
       if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
-        const stageText = String(row.stage || "").toLowerCase();
-        const labelText = String(row.label || "").toLowerCase();
+        if (!isCivRevolutionRow(row)){
+          return { points: null, explain: "Civ: не революция — не в зачёт" };
+        }
 
-        const looksLikeRevolution =
-          includesAny(stageText, ["революц", "revolution"]) ||
-          includesAny(labelText, ["не защит", "революц"]) ||
-          /(16\d{2}|17\d{2}|18\d{2})/.test(labelText);
+        const lab = effLabel(row).toLowerCase();
+        const failed = lab.includes("не защит");
+        if (failed){
+          // революция не совершена -> 0
+          return { points: 0, explain: "Civ: не защитился — 0" };
+        }
 
-        if (!looksLikeRevolution) return { points: null, explain: "Civ: не революция — не в зачёт" };
-
-        const basePts = 100;
         const y = parseYearFromRow(row);
         const yearPts = y ? civYearPointsFromYear(y) : 0;
+        const total = 100 + yearPts;
 
-        const win = revolutionIsWin(row);
-        const finalYearPts = win ? yearPts : 0;
-
-        const total = basePts + finalYearPts;
-        const yearText = win
-          ? (y ? `год ${y} → ${finalYearPts}` : "год не найден → 0")
-          : "не защитился → 0";
-
-        return { points: total, explain: `Civ: революция 100 + ${yearText} = ${total}` };
+        return { points: total, explain: `Civ: революция 100 + год ${y || "—"} → ${yearPts} = ${total}` };
       }
 
       return { points: null, explain: "Пока не начисляем (добавим позже)" };
     }
 
+    // ✅ UPDATED: Civ revolution counted once per tournament per student
     function computeScoredSessions(id){
       const sessions = DB.sessionsById.get(id) || [];
-      const temp = [];
+      const out = [];
+      const seenCivRevolution = new Set(); // tournamentKey
 
       for (const s of sessions){
+        if (isCivRevolutionRow(s)){
+          const key = normTournamentKey(s.tournament);
+          if (seenCivRevolution.has(key)) continue;
+          seenCivRevolution.add(key);
+        }
+
         const scored = scoreSession(s);
         if (typeof scored.points === "number" && Number.isFinite(scored.points)){
-          temp.push({
+          out.push({
             ...s,
             tournamentKey: normTournamentKey(s.tournament),
             points: scored.points,
@@ -669,31 +668,6 @@
           });
         }
       }
-
-      // ✅ Dedup for Civ revolutions: count once per tournament (take max points)
-      const out = [];
-      const bestCivByTournament = new Map();
-
-      for (const x of temp){
-        const t = x.tournamentKey;
-        const stage = String(x.stage || x.label || "").toLowerCase();
-        const label = String(x.label || "").toLowerCase();
-        const isCiv = (t === "Civilization: Solo" || t === "Civilization: DUEL");
-        const isRev = isCiv && (includesAny(stage, ["революц", "revolution"]) || label.includes("не защит") || /(16\d{2}|17\d{2}|18\d{2})/.test(label));
-
-        if (!isRev){
-          out.push(x);
-          continue;
-        }
-
-        const key = `${id}__${t}__revolution`;
-        const prev = bestCivByTournament.get(key);
-        if (!prev || (x.points || 0) > (prev.points || 0)){
-          bestCivByTournament.set(key, x);
-        }
-      }
-
-      for (const v of bestCivByTournament.values()) out.push(v);
 
       out.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
       return out;
@@ -704,14 +678,8 @@
       return scored.reduce((sum, x)=> sum + (x.points || 0), 0);
     }
 
-    // ✅ leagues exclude expelled
     function recomputeLeagues(){
-      const idsAll = Array.from(DB.studentsById.keys());
-      const ids = idsAll.filter(id=>{
-        const st = DB.studentsById.get(id)?.status || "";
-        return String(st).trim() !== "В списках отчисленных";
-      });
-
+      const ids = Array.from(DB.studentsById.keys());
       const totals = ids.map(id => ({ id, total: computeStudentTotalPoints(id) }));
       totals.sort((a,b)=> b.total - a.total);
 
@@ -1134,7 +1102,7 @@
         ctx.fill();
 
         const title = `${item.tournamentKey || normTournamentKey(item.tournament)} • ${formatDateRU(item.date || "—")}`;
-        const sub = `${item.stage || item.label || "—"} • ${item.place_or_result || item.label || item.score_or_attendance || "—"}`;
+        const sub = `${item.stage || item.label || item.extra || "—"} • ${item.place_or_result || item.label || item.extra || item.score_or_attendance || "—"}`;
 
         ctx.fillStyle = "rgba(234,240,255,.95)";
         ctx.font = "1000 13px ui-sans-serif, system-ui";
@@ -1202,8 +1170,8 @@
         }
         const s = hit.data;
         const title = `${s.tournamentKey || normTournamentKey(s.tournament)} • ${formatDateRU(s.date || "—")}`;
-        const stage = (s.stage || s.label || "—");
-        const res = (s.place_or_result || s.label || s.score_or_attendance || "—");
+        const stage = (s.stage || s.label || s.extra || "—");
+        const res = (s.place_or_result || s.label || s.extra || s.score_or_attendance || "—");
         tip.innerHTML = `${esc(title)}<br><span style="color:rgba(169,180,214,.9)">${esc(stage)} • ${esc(res)}</span><br><b>${esc(s.points)} баллов</b>`;
         tip.style.display = "block";
         tip.style.left = (e.clientX + 12) + "px";
@@ -1287,11 +1255,12 @@
         const stuHeader = stuRows.shift().map(normalizeHeader);
         const sesHeader = sesRows.shift().map(normalizeHeader);
 
-        // ✅ students: no requirement for name_full
+        // ---- LOAD: site_students.csv (без name_full) ----
         const s_id = findHeader(stuHeader, ["id"]);
-        const s_ns = findHeader(stuHeader, ["name_short","кратко"]);
-        const s_gr = findHeader(stuHeader, ["group","группа"]);
-        const s_st = findHeader(stuHeader, ["status","статус","статус обучения"]);
+        const s_ns = findHeader(stuHeader, ["name_short", "кратко"]);
+        const s_gr = findHeader(stuHeader, ["group", "группа"]);
+        const s_st = findHeader(stuHeader, ["status", "статус", "статус обучения"]);
+
         if (s_id < 0) throw new Error("students: нет колонки id");
         if (s_ns < 0) throw new Error("students: нет колонки name_short");
 
@@ -1299,11 +1268,12 @@
         for (const r of stuRows){
           const id = normalizeId(r[s_id]);
           if (!id) continue;
+
           DB.studentsById.set(id, {
             id,
-            name_short: (s_ns >= 0 ? (r[s_ns] ?? "") : ""),
-            group: (s_gr >= 0 ? (r[s_gr] ?? "") : ""),
-            status: (s_st >= 0 ? (r[s_st] ?? "") : ""),
+            name_short: String(r[s_ns] ?? "").trim(),
+            group: (s_gr >= 0 ? String(r[s_gr] ?? "").trim() : ""),
+            status: (s_st >= 0 ? String(r[s_st] ?? "").trim() : ""),
           });
         }
 
@@ -1481,12 +1451,7 @@
       `;
     }
 
-    // ✅ rank among обучающихся (and expelled -> "—")
     function getRankPlaceOnly(id){
-      const student = DB.studentsById.get(id);
-      const isExpelled = String(student?.status || "").trim() === "В списках отчисленных";
-      if (isExpelled) return "—";
-
       const list = Array.from(DB.totalsById.entries()).map(([sid, total])=>({ sid, total }));
       list.sort((a,b)=> b.total - a.total);
       const idx = list.findIndex(x=>x.sid===id);
@@ -1623,7 +1588,7 @@
             <div class="kpi">
               <div class="k">Позиция в общем зачёте</div>
               <div class="v">${esc(rankPlace)}</div>
-              <div class="c">место по сумме баллов (без отчисленных)</div>
+              <div class="c">место по сумме баллов</div>
             </div>
           </div>
 
@@ -1690,13 +1655,13 @@
                       <tr>
                         <td>${esc(formatDateRU(s.date || "—"))}</td>
                         <td><b>${esc(s.tournamentKey)}</b></td>
-                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || s.label || s.score_or_attendance || "—")}</td>
+                        <td class="muted">${esc(s.stage || s.label || s.extra || "—")}</td>
+                        <td class="muted">${esc(s.place_or_result || s.label || s.extra || s.score_or_attendance || "—")}</td>
                         <td><b>${esc(s.points)}</b></td>
                         <td class="muted">${esc(s.explain)}</td>
                       </tr>
                     `).join("")
-                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
+                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий.</td></tr>`
                 }
               </tbody>
             </table>
@@ -1724,11 +1689,11 @@
                       <tr>
                         <td>${esc(formatDateRU(s.date || "—"))}</td>
                         <td><b>${esc(normTournamentKey(s.tournament))}</b></td>
-                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
+                        <td class="muted">${esc(s.stage || s.label || s.extra || "—")}</td>
                         <td class="muted">${esc(s.session_no || "—")}</td>
                         <td class="muted">${esc(s.game_no || "—")}</td>
                         <td class="muted">${esc(s.score_or_attendance || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || s.label || "—")}</td>
+                        <td class="muted">${esc(s.place_or_result || s.label || s.extra || "—")}</td>
                         <td class="muted">${esc(s.comment || s.extra || "")}</td>
                       </tr>
                     `).join("")
