@@ -243,6 +243,141 @@
       text-underline-offset: 3px;
     }
 
+/* ---------------------------
+   HOME (inspired by polytech.alabuga.ru/klt)
+--------------------------- */
+.homeHero{
+  padding: 18px 0 6px;
+}
+.homeHeroGrid{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap:12px;
+  align-items:stretch;
+}
+.homeHeroMain{
+  padding:22px;
+  border-radius: var(--r2);
+  background:
+    radial-gradient(900px 320px at 30% 0%, rgba(124,92,255,.28), transparent 55%),
+    radial-gradient(700px 260px at 92% 12%, rgba(33,212,255,.16), transparent 60%),
+    rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.homeKicker{
+  color:var(--muted);
+  font-weight:900;
+  letter-spacing:.28px;
+  text-transform:uppercase;
+  font-size:12px;
+}
+.homeTitle{
+  margin:12px 0 10px;
+  font-size: clamp(30px, 4.2vw, 48px);
+  line-height:1.04;
+  letter-spacing:-.6px;
+}
+.homeLead{
+  color:var(--muted);
+  font-size:16px;
+  line-height:1.65;
+  max-width: 70ch;
+  font-weight:800;
+}
+.homeCtas{display:flex; gap:12px; flex-wrap:wrap; margin-top:16px}
+
+.homeHeroSide{
+  padding:18px;
+  border-radius: var(--r2);
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  box-shadow: var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.homeVisual{
+  border-radius: 18px;
+  border:1px solid rgba(255,255,255,.12);
+  overflow:hidden;
+  min-height: 260px;
+  background:
+    linear-gradient(180deg, rgba(124,92,255,.22), rgba(33,212,255,.10)),
+    rgba(15,23,48,.55);
+  position:relative;
+}
+.homeVisual img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  opacity:.85;
+}
+.homeVisual::after{
+  content:"";
+  position:absolute; inset:0;
+  background: radial-gradient(600px 280px at 10% 0%, rgba(0,0,0,.18), transparent 60%),
+              linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.30));
+}
+.homeSideCard{
+  padding:12px;
+  border-radius: 16px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+}
+.homeSideCard .t{font-weight:1100}
+.homeSideCard .s{color:var(--muted); font-weight:800; font-size:13px; margin-top:6px; line-height:1.45}
+
+.homeSection{padding:16px 0}
+.homeSectionTitle{
+  font-size: 22px;
+  margin:0;
+  letter-spacing:-.35px;
+  font-weight:1100;
+}
+.homeSectionDesc{
+  color:var(--muted);
+  max-width:72ch;
+  margin:8px 0 0;
+  line-height:1.65;
+  font-weight:800;
+}
+
+.homeGrid2{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:12px;
+  margin-top:14px;
+}
+.homeItem{
+  padding:16px;
+  border-radius: var(--r);
+  background: rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.10);
+  transition: .15s ease;
+}
+.homeItem:hover{transform: translateY(-2px); border-color: rgba(255,255,255,.16)}
+.homeItem h3{margin:0 0 8px; font-size:16px}
+.homeItem p{margin:0; color:var(--muted); line-height:1.55; font-size:14px; font-weight:800}
+
+.homeTags{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+.homeTag{
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight:900;
+}
+
+/* Home mobile tweaks */
+@media (max-width: 980px){
+  .homeHeroGrid{grid-template-columns: 1fr}
+  .homeGrid2{grid-template-columns: 1fr}
+}
+    
     @media (max-width: 980px){
       .kpiGrid{grid-template-columns: 1fr 1fr}
       .dash{grid-template-columns: 1fr}
@@ -1374,22 +1509,125 @@
     // ---------------------------
     // Pages
     // ---------------------------
-    function renderHome(){
-      app.innerHTML = html`
-        <div class="card" style="padding:18px">
-          <div class="crumbs">КЛТ</div>
-          <h2 class="pageTitle">Рейтинг и посещаемость</h2>
-          <div class="muted" style="font-weight:800; line-height:1.7">
-            Фокусируемся на дашборде рейтинга. Остальные разделы временно в разработке.
-          </div>
-          <div class="divider"></div>
-          <div class="formRow">
-            <a class="btn" href="#/rating">Перейти к рейтингу</a>
+    
+   function renderHome(){
+  // Тексты и структура — по мотивам страницы Алабуга Политех про КЛТ
+  // (адаптировано под наш роутинг и кнопки)  [oai_citation:1‡polytech.alabuga.ru](https://polytech.alabuga.ru/klt?utm_uid=uid-943f47bc891&ysclid=mluiyjasc0729288217)
+
+  const heroImg =
+    "https://polytech.alabuga.ru/assets/img/klt/klt_main.jpg"; // если не загрузится — будет просто градиентный фон
+
+  app.innerHTML = html`
+    <section class="homeHero">
+      <div class="homeHeroGrid">
+        <div class="homeHeroMain">
+          <div class="homeKicker">САОК КЛТ</div>
+          <h1 class="homeTitle">Командно-лидерский турнир</h1>
+          <p class="homeLead">
+            В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса,
+            формирующая будущих профессионалов и лидеров.
+          </p>
+
+          <div class="homeCtas">
+            <a class="btn" href="#/rating">Показать результаты</a>
             <a class="btn secondary" href="https://disk.yandex.ru/d/p1wxZn33wEVVyw" target="_blank" rel="noreferrer">Распределение</a>
           </div>
         </div>
-      `;
-    }
+
+        <div class="homeHeroSide">
+          <div class="homeVisual" aria-label="КЛТ — визуальный блок">
+            <img src="${esc(heroImg)}" alt="КЛТ" loading="lazy" onerror="this.style.display='none'">
+          </div>
+
+          <div class="homeSideCard">
+            <div class="t">О программе</div>
+            <div class="s">
+              Уникальная программа реализуется только в «Алабуга Политех» и позволяет вырастить лидеров и высокотехнологичных предпринимателей.
+              Игра мотивирует, обучает распределению ролей, делегированию задач, управлению командой, ответственности за результат,
+              дисциплинирует в организации работы.
+            </div>
+          </div>
+
+          <div class="homeSideCard">
+            <div class="t">Быстрый старт</div>
+            <div class="s">
+              Откройте вкладку «Рейтинг» и введите ID (4 цифры). Если вы не знаете свой ID — обратитесь к сотруднику <b>САОК КЛТ</b>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="homeSection">
+      <h2 class="homeSectionTitle">Турниры, которые мы проводим</h2>
+      <p class="homeSectionDesc">
+        Форматы развивают лидерство, командную работу, стратегию и дисциплину — через практику и реальные решения.
+      </p>
+
+      <div class="homeGrid2">
+        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
+          <h3>Business Cats</h3>
+          <p>Бизнес-симуляция: выявляет аналитические и коммуникативные навыки и лидерские качества.</p>
+          <div class="homeTags">
+            <span class="homeTag">Аналитика</span><span class="homeTag">Коммуникация</span><span class="homeTag">Лидерство</span>
+          </div>
+        </a>
+
+        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
+          <h3>Пейнтбол</h3>
+          <p>Командная тактика и ответственность: учит нестандартно решать сложные задачи и действовать слаженно.</p>
+          <div class="homeTags">
+            <span class="homeTag">Команда</span><span class="homeTag">Тактика</span><span class="homeTag">Дисциплина</span>
+          </div>
+        </a>
+
+        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
+          <h3>Sid Meier’s Civilization</h3>
+          <p>Стратегия и управление ресурсами: развивает критическое мышление, планирование и принятие решений.</p>
+          <div class="homeTags">
+            <span class="homeTag">Стратегия</span><span class="homeTag">Планирование</span><span class="homeTag">Решения</span>
+          </div>
+        </a>
+
+        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
+          <h3>Бенди</h3>
+          <p>Командная игра: лидерство, упорство и дисциплина. Хорошо «сшивает» коллектив.</p>
+          <div class="homeTags">
+            <span class="homeTag">Слаженность</span><span class="homeTag">Тимбилдинг</span><span class="homeTag">Ритм</span>
+          </div>
+        </a>
+
+        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
+          <h3>Life is Feudal</h3>
+          <p>Командная экономика и роли: переговоры, риск-менеджмент, управление ресурсами.</p>
+          <div class="homeTags">
+            <span class="homeTag">Роли</span><span class="homeTag">Ресурсы</span><span class="homeTag">Стратегия</span>
+          </div>
+        </a>
+
+        <div class="homeItem">
+          <h3>Дальше — больше</h3>
+          <p>Секции «О КЛТ», «Турниры», «База знаний» мы доделаем позже. Сейчас фокус — на рейтинге и аналитике.</p>
+          <div class="homeTags">
+            <span class="homeTag">Фокус</span><span class="homeTag">Дашборд</span><span class="homeTag">Метрики</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="card" style="padding:18px; margin-top:12px">
+      <div class="crumbs">КЛТ</div>
+      <h2 class="pageTitle" style="margin-top:8px">Готовы посмотреть результаты?</h2>
+      <div class="muted" style="font-weight:800; line-height:1.7">
+        Перейдите в «Рейтинг» и введите ID — увидите очки, прогресс, посещаемость и начисления.
+      </div>
+      <div class="divider"></div>
+      <div class="formRow">
+        <a class="btn" href="#/rating">Открыть рейтинг</a>
+      </div>
+    </div>
+  `;
+}
 
     function renderWIP(page){
       const title =
