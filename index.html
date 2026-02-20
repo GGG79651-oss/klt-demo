@@ -386,6 +386,196 @@
     @media (max-width: 520px){
       .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
+      /* ---------------------------
+   HOME (light blocks like example)
+--------------------------- */
+.homeWrap{max-width:var(--max); margin:0 auto; padding:24px;}
+.homeSection{margin-top:18px;}
+.homeCard{
+  background: rgba(255,255,255,.92);
+  color:#0b1020;
+  border-radius: 28px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.homeHero{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap:18px;
+  padding:22px;
+  overflow:hidden;
+}
+.homeHero h1{
+  margin:10px 0 10px;
+  font-size: clamp(26px, 3.6vw, 44px);
+  line-height:1.05;
+  letter-spacing:-.6px;
+}
+.homeHero .sub{
+  color: rgba(11,16,32,.75);
+  font-weight:800;
+  line-height:1.7;
+  max-width: 62ch;
+}
+.homeHero .cta{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;}
+.homeBtn{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:10px; padding:12px 16px;
+  border-radius: 999px;
+  background: #1f5cff;
+  color:#fff;
+  font-weight:1000;
+  border: 1px solid rgba(0,0,0,.08);
+  cursor:pointer;
+}
+.homeBtn.secondary{
+  background: transparent;
+  color:#0b1020;
+  border:1px solid rgba(11,16,32,.18);
+}
+.homeHeroMedia{
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(31,92,255,.12), rgba(33,212,255,.10));
+  border: 1px solid rgba(11,16,32,.10);
+  overflow:hidden;
+  min-height: 260px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.homeHeroMedia iframe{
+  width:100%;
+  height:100%;
+  min-height:260px;
+  border:0;
+  display:block;
+  background: rgba(0,0,0,.05);
+}
+.homeHeroBadge{
+  position:absolute;
+  top:14px; left:14px;
+  padding:8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  border:1px solid rgba(11,16,32,.12);
+  color:#0b1020;
+  font-weight:1000;
+  font-size:12px;
+}
+
+/* Tournaments block */
+.homeTitle{
+  color: rgba(255,255,255,.95);
+  font-weight:1100;
+  font-size: clamp(24px, 3vw, 40px);
+  letter-spacing:-.5px;
+  margin:22px 0 12px;
+}
+.homeSubtitle{
+  color: rgba(169,180,214,.95);
+  font-weight:800;
+  margin:0 0 12px;
+  line-height:1.6;
+  max-width: 72ch;
+}
+.tourCard{
+  padding:20px;
+}
+.tourGrid{
+  display:grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap:18px;
+  align-items:stretch;
+}
+.tourTabs{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+.tabBtn{
+  padding:10px 14px;
+  border-radius: 999px;
+  border:1px solid rgba(11,16,32,.18);
+  background:#fff;
+  color:#0b1020;
+  font-weight:1000;
+  cursor:pointer;
+}
+.tabBtn.active{
+  background:#1f5cff;
+  border-color:#1f5cff;
+  color:#fff;
+}
+.tourText p{
+  margin:10px 0 0;
+  color: rgba(11,16,32,.75);
+  font-weight:800;
+  line-height:1.7;
+}
+.tourMedia{
+  border-radius: 22px;
+  border:1px solid rgba(11,16,32,.10);
+  overflow:hidden;
+  background: linear-gradient(135deg, rgba(31,92,255,.10), rgba(33,212,255,.08));
+  min-height: 320px;
+  position:relative;
+}
+.tourMedia img{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+  filter: saturate(1.05);
+}
+.tourMedia .play{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.tourMedia .play .circle{
+  width:76px; height:76px;
+  border-radius:999px;
+  background: rgba(255,255,255,.86);
+  border:1px solid rgba(11,16,32,.12);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:1000;
+  color:#0b1020;
+  box-shadow: 0 18px 45px rgba(0,0,0,.18);
+}
+
+/* Skills cards */
+.skillsGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:14px;
+}
+.skillCard{
+  padding:18px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.92);
+  border:1px solid rgba(255,255,255,.18);
+  color:#0b1020;
+  box-shadow: 0 18px 60px rgba(0,0,0,.22);
+}
+.skillCard h3{
+  margin:0;
+  font-size: 20px;
+  letter-spacing:-.3px;
+}
+.skillCard p{
+  margin:10px 0 0;
+  color: rgba(11,16,32,.75);
+  font-weight:800;
+  line-height:1.65;
+}
+
+/* Mobile */
+@media (max-width: 980px){
+  .homeHero{grid-template-columns:1fr;}
+  .tourGrid{grid-template-columns:1fr;}
+  .skillsGrid{grid-template-columns:1fr;}
+  .homeWrap{padding:16px;}
+}
     }
   </style>
 </head>
@@ -1510,123 +1700,193 @@
     // Pages
     // ---------------------------
     
-   function renderHome(){
-  // Тексты и структура — по мотивам страницы Алабуга Политех про КЛТ
-  // (адаптировано под наш роутинг и кнопки)  [oai_citation:1‡polytech.alabuga.ru](https://polytech.alabuga.ru/klt?utm_uid=uid-943f47bc891&ysclid=mluiyjasc0729288217)
+  function renderHome(){
+  // Можно поставить ваше видео/постер. Если нет своих картинок — оставляем градиент/заглушку.
+  const HERO_VIDEO = "https://yandex.ru/video/preview/669671511627713429";
 
-  const heroImg =
-    "https://polytech.alabuga.ru/assets/img/klt/klt_main.jpg"; // если не загрузится — будет просто градиентный фон
+  const TOURS = [
+    {
+      key:"bc",
+      title:"Business Cats",
+      desc:[
+        "Бизнес-симуляция развивает аналитику, коммуникации и лидерские решения.",
+        "Вы учитесь управлять ресурсами, договариваться в команде и отвечать за результат."
+      ],
+      // Поставьте свою картинку (в репозиторий рядом с index.html), например ./img/business-cats.jpg
+      img:"./img/business-cats.jpg",
+      tags:["Бизнес","Аналитика","Команда"]
+    },
+    {
+      key:"pb",
+      title:"Пейнтбол",
+      desc:[
+        "Командная игра на координацию, дисциплину и ответственность.",
+        "Здесь важны коммуникация, тактика и роль в команде."
+      ],
+      img:"./img/paintball.jpg",
+      tags:["Тактика","Команда","Стресс"]
+    },
+    {
+      key:"civ",
+      title:"Sid Meier’s Civilization",
+      desc:[
+        "Стратегия и долгий план: экономика, приоритеты и адаптация.",
+        "Форматы Solo / Duel тренируют мышление и решения под давлением."
+      ],
+      img:"./img/civ.jpg",
+      tags:["Стратегия","Планирование","Адаптация"]
+    },
+    {
+      key:"bandy",
+      title:"Бенди",
+      desc:[
+        "Командный спорт: взаимодействие, дисциплина, общий результат.",
+        "Помогает прокачать командную игру и устойчивость."
+      ],
+      img:"./img/bandy.jpg",
+      tags:["Команда","Дисциплина","Слаженность"]
+    },
+    {
+      key:"feudal",
+      title:"Life is Feudal",
+      desc:[
+        "Командная стратегия: роли, экономика, управление ресурсами.",
+        "Учит распределять ответственность и синхронизировать действия."
+      ],
+      img:"./img/feudal.jpg",
+      tags:["Роли","Экономика","Команда"]
+    },
+  ];
+
+  const SKILLS = [
+    { title:"Лидерские качества", text:"КЛТ формирует привычку брать ответственность, вести за собой и принимать решения в условиях неопределённости." },
+    { title:"Управленческие навыки", text:"Турниры помогают прокачать управление командой: цели, роли, коммуникация, контроль результата и разбор." },
+    { title:"Упорство и дисциплина", text:"Регулярность, следование правилам и стабильный вклад в команду дают рост — и в игре, и в учебе/работе." },
+    { title:"Аналитическое мышление", text:"Вы учитесь видеть закономерности, оценивать риски и выбирать стратегию в ограниченное время." },
+    { title:"Тимбилдинг", text:"КЛТ усиливает командный дух: взаимодействие, поддержка и движение к общему результату." },
+    { title:"Коммуникативные компетенции", text:"Коротко и ясно доносить мысль, слушать, договариваться и быстро синхронизироваться — ключ к победе." },
+  ];
 
   app.innerHTML = html`
-    <section class="homeHero">
-      <div class="homeHeroGrid">
-        <div class="homeHeroMain">
-          <div class="homeKicker">САОК КЛТ</div>
-          <h1 class="homeTitle">Командно-лидерский турнир</h1>
-          <p class="homeLead">
-            В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса,
-            формирующая будущих профессионалов и лидеров.
-          </p>
-
-          <div class="homeCtas">
-            <a class="btn" href="#/rating">Показать результаты</a>
-            <a class="btn secondary" href="https://disk.yandex.ru/d/p1wxZn33wEVVyw" target="_blank" rel="noreferrer">Распределение</a>
+    <div class="homeWrap">
+      <div class="homeCard homeHero">
+        <div>
+          <div style="font-weight:1000; letter-spacing:.18px; color:rgba(11,16,32,.70); text-transform:uppercase; font-size:12px;">
+            САОК КЛТ
+          </div>
+          <h1>Командно-лидерский турнир</h1>
+          <div class="sub">
+            Внутри — командные и индивидуальные этапы, которые развивают лидерство, дисциплину, аналитику и коммуникацию.
+            Здесь можно посмотреть прогресс и результаты по вашему ID.
+          </div>
+          <div class="cta">
+            <a class="homeBtn" href="#/rating">Открыть рейтинг</a>
+            <a class="homeBtn secondary" href="https://disk.yandex.ru/d/p1wxZn33wEVVyw" target="_blank" rel="noreferrer">Распределение</a>
+          </div>
+          <div style="margin-top:10px; color:rgba(11,16,32,.60); font-weight:900; font-size:12px;">
+            Если вы не знаете свой ID — обратитесь к сотруднику САОК КЛТ.
           </div>
         </div>
 
-        <div class="homeHeroSide">
-          <div class="homeVisual" aria-label="КЛТ — визуальный блок">
-            <img src="${esc(heroImg)}" alt="КЛТ" loading="lazy" onerror="this.style.display='none'">
-          </div>
+        <div class="homeHeroMedia" aria-label="Видео КЛТ">
+          <div class="homeHeroBadge">Видео о КЛТ</div>
+          <iframe
+            src="${esc(HERO_VIDEO)}"
+            title="Видео КЛТ"
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowfullscreen
+            referrerpolicy="no-referrer"
+          ></iframe>
+        </div>
+      </div>
 
-          <div class="homeSideCard">
-            <div class="t">О программе</div>
-            <div class="s">
-              Уникальная программа реализуется только в «Алабуга Политех» и позволяет вырастить лидеров и высокотехнологичных предпринимателей.
-              Игра мотивирует, обучает распределению ролей, делегированию задач, управлению командой, ответственности за результат,
-              дисциплинирует в организации работы.
+      <div class="homeSection">
+        <div class="homeTitle">Турниры, которые мы проводим</div>
+        <div class="homeSubtitle">
+          Каждый этап прокачивает отдельные навыки: от лидерства и коммуникаций до стратегии и командной координации.
+        </div>
+
+        <div class="homeCard tourCard">
+          <div class="tourGrid">
+            <div class="tourText">
+              <div style="font-weight:1200; font-size:42px; letter-spacing:-.6px; margin-top:4px;" id="tourTitle">${esc(TOURS[0].title)}</div>
+              <div id="tourDesc">
+                ${TOURS[0].desc.map(p=>`<p>${esc(p)}</p>`).join("")}
+              </div>
+
+              <div class="tourTabs" id="tourTabs">
+                ${TOURS.map((t,i)=>`
+                  <button class="tabBtn ${i===0?"active":""}" type="button" data-tour="${esc(t.key)}">${esc(t.title)}</button>
+                `).join("")}
+              </div>
+
+              <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;" id="tourTags">
+                ${TOURS[0].tags.map(x=>`<span class="badge b-ok" style="border-color:rgba(31,92,255,.22); background:rgba(31,92,255,.06); color:#0b1020">${esc(x)}</span>`).join("")}
+              </div>
+            </div>
+
+            <div class="tourMedia" aria-label="Медиа турнира">
+              <img id="tourImg" src="${esc(TOURS[0].img)}" alt="${esc(TOURS[0].title)}"
+                   onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, rgba(31,92,255,.16), rgba(33,212,255,.10))';" />
+              <div class="play" aria-hidden="true">
+                <div class="circle">▶</div>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="homeSideCard">
-            <div class="t">Быстрый старт</div>
-            <div class="s">
-              Откройте вкладку «Рейтинг» и введите ID (4 цифры). Если вы не знаете свой ID — обратитесь к сотруднику <b>САОК КЛТ</b>.
+      <div class="homeSection">
+        <div class="homeTitle">Какие навыки развивает КЛТ</div>
+        <div class="homeSubtitle">
+          Командно-лидерские турниры — это практический способ развивать компетенции через действие и результат.
+        </div>
+
+        <div class="skillsGrid">
+          ${SKILLS.map(s=>html`
+            <div class="skillCard">
+              <h3>${esc(s.title)}</h3>
+              <p>${esc(s.text)}</p>
             </div>
-          </div>
+          `).join("")}
         </div>
       </div>
-    </section>
 
-    <section class="homeSection">
-      <h2 class="homeSectionTitle">Турниры, которые мы проводим</h2>
-      <p class="homeSectionDesc">
-        Форматы развивают лидерство, командную работу, стратегию и дисциплину — через практику и реальные решения.
-      </p>
-
-      <div class="homeGrid2">
-        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
-          <h3>Business Cats</h3>
-          <p>Бизнес-симуляция: выявляет аналитические и коммуникативные навыки и лидерские качества.</p>
-          <div class="homeTags">
-            <span class="homeTag">Аналитика</span><span class="homeTag">Коммуникация</span><span class="homeTag">Лидерство</span>
-          </div>
-        </a>
-
-        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
-          <h3>Пейнтбол</h3>
-          <p>Командная тактика и ответственность: учит нестандартно решать сложные задачи и действовать слаженно.</p>
-          <div class="homeTags">
-            <span class="homeTag">Команда</span><span class="homeTag">Тактика</span><span class="homeTag">Дисциплина</span>
-          </div>
-        </a>
-
-        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
-          <h3>Sid Meier’s Civilization</h3>
-          <p>Стратегия и управление ресурсами: развивает критическое мышление, планирование и принятие решений.</p>
-          <div class="homeTags">
-            <span class="homeTag">Стратегия</span><span class="homeTag">Планирование</span><span class="homeTag">Решения</span>
-          </div>
-        </a>
-
-        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
-          <h3>Бенди</h3>
-          <p>Командная игра: лидерство, упорство и дисциплина. Хорошо «сшивает» коллектив.</p>
-          <div class="homeTags">
-            <span class="homeTag">Слаженность</span><span class="homeTag">Тимбилдинг</span><span class="homeTag">Ритм</span>
-          </div>
-        </a>
-
-        <a class="homeItem" href="#/rating" aria-label="Открыть рейтинг">
-          <h3>Life is Feudal</h3>
-          <p>Командная экономика и роли: переговоры, риск-менеджмент, управление ресурсами.</p>
-          <div class="homeTags">
-            <span class="homeTag">Роли</span><span class="homeTag">Ресурсы</span><span class="homeTag">Стратегия</span>
-          </div>
-        </a>
-
-        <div class="homeItem">
-          <h3>Дальше — больше</h3>
-          <p>Секции «О КЛТ», «Турниры», «База знаний» мы доделаем позже. Сейчас фокус — на рейтинге и аналитике.</p>
-          <div class="homeTags">
-            <span class="homeTag">Фокус</span><span class="homeTag">Дашборд</span><span class="homeTag">Метрики</span>
-          </div>
+      <div class="homeSection" style="margin-top:18px">
+        <div class="supportWrap" style="border-top:0; padding:0">
+          <div class="small">© ${new Date().getFullYear()} · КЛТ.demo</div>
+          <a class="homeBtn secondary" href="#/rating">Перейти к рейтингу</a>
         </div>
-      </div>
-    </section>
-
-    <div class="card" style="padding:18px; margin-top:12px">
-      <div class="crumbs">КЛТ</div>
-      <h2 class="pageTitle" style="margin-top:8px">Готовы посмотреть результаты?</h2>
-      <div class="muted" style="font-weight:800; line-height:1.7">
-        Перейдите в «Рейтинг» и введите ID — увидите очки, прогресс, посещаемость и начисления.
-      </div>
-      <div class="divider"></div>
-      <div class="formRow">
-        <a class="btn" href="#/rating">Открыть рейтинг</a>
       </div>
     </div>
   `;
+
+  // Tabs logic (no framework)
+  const tabs = document.getElementById("tourTabs");
+  const titleEl = document.getElementById("tourTitle");
+  const descEl = document.getElementById("tourDesc");
+  const imgEl = document.getElementById("tourImg");
+  const tagsEl = document.getElementById("tourTags");
+
+  function setActive(key){
+    const t = TOURS.find(x=>x.key===key) || TOURS[0];
+    titleEl.textContent = t.title;
+    descEl.innerHTML = t.desc.map(p=>`<p>${esc(p)}</p>`).join("");
+    imgEl.style.display = "";
+    imgEl.src = t.img;
+    imgEl.alt = t.title;
+    tagsEl.innerHTML = t.tags.map(x=>`<span class="badge b-ok" style="border-color:rgba(31,92,255,.22); background:rgba(31,92,255,.06); color:#0b1020">${esc(x)}</span>`).join("");
+
+    tabs.querySelectorAll(".tabBtn").forEach(b=>{
+      b.classList.toggle("active", b.getAttribute("data-tour")===key);
+    });
+  }
+
+  tabs?.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".tabBtn");
+    if (!btn) return;
+    setActive(btn.getAttribute("data-tour"));
+  });
 }
 
     function renderWIP(page){
