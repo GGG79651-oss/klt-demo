@@ -243,7 +243,150 @@
       text-decoration: underline;
       text-underline-offset: 3px;
     }
+/* ---------------------------
+   HOME (landing blocks)
+--------------------------- */
+.homeHero{
+  padding: 10px 0 6px;
+}
+.homeHeroGrid{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap:12px;
+  align-items:stretch;
+}
+.homeHeroCard{
+  padding:22px;
+}
+.homeKicker{
+  color:var(--muted);
+  font-weight:1000;
+  letter-spacing:.22px;
+  text-transform:uppercase;
+  font-size:12px;
+}
+.homeH1{
+  margin:12px 0 10px;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height:1.05;
+  letter-spacing:-.6px;
+}
+.homeLead{
+  color:var(--muted);
+  font-weight:800;
+  line-height:1.75;
+  margin:0;
+  max-width: 74ch;
+}
+.homeCtas{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+.homeAside{
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.homeAsideBox{
+  padding:14px;
+  border-radius: 18px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.02);
+}
+.homeAsideTitle{font-weight:1100; margin:0;}
+.homeAsideText{margin-top:8px; color:var(--muted); font-weight:800; line-height:1.65;}
+.homeAsideMini{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.homeMini{
+  padding:12px;
+  border-radius: 16px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.02);
+}
+.homeMini .k{color:var(--muted); font-weight:1000; font-size:12px;}
+.homeMini .v{margin-top:6px; font-weight:1000; line-height:1.55; color: rgba(234,240,255,.92);}
 
+.homeSection{margin-top:14px;}
+.homeSectionHead{padding:8px 2px 12px;}
+.homeSectionTitle{margin:0; font-size:22px; letter-spacing:-.35px; font-weight:1100;}
+.homeSectionDesc{margin-top:6px; color:var(--muted); font-weight:800; line-height:1.6; max-width: 86ch;}
+
+.homeTabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.homeTab{
+  padding:10px 12px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.02);
+  color: var(--muted);
+  font-weight:1000;
+  cursor:pointer;
+  transition:.15s ease;
+  user-select:none;
+}
+.homeTab:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.22); color: var(--text);}
+.homeTab.active{
+  border-color: rgba(124,92,255,.55);
+  background: rgba(124,92,255,.14);
+  color: var(--text);
+}
+
+.homeTourCard{padding:16px;}
+.homeTourGrid{
+  display:grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap:12px;
+  align-items:stretch;
+}
+.homeTourTitle{
+  font-weight:1200;
+  font-size:28px;
+  letter-spacing:-.45px;
+  margin:0;
+}
+.homeTourText{
+  margin-top:10px;
+  color:var(--muted);
+  font-weight:800;
+  line-height:1.75;
+}
+.homeTourList{
+  margin-top:12px;
+  display:grid;
+  gap:10px;
+}
+.homeTourPoint{
+  padding:12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.02);
+}
+.homeTourPoint .t{font-weight:1100;}
+.homeTourPoint .d{margin-top:6px; color:var(--muted); font-weight:800; line-height:1.6;}
+
+.homeSkills{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+.homeSkill{padding:16px;}
+.homeSkillTitle{font-weight:1100; font-size:18px; letter-spacing:-.2px;}
+.homeSkillText{margin-top:8px; color:var(--muted); font-weight:800; line-height:1.65;}
+
+@media (max-width: 980px){
+  .homeHeroGrid{grid-template-columns: 1fr;}
+  .homeAsideMini{grid-template-columns: 1fr;}
+  .homeTourGrid{grid-template-columns: 1fr;}
+  .homeSkills{grid-template-columns: 1fr;}
+}
+    
     @media (max-width: 980px){
       .kpiGrid{grid-template-columns: 1fr 1fr}
       .dash{grid-template-columns: 1fr}
@@ -1376,21 +1519,229 @@
     // Pages
     // ---------------------------
     function renderHome(){
-      app.innerHTML = html`
-        <div class="card" style="padding:18px">
-          <div class="crumbs">КЛТ</div>
-          <h2 class="pageTitle">Рейтинг и посещаемость</h2>
-          <div class="muted" style="font-weight:800; line-height:1.7">
-            Фокусируемся на дашборде рейтинга. Остальные разделы временно в разработке.
-          </div>
-          <div class="divider"></div>
-          <div class="formRow">
-            <a class="btn" href="#/rating">Перейти к рейтингу</a>
+  // Тексты по странице-референсу (адаптировано под наш сайт/кнопки)  [oai_citation:1‡Алабуга Политех](https://polytech.alabuga.ru/klt)
+  const TOURS = [
+    {
+      key:"bc",
+      title:"Business Cats",
+      about:"Бизнес-симуляция, разработанная управляющей компанией «Алабуга», выявляет аналитические и коммуникативные навыки и лидерские качества, важные для работы в компании мирового уровня.",
+      extra:[
+        { t:"Формат", d:"Создайте бизнес с нуля: от первых решений до устойчивой стратегии." },
+        { t:"Что прокачивает", d:"Финансы, коммуникацию, распределение ролей, ответственность за результат." }
+      ],
+      note1:"Участникам предстоит создать бизнес с нуля, начиная с нескольких котят, управляя финансами и выстраивая стратегию.",
+      note2:"Успешная игра повышает шансы на поступление на желаемое направление."
+    },
+    {
+      key:"pb",
+      title:"Пейнтбол",
+      about:"«Алабуга Политех» проводит крупнейший в России военно-патриотический турнир по пейнтболу, где участники учатся нестандартно решать сложные задачи.",
+      extra:[
+        { t:"Формат", d:"Командные бои, где важны тактика и слаженность." },
+        { t:"Что прокачивает", d:"Управление командой, дисциплину и ответственность." }
+      ],
+      note1:"Игра в пейнтбол позволяет получить опыт управления командой и воспитывает ответственность.",
+      note2:"Побеждает команда, которая сохраняет план и коммуникацию под давлением."
+    },
+    {
+      key:"civ",
+      title:"Sid Meyers Civilization",
+      about:"Пошаговая стратегия, где игроки становятся лидерами стран, стремящихся к независимости и мировому влиянию.",
+      extra:[
+        { t:"Формат", d:"Стратегия и долгий план: экономика, технологии, развитие." },
+        { t:"Что прокачивает", d:"Критическое мышление, решения в ограниченное время, управление ресурсами." }
+      ],
+      note1:"Игра развивает аналитические и коммуникативные навыки, умение принимать решения и критически мыслить.",
+      note2:"Сильный результат строится на приоритетах и дисциплине исполнения."
+    },
+    {
+      key:"bandy",
+      title:"Бенди",
+      about:"Корпоративный хоккей на траве, в отличие от классического, не требует сложного оборудования и большой игровой площадки.",
+      extra:[
+        { t:"Формат", d:"Командная игра с высоким темпом и быстрыми решениями." },
+        { t:"Что прокачивает", d:"Лидерство, упорство и дисциплину." }
+      ],
+      note1:"Игра развивает работу в команде, лидерство, упорство и дисциплину.",
+      note2:"Спортивная нагрузка помогает разгрузиться и снять эмоциональное напряжение."
+    },
+    {
+      key:"trucks",
+      title:"Alabuga «Trucks»",
+      about:"Экономическая стратегия обучает производственному циклу и рыночным отношениям, развивая навыки переговоров и управление ресурсами.",
+      extra:[
+        { t:"Формат", d:"Три роли: производство, банк и транспортная компания." },
+        { t:"Цель", d:"Получить максимальную прибыль через координацию ролей." }
+      ],
+      note1:"В игре есть три роли: производство, банк и транспортная компания.",
+      note2:"Цель — получить максимальную прибыль."
+    },
+    {
+      key:"feudal",
+      title:"Life is Feudal",
+      about:"Популярная онлайн-игра переносит игроков в средневековье, где они могут развивать собственное общество.",
+      extra:[
+        { t:"Формат", d:"Командная стратегия с ролями, ресурсами и целями." },
+        { t:"Что прокачивает", d:"Процессы, ответственность, вклад в командную победу." }
+      ],
+      note1:"Студенты, развивая экономику, крепости и вооружение, учатся выстраивать эффективные процессы.",
+      note2:"И вносить вклад в командную победу."
+    },
+  ];
+
+  const SKILLS = [
+    { title:"Лидерские качества", text:"КЛТ формируют уверенных лидеров, учат брать на себя ответственность, мотивировать команду, принимать решения и вести за собой." },
+    { title:"Управленческие навыки", text:"Турниры развивают управленческие компетенции, обучая управлению командой, адаптации и достижению целей." },
+    { title:"Упорство и дисциплина", text:"Участники учатся последовательно выполнять план действий, соблюдать правила и действовать слаженно, не сдаваясь при возникновении трудностей." },
+    { title:"Аналитическое мышление", text:"Участники, анализируя, оценивая и разрабатывая стратегии, учатся принимать решения в ограниченное время — это развивает логику, адаптивность и аналитические навыки." },
+    { title:"Тимбилдинг", text:"КЛТ развивает тимбилдинг и командный дух, делая акцент на взаимодействие, сотрудничество и достижение общего результата." },
+    { title:"Коммуникативные компетенции", text:"Участникам важно чётко доносить идеи, слушать мнения других и договариваться для достижения общей цели — это развивает коммуникацию." },
+  ];
+
+  app.innerHTML = html`
+    <section class="homeHero">
+      <div class="homeHeroGrid">
+
+        <div class="card homeHeroCard">
+          <div class="homeKicker">САОК КЛТ</div>
+          <div class="homeH1">Командно-лидерский турнир</div>
+          <p class="homeLead">
+            В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса,
+            формирующая будущих профессионалов и лидеров.
+          </p>
+
+          <div class="homeCtas">
+            <a class="btn" href="#/rating">Открыть рейтинг</a>
             <a class="btn secondary" href="https://disk.yandex.ru/d/p1wxZn33wEVVyw" target="_blank" rel="noreferrer">Распределение</a>
           </div>
+
+          <div class="divider"></div>
+
+          <div class="homeSectionTitle" style="font-size:18px; margin:0">Командно-лидерский турнир</div>
+          <div class="homeSectionDesc" style="margin-top:8px">
+            Уникальная программа реализуется только в «Алабуга Политех» и позволяет вырастить лидеров и высокотехнологичных предпринимателей.
+            Игра мотивирует, обучает распределению ролей, делегированию задач, управлению командой, ответственности за результат,
+            дисциплинирует в организации работы.
+          </div>
         </div>
-      `;
-    }
+
+        <div class="card homeAside">
+          <div class="homeAsideBox">
+            <h3 class="homeAsideTitle">Как посмотреть результаты</h3>
+            <div class="homeAsideText">
+              Перейдите в «Рейтинг» и введите ваш ID (4 цифры).
+              Если вы не знаете свой ID — обратитесь к сотруднику <b>САОК КЛТ</b>.
+            </div>
+
+            <div class="homeAsideMini">
+              <div class="homeMini">
+                <div class="k">Быстрый доступ</div>
+                <div class="v">Кнопка «Показать результаты» вверху сайта</div>
+              </div>
+              <div class="homeMini">
+                <div class="k">Секретная команда</div>
+                <div class="v">Введите <b>9999</b> — топ лучших обучающихся</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="homeAsideBox">
+            <h3 class="homeAsideTitle">Важно</h3>
+            <div class="homeAsideText">
+              Дашборд и баллы в нашем прототипе ведутся для аналитики и прозрачности прогресса.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="homeSection">
+      <div class="homeSectionHead">
+        <h2 class="homeSectionTitle">Турниры, которые мы проводим</h2>
+      </div>
+
+      <div class="homeTabs" id="homeTabs" role="tablist" aria-label="Турниры">
+        ${TOURS.map((t,i)=>`
+          <button class="homeTab ${i===0?"active":""}" type="button" data-key="${esc(t.key)}" role="tab" aria-selected="${i===0?"true":"false"}">
+            ${esc(t.title)}
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="card homeTourCard" id="homeTour"></div>
+    </section>
+
+    <section class="homeSection">
+      <div class="homeSectionHead">
+        <h2 class="homeSectionTitle">Какие навыки развивает КЛТ</h2>
+        <div class="homeSectionDesc">
+          Командно-лидерские турниры — это эффективный способ сплочения коллектива и раскрытия лидерского потенциала.
+        </div>
+      </div>
+
+      <div class="homeSkills">
+        ${SKILLS.map(s=>html`
+          <div class="card homeSkill">
+            <div class="homeSkillTitle">${esc(s.title)}</div>
+            <div class="homeSkillText">${esc(s.text)}</div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+
+  const tabs = document.getElementById("homeTabs");
+  const tourBox = document.getElementById("homeTour");
+
+  function renderTour(key){
+    const t = TOURS.find(x=>x.key===key) || TOURS[0];
+
+    tourBox.innerHTML = html`
+      <div class="homeTourGrid">
+        <div>
+          <h3 class="homeTourTitle">${esc(t.title)}</h3>
+          <div class="homeTourText">${esc(t.about)}</div>
+
+          <div class="homeTourText" style="margin-top:10px">${esc(t.note1)}</div>
+          <div class="homeTourText" style="margin-top:6px">${esc(t.note2)}</div>
+        </div>
+
+        <div class="homeTourList">
+          ${t.extra.map(x=>html`
+            <div class="homeTourPoint">
+              <div class="t">${esc(x.t)}</div>
+              <div class="d">${esc(x.d)}</div>
+            </div>
+          `).join("")}
+
+          <div class="homeTourPoint">
+            <div class="t">Смотреть в рейтинге</div>
+            <div class="d">Откройте вкладку «Рейтинг» и введите ID — увидите прогресс, посещаемость и начисление баллов.</div>
+            <div style="margin-top:10px">
+              <a class="btn" href="#/rating">Перейти к рейтингу</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderTour(TOURS[0].key);
+
+  tabs?.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".homeTab");
+    if (!btn) return;
+    const key = btn.getAttribute("data-key");
+
+    tabs.querySelectorAll(".homeTab").forEach(b=>{
+      b.classList.toggle("active", b === btn);
+      b.setAttribute("aria-selected", b === btn ? "true" : "false");
+    });
+
+    renderTour(key);
+  });
+}
 
     function renderWIP(page){
       const title =
