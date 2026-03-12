@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ru">
 <head>
@@ -51,20 +50,6 @@
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       box-shadow: 0 10px 25px rgba(124,92,255,.25);
     }
-    .menu{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-    .pill{
-      padding:10px 12px; border:1px solid var(--border);
-      border-radius:999px; color:var(--muted);
-      background: rgba(255,255,255,.03);
-      font-weight:800; font-size:14px;
-      transition: .15s ease;
-    }
-    .pill:hover{transform: translateY(-1px); color:var(--text); border-color: rgba(255,255,255,.18)}
-    .pill.active{
-      color:var(--text);
-      border-color: rgba(124,92,255,.55);
-      background: rgba(124,92,255,.14);
-    }
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       gap:10px; padding:12px 16px;
@@ -77,6 +62,7 @@
       transition:.15s ease;
       cursor:pointer;
       user-select:none;
+      white-space: nowrap;
     }
     .btn:hover{transform: translateY(-1px)}
     .btn.secondary{
@@ -206,11 +192,6 @@
     .b-warn{border-color: rgba(246,195,67,.35)}
     .b-bad{border-color: rgba(255,77,109,.35)}
 
-    .wip{padding:28px; text-align:center;}
-    .wip .icon{font-size:38px; margin-bottom:10px}
-    .wip .title{font-weight:1100; font-size:22px}
-    .wip .desc{color:var(--muted); margin-top:6px; font-weight:800}
-
     .supportWrap{
       margin-top:14px;
       padding:14px 0 8px;
@@ -244,61 +225,137 @@
       text-underline-offset: 3px;
     }
 
+    /* ----- Slides inside results page ----- */
+    .resultsHeader{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:12px;
+      margin-top:12px;
+      align-items:stretch;
+    }
+    .slidesCard{padding:14px; display:flex; flex-direction:column; gap:10px;}
+    .heroSlider{
+      border-radius: 22px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      overflow:hidden;
+      position:relative;
+      min-height: 300px;
+    }
+    .heroSlide{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transition: opacity .6s ease;
+    }
+    .heroSlide.active{opacity:1;}
+    .heroSlide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      filter:saturate(1.05);
+      opacity:.92;
+    }
+    .heroSlider::after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 260px at 20% 0%, rgba(124,92,255,.22), transparent 55%),
+        radial-gradient(700px 240px at 85% 20%, rgba(33,212,255,.14), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.42));
+      pointer-events:none;
+    }
+    .heroOverlay{
+      position:absolute;
+      left:14px; right:14px; bottom:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      z-index:2;
+    }
+    .heroCaption{
+      padding:10px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(7,10,20,.55);
+      color: rgba(234,240,255,.92);
+      font-weight:900;
+      line-height:1.35;
+    }
+    .heroDots{display:flex; gap:8px; align-items:center;}
+    .heroDot{
+      width:9px; height:9px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.35);
+      background: rgba(255,255,255,.10);
+      cursor:pointer;
+    }
+    .heroDot.active{
+      background: rgba(255,255,255,.85);
+      border-color: rgba(255,255,255,.85);
+    }
+    .slidesMiniRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .slidesMini{
+      padding:12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+    }
+    .slidesMini .k{color:var(--muted); font-weight:1000; font-size:12px;}
+    .slidesMini .v{margin-top:6px; font-weight:1000; line-height:1.55; color: rgba(234,240,255,.92);}
+
     @media (max-width: 980px){
       .kpiGrid{grid-template-columns: 1fr 1fr}
       .dash{grid-template-columns: 1fr}
       .chartRow{grid-template-columns: 1fr; grid-template-rows: auto;}
+      .resultsHeader{grid-template-columns: 1fr;}
     }
     @media (max-width: 520px){
-      .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
+      input[type="text"]{ min-width: 0; width: 100%; }
+      .formRow .btn{ width: 100%; }
+      .heroSlider{min-height:240px;}
+      .slidesMiniRow{grid-template-columns:1fr;}
     }
 
+    /* Mobile chart hard-fix */
     @media (max-width: 700px){
-  .chartRow{
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto !important;
-  }
-  .chartCard{
-    grid-column: auto !important;
-    grid-row: auto !important;
-  }
-
+      .chartRow{
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto !important;
+      }
+      .chartCard{
+        grid-column: auto !important;
+        grid-row: auto !important;
+      }
       .chartTitle{
-  white-space: normal;
-  word-break: break-word;
-}
-
+        white-space: normal;
+        word-break: break-word;
+      }
       canvas{ max-width:100%; height:220px; display:block; }
+      .table{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .table th, .table td{ white-space: nowrap; }
+    }
 
-.table{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.table th, .table td{ white-space: nowrap; }
-      
-}
-
-    /* --- Mobile layout hard-fix (prevents “vertical letters”/overlap) --- */
-.card, .chartCard, .kpi, .notice { min-width: 0; }
-.dash, .chartRow, .kpiGrid { min-width: 0; }
-    
+    /* prevents “vertical letters”/overlap */
+    .card, .chartCard, .kpi, .notice { min-width: 0; }
+    .dash, .chartRow, .kpiGrid { min-width: 0; }
   </style>
 </head>
 <body>
   <div class="topbar">
     <div class="nav">
-      <a class="brand" href="#/">
+      <a class="brand" href="#/rating" aria-label="КЛТ Рейтинг">
         <div class="logo" aria-hidden="true"></div>
-        <div>КЛТ<span class="muted">.demo</span></div>
+        <div>КЛТ <span class="muted">Рейтинг</span></div>
       </a>
 
-      <div class="menu" role="navigation" aria-label="Навигация">
-        <a class="pill" data-link href="#/">Главная</a>
-        <a class="pill" data-link href="#/about">О КЛТ</a>
-        <a class="pill" data-link href="#/tournaments">Турниры</a>
-        <a class="pill" data-link href="#/kb">База знаний</a>
-        <a class="pill" href="https://disk.yandex.ru/d/p1wxZn33wEVVyw" target="_blank" rel="noreferrer">Распределение</a>
-        <a class="pill" data-link href="#/rating">Рейтинг</a>
-      </div>
-
+      <!-- оставляем только одну “вкладку” -->
       <a class="btn" href="#/rating" aria-label="Показать результаты">Показать результаты</a>
     </div>
   </div>
@@ -332,6 +389,18 @@
     };
 
     // ---------------------------
+    // Slides (local files in /img)
+    // ---------------------------
+    const SLIDES = [
+      { src: "./img/video_slide1.webp", label: "Командно-лидерский турнир" },
+      { src: "./img/video_slide2.webp", label: "Турниры и командная работа" },
+      { src: "./img/video_slide3.webp", label: "Команда • решения • темп" },
+      { src: "./img/video_slide5.webp", label: "Стратегия • дисциплина • результат" },
+      { src: "./img/video_slide7.webp", label: "Лидерство в действии" },
+    ];
+    const VIDEO_LINK = "https://yandex.ru/video/preview/669671511627713429";
+
+    // ---------------------------
     // Helpers
     // ---------------------------
     const app = document.getElementById("app");
@@ -345,13 +414,11 @@
       return raw.padStart(4,"0").slice(-4);
     };
 
-    // ✅ NEW: robust expelled detection (fixes rank counting)
     function isExpelledStatus(status){
       const s = String(status ?? "").toLowerCase().replace(/\s+/g, " ").trim();
       return s.includes("отчисл");
     }
 
-    // ✅ updated: strict parsing, rejects 1900-01-00 and any day/month 00
     function parseISODateMaybe(s){
       const t = String(s ?? "").trim();
       if (!t) return null;
@@ -388,7 +455,6 @@
       return isNaN(+d) ? null : d;
     }
 
-    // ✅ updated: invalid -> "—"
     function formatDateRU(s){
       const raw = String(s ?? "").trim();
       const d = parseISODateMaybe(raw);
@@ -693,7 +759,6 @@
       return scored.reduce((sum, x)=> sum + (x.points || 0), 0);
     }
 
-    // ✅ UPDATED: leagues/thresholds only among обучающихся (exclude expelled)
     function recomputeLeagues(){
       const ids = Array.from(DB.studentsById.keys()).filter(id=>{
         const st = DB.studentsById.get(id)?.status;
@@ -727,9 +792,6 @@
       return { label:"Бронзовая", cls:"b-bad" };
     }
 
-    // ---------------------------
-    // Recommendations + Strong side
-    // ---------------------------
     function calcTrackers(student, sessions, scored){
       const attSessions = sessions.filter(s=> isAttendanceValue(s.score_or_attendance));
       const presentCount = attSessions.reduce((acc, s)=> acc + (attendanceIsPresent(s.score_or_attendance) === true ? 1 : 0), 0);
@@ -799,7 +861,6 @@
       else if (t < 75) focus = "аналитики и планирования";
       else focus = "тактики и принятия решений";
 
-      // ✅ updated text: no “2–3 games”, no mention of “cats”
       advice.push({
         title: "План на следующую неделю",
         text: `Ваш текущий темп — в среднем ${track.recentAvg} баллов. Выберите один фокус: ${focus}. Сделайте его вашей сильной привычкой недели — фиксируйте лучшие решения и повторяйте их. Так результат будет расти устойчиво и предсказуемо.`,
@@ -841,7 +902,7 @@
     }
 
     // ---------------------------
-    // Charts
+    // Charts (unchanged)
     // ---------------------------
     function setupCanvas(id){
       const c = document.getElementById(id);
@@ -1235,9 +1296,6 @@
       c.addEventListener("mouseleave", ()=> tip.style.display = "none");
     }
 
-    // ---------------------------
-    // Robust fetch + Ensure load
-    // ---------------------------
     async function fetchTextOrThrow(url, label){
       let res;
       try{
@@ -1353,18 +1411,8 @@
       }
     }
 
-    // ---------------------------
-    // Router
-    // ---------------------------
-    function setActivePills(){
-      const hash = (location.hash || "#/").split("?")[0];
-      document.querySelectorAll("[data-link]").forEach(a=>{
-        a.classList.toggle("active", a.getAttribute("href") === hash);
-      });
-    }
-
     function parseHash(){
-      const raw = (location.hash || "#/").replace("#", "");
+      const raw = (location.hash || "#/rating").replace("#", "");
       const [path, qs] = raw.split("?");
       const parts = path.split("/").filter(Boolean);
       const params = new URLSearchParams(qs || "");
@@ -1372,92 +1420,22 @@
     }
 
     async function route(){
-      setActivePills();
       const {parts, params} = parseHash();
 
-      if (parts.length === 0){
-        renderHome();
-        return;
-      }
-
-      const [page] = parts;
-
-      if (page === "rating"){
-        renderRatingSkeleton();
-        await ensureDBLoaded(false);
-        renderRating(params);
-        return;
-      }
-
-      if (page === "about" || page === "tournaments" || page === "kb"){
-        renderWIP(page);
-        return;
-      }
-
-      renderNotFound();
+      // всегда ведём на рейтинг (одна страница)
+      renderRatingSkeleton();
+      await ensureDBLoaded(false);
+      renderRating(params);
     }
 
     window.addEventListener("hashchange", ()=>{ route(); });
 
-    // ---------------------------
-    // Pages
-    // ---------------------------
-    function renderHome(){
-      app.innerHTML = html`
-        <div class="card" style="padding:18px">
-          <div class="crumbs">КЛТ</div>
-          <h2 class="pageTitle">Рейтинг и посещаемость</h2>
-          <div class="muted" style="font-weight:800; line-height:1.7">
-            Фокусируемся на дашборде рейтинга. Остальные разделы временно в разработке.
-          </div>
-          <div class="divider"></div>
-          <div class="formRow">
-            <a class="btn" href="#/rating">Перейти к рейтингу</a>
-            <a class="btn secondary" href="https://disk.yandex.ru/d/p1wxZn33wEVVyw" target="_blank" rel="noreferrer">Распределение</a>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderWIP(page){
-      const title =
-        page === "about" ? "О КЛТ" :
-        page === "tournaments" ? "Турниры" :
-        "База знаний";
-
-      app.innerHTML = html`
-        <div class="crumbs">КЛТ / ${esc(title)}</div>
-        <h2 class="pageTitle">${esc(title)}</h2>
-
-        <div class="card wip">
-          <div class="icon">🔧</div>
-          <div class="title">В разработке</div>
-          <div class="desc">Сейчас концентрируемся на вкладке «Рейтинг».</div>
-          <div style="margin-top:16px">
-            <a class="btn" href="#/rating">Открыть рейтинг</a>
-          </div>
-        </div>
-      `;
-    }
-
     function renderRatingSkeleton(){
       app.innerHTML = html`
         <div class="crumbs">КЛТ / Рейтинг</div>
-        <h2 class="pageTitle">Рейтинг и посещаемость</h2>
+        <h2 class="pageTitle">Рейтинг</h2>
         <div class="card" style="padding:18px">
           <div class="notice">Загружаю данные CSV…</div>
-        </div>
-      `;
-    }
-
-    function renderNotFound(){
-      app.innerHTML = html`
-        <div class="card" style="padding:18px">
-          <h2 class="pageTitle">Страница не найдена</h2>
-          <p class="muted">Проверьте ссылку или вернитесь на главную.</p>
-          <div style="margin-top:14px">
-            <a class="btn" href="#/rating">Открыть рейтинг</a>
-          </div>
         </div>
       `;
     }
@@ -1470,7 +1448,6 @@
       `;
     }
 
-    // ✅ UPDATED: rank place only among обучающихся (exclude expelled)
     function getRankPlaceOnly(id){
       const list = Array.from(DB.studentsById.keys())
         .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status))
@@ -1490,23 +1467,23 @@
 
       app.innerHTML = html`
         <div class="crumbs">КЛТ / Рейтинг</div>
-        <h2 class="pageTitle">Рейтинг и посещаемость</h2>
+        <h2 class="pageTitle">Рейтинг</h2>
 
         <div class="card" style="padding:18px">
           <div class="formRow">
             <input id="studentId" type="text" inputmode="numeric" maxlength="4" placeholder="Введите ID (4 цифры)" />
             <button class="btn" type="button" id="btnShow">Показать</button>
+            <a class="btn secondary" href="${esc(VIDEO_LINK)}" target="_blank" rel="noreferrer">Смотреть видео</a>
           </div>
           <div class="small" style="margin-top:8px">Если вы не знаете свой ID — обратитесь к сотруднику <b>САОК КЛТ</b>.</div>
 
           <div id="out" style="margin-top:14px"></div>
 
           <div class="supportWrap">
-            <div class="small">© ${new Date().getFullYear()} · КЛТ.demo</div>
+            <div class="small">© ${new Date().getFullYear()} · КЛТ Рейтинг</div>
             <div class="supportLink" id="supportLink">Поддержка</div>
           </div>
           <div class="supportBox" id="supportBox">
-            Почта: <a href="mailto:SupportKLT@yandex.ru">SupportKLT@yandex.ru</a><br/>
             MAX: <a href="https://clck.ru/3RdkWv" target="_blank" rel="noreferrer">https://clck.ru/3RdkWv</a>
           </div>
         </div>
@@ -1536,7 +1513,7 @@
           out.innerHTML = `
             <div class="notice bad">
               CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b><br/>
-              Проверь, что сайт открыт через <b>http://localhost:8000</b> и файлы лежат рядом с index.html.
+              Проверь, что файлы лежат рядом с index.html.
             </div>
           `;
           return;
@@ -1546,86 +1523,79 @@
           out.innerHTML = `<div class="notice bad">Введите ID (4 цифры).</div>`;
           return;
         }
-        
-// ✅ SECRET: 9999 — показать топ лучших (только обучающиеся)
-if (id === "9999") {
-  // список обучающихся
-  const activeIds = Array.from(DB.studentsById.keys())
-    .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status));
 
-  // считаем сумму баллов каждому (по тем же правилам)
-  const ranking = activeIds
-    .map(sid => ({
-      id: sid,
-      total: computeStudentTotalPoints(sid),
-      student: DB.studentsById.get(sid)
-    }))
-    .sort((a,b)=> b.total - a.total);
+        // ✅ SECRET: 9999 — показать топ лучших (только обучающиеся)
+        if (id === "9999") {
+          const activeIds = Array.from(DB.studentsById.keys())
+            .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status));
 
-  const TOP_N = 25;
-  const top = ranking.slice(0, TOP_N);
+          const ranking = activeIds
+            .map(sid => ({
+              id: sid,
+              total: computeStudentTotalPoints(sid),
+              student: DB.studentsById.get(sid)
+            }))
+            .sort((a,b)=> b.total - a.total);
 
-  out.innerHTML = html`
-    <div class="notice ok">
-      <b></b> Топ-${esc(TOP_N)} участников (только обучающиеся)
-    </div>
+          const TOP_N = 25;
+          const top = ranking.slice(0, TOP_N);
 
-    <div class="chartCard" style="margin-top:12px">
-      <p class="chartTitle">Топ лучших игроков</p>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Участник</th>
-            <th>ID</th>
-            <th>Группа</th>
-            <th>Лига</th>
-            <th>Баллы</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${
-            top.length
-              ? top.map((x, i) => {
-                  const league = DB.leagueById.get(x.id) || "Бронзовая";
-                  const b = leagueBadge(league);
-                  return html`
-                    <tr>
-                      <td><b>${esc(i+1)}</b></td>
-                      <td><b>${esc((x.student?.name_short || "—").toString().trim() || "—")}</b></td>
-                      <td class="muted">${esc(x.id)}</td>
-                      <td class="muted">${esc((x.student?.group || "—").toString().trim() || "—")}</td>
-                      <td><span class="badge ${esc(b.cls)}">${esc(b.label)}</span></td>
-                      <td><b>${esc(x.total)}</b></td>
-                    </tr>
-                  `;
-                }).join("")
-              : `<tr><td colspan="6" class="muted">Нет данных для рейтинга.</td></tr>`
-          }
-        </tbody>
-      </table>
+          out.innerHTML = html`
+            <div class="notice ok">
+              Топ-${esc(TOP_N)} участников (только обучающиеся)
+            </div>
 
-      <div class="small" style="margin-top:10px">
-        Подсказка: нажми на ID (можно скопировать) и введи его в поле сверху, чтобы открыть дашборд участника.
-      </div>
-    </div>
-  `;
+            <div class="chartCard" style="margin-top:12px">
+              <p class="chartTitle">Топ лучших игроков</p>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Участник</th>
+                    <th>ID</th>
+                    <th>Группа</th>
+                    <th>Лига</th>
+                    <th>Баллы</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    top.length
+                      ? top.map((x, i) => {
+                          const league = DB.leagueById.get(x.id) || "Бронзовая";
+                          const b = leagueBadge(league);
+                          return html`
+                            <tr>
+                              <td><b>${esc(i+1)}</b></td>
+                              <td><b>${esc((x.student?.name_short || "—").toString().trim() || "—")}</b></td>
+                              <td class="muted">${esc(x.id)}</td>
+                              <td class="muted">${esc((x.student?.group || "—").toString().trim() || "—")}</td>
+                              <td><span class="badge ${esc(b.cls)}">${esc(b.label)}</span></td>
+                              <td><b>${esc(x.total)}</b></td>
+                            </tr>
+                          `;
+                        }).join("")
+                      : `<tr><td colspan="6" class="muted">Нет данных для рейтинга.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          `;
 
-  // Небольшой UX: клик по строке подставляет ID в поле
-  const rows = out.querySelectorAll("tbody tr");
-  rows.forEach((tr, idx)=>{
-    const rec = top[idx];
-    if (!rec) return;
-    tr.style.cursor = "pointer";
-    tr.addEventListener("click", ()=>{
-      idInput.value = rec.id;
-      show();
-    });
-  });
+          const rows = out.querySelectorAll("tbody tr");
+          rows.forEach((tr, idx)=>{
+            const rec = top[idx];
+            if (!rec) return;
+            tr.style.cursor = "pointer";
+            tr.addEventListener("click", ()=>{
+              idInput.value = rec.id;
+              show();
+            });
+          });
 
-  return;
-}
-        
+          return;
+        }
+
         const student = DB.studentsById.get(id);
         const sessions = DB.sessionsById.get(id) || [];
         if (!student){
@@ -1633,7 +1603,6 @@ if (id === "9999") {
           return;
         }
 
-        // ✅ UPDATED: robust expelled detection
         const isExpelled = isExpelledStatus(student.status);
 
         const attSessions = sessions.filter(s=> isAttendanceValue(s.score_or_attendance));
@@ -1662,15 +1631,48 @@ if (id === "9999") {
         });
 
         out.innerHTML = html`
-          <div class="notice ${isExpelled ? "expelled" : "ok"}">
-            <b>${esc(student.name_short || student.name_full || "Студент")}</b> ·
-            ID: <b>${esc(student.id)}</b> ·
-            Группа: <b>${esc(student.group || "—")}</b>
-            ${student.status ? ` · Статус: <b>${esc(student.status)}</b>` : ""}
-          </div>
+          <div class="resultsHeader">
+            <div>
+              <div class="notice ${isExpelled ? "expelled" : "ok"}" style="margin-top:0">
+                <b>${esc(student.name_short || student.name_full || "Студент")}</b> ·
+                ID: <b>${esc(student.id)}</b> ·
+                Группа: <b>${esc(student.group || "—")}</b>
+                ${student.status ? ` · Статус: <b>${esc(student.status)}</b>` : ""}
+              </div>
 
-          <div class="notice" style="margin-top:10px">
-            Баллы и дашборд ведутся <b>исключительно для информационных целей</b> и <b>не влияют</b> на выплаты/начисления.
+              <div class="notice" style="margin-top:10px">
+                Баллы и дашборд ведутся <b>исключительно для информационных целей</b> и <b>не влияют</b> на выплаты/начисления.
+              </div>
+            </div>
+
+            <div class="card slidesCard">
+              <div class="heroSlider" id="heroSlider">
+                ${SLIDES.map((s,i)=>`
+                  <div class="heroSlide ${i===0?"active":""}" data-i="${i}">
+                    <img src="${esc(s.src)}" alt="${esc(s.label)}"
+                      onerror="this.style.display='none'; this.parentElement.style.background='rgba(255,255,255,.04)';" />
+                  </div>
+                `).join("")}
+
+                <div class="heroOverlay">
+                  <div class="heroCaption" id="heroCaption">${esc(SLIDES[0].label)}</div>
+                  <div class="heroDots" id="heroDots" aria-label="Переключение слайдов">
+                    ${SLIDES.map((_,i)=>`<div class="heroDot ${i===0?"active":""}" role="button" tabindex="0" aria-label="Слайд ${i+1}" data-i="${i}"></div>`).join("")}
+                  </div>
+                </div>
+              </div>
+
+              <div class="slidesMiniRow">
+                <div class="slidesMini">
+                  <div class="k">Фокус недели</div>
+                  <div class="v">${esc(advice[0]?.title || "Дисциплина")}</div>
+                </div>
+                <div class="slidesMini">
+                  <div class="k">Сильная сторона</div>
+                  <div class="v">${esc(strong.badge.text === "—" ? "Пока нет" : strong.badge.text)}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="kpiGrid">
@@ -1764,7 +1766,7 @@ if (id === "9999") {
                         <td class="muted">${esc(s.explain)}</td>
                       </tr>
                     `).join("")
-                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий (баллы считаются только если посещаемость = 0).</td></tr>`
+                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий.</td></tr>`
                 }
               </tbody>
             </table>
@@ -1807,6 +1809,9 @@ if (id === "9999") {
           </div>
         `;
 
+        // slider
+        initSlides();
+
         drawProgressDots("progressChart", scored);
         attachDotTooltip("progressChart");
 
@@ -1817,6 +1822,46 @@ if (id === "9999") {
 
         drawTop3("top3Chart", scored);
         attachBarTooltip("top3Chart");
+      }
+
+      function initSlides(){
+        const slider = document.getElementById("heroSlider");
+        const caption = document.getElementById("heroCaption");
+        const dotsWrap = document.getElementById("heroDots");
+        if (!slider || !caption || !dotsWrap) return;
+
+        const slides = Array.from(slider.querySelectorAll(".heroSlide"));
+        const dots = Array.from(dotsWrap.querySelectorAll(".heroDot"));
+        let idx = 0;
+        let timer = null;
+
+        function setSlide(i){
+          idx = (i + SLIDES.length) % SLIDES.length;
+          slides.forEach((el, k)=> el.classList.toggle("active", k===idx));
+          dots.forEach((el, k)=> el.classList.toggle("active", k===idx));
+          caption.textContent = SLIDES[idx].label;
+        }
+
+        function start(){
+          stop();
+          timer = setInterval(()=> setSlide(idx+1), 4200);
+        }
+        function stop(){
+          if (timer) clearInterval(timer);
+          timer = null;
+        }
+
+        dotsWrap.addEventListener("click", (e)=>{
+          const d = e.target.closest(".heroDot");
+          if (!d) return;
+          setSlide(Number(d.getAttribute("data-i")));
+          start();
+        });
+
+        slider.addEventListener("mouseenter", stop);
+        slider.addEventListener("mouseleave", start);
+
+        start();
       }
 
       btnShow.addEventListener("click", show);
