@@ -374,6 +374,31 @@
       .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
     }
+    /* ---------------------------
+   Mobile fixes for Rating page
+--------------------------- */
+.chartCard, .card, .kpi, .notice { min-width: 0; } /* важно для grid */
+
+canvas { max-width: 100%; } /* чтобы canvas не вылезал */
+
+.table { display:block; overflow-x:auto; -webkit-overflow-scrolling: touch; }
+.table thead, .table tbody, .table tr { width: max-content; }
+.table th, .table td { white-space: nowrap; }
+
+/* более “плотная” мобилка */
+@media (max-width: 520px){
+  .wrap{ padding: 14px; }
+  .pageTitle{ font-size: 22px; }
+  input[type="text"]{ min-width: 0; width: 100%; }
+  .formRow{ gap:8px; }
+  .formRow .btn{ width: 100%; }
+  .kpiGrid{ grid-template-columns: 1fr !important; }
+  .dash{ grid-template-columns: 1fr !important; }
+  .chartRow{ grid-template-columns: 1fr !important; }
+  canvas{ height: 200px; }         /* общий дефолт */
+  #top3Chart{ height: 210px; }     /* топ-3 чуть выше */
+}
+    
   </style>
 </head>
 <body>
@@ -2003,6 +2028,42 @@ if (id === "9999") {
 
         drawTop3("top3Chart", scored);
         attachBarTooltip("top3Chart");
+
+        // ✅ Mobile: redraw charts on resize/orientation change (debounced)
+if (!window.__kltResizeHooked){
+  window.__kltResizeHooked = true;
+
+  let t = null;
+  const redraw = ()=>{
+    clearTimeout(t);
+    t = setTimeout(()=>{
+      // пытаемся перерисовать только если мы сейчас на странице рейтинга и графики есть
+      const p = document.getElementById("progressChart");
+      if (!p) return;
+
+      // заново рисуем по последним данным, которые лежат в замыкании show()
+      drawProgressDots("progressChart", window.__kltLastScored || []);
+      attachDotTooltip("progressChart");
+
+      drawDonut("attChart", window.__kltLastPresent || 0, window.__kltLastAbsent || 0);
+
+      drawActivityByDate("activityChart", window.__kltLastScored || []);
+      attachBarTooltip("activityChart");
+
+      drawTop3("top3Chart", window.__kltLastScored || []);
+      attachBarTooltip("top3Chart");
+    }, 120);
+  };
+
+  window.addEventListener("resize", redraw, { passive:true });
+  window.addEventListener("orientationchange", redraw, { passive:true });
+}
+
+// сохраняем данные последнего рендера (для перерисовки)
+window.__kltLastScored = scored;
+window.__kltLastPresent = presentCount;
+window.__kltLastAbsent = Math.max(0, attTotal - presentCount);
+        
       }
 
       btnShow.addEventListener("click", show);
