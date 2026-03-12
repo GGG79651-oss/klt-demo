@@ -613,6 +613,14 @@ color: var(--text);
       return Number.isFinite(y) ? y : null;
     }
 
+    /* ✅ CHANGED (CIV ONLY): detect revolution rows by label (year or "Не защитился") */
+    function isCivRevolutionRow(row){
+      const lbl = String(row.label ?? "").trim().toLowerCase();
+      if (!lbl) return false;
+      if (lbl.includes("не защит")) return true;
+      return /(16\d{2}|17\d{2}|18\d{2})/.test(lbl);
+    }
+
     function playoffRoundPoints(denom){
       const map = { 32:20, 16:30, 8:40, 4:60, 2:80 };
       return map[denom] ?? null;
@@ -655,6 +663,29 @@ color: var(--text);
       const valText = String(row.score_or_attendance || "").trim();
       const comment = String(row.comment || row.extra || row.label || "").trim();
       const blobAll = (stage + " " + placeText + " " + valText + " " + comment).toLowerCase();
+
+      /* ✅ CHANGED (CIV ONLY): Civ scoring BEFORE eligibleForScoring, because civ uses label (year/не защитился) */
+      if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
+        const a = String(row.score_or_attendance ?? "").trim();
+        if (a !== "0") return { points: null, explain: "Civ: не начисляем (нужно 0 в посещаемости)" };
+
+        if (!isCivRevolutionRow(row)) return { points: null, explain: "Civ: не революция — не в зачёт" };
+
+        const lbl = String(row.label ?? "").trim().toLowerCase();
+
+        // Не защитился = 0
+        if (lbl.includes("не защит")) {
+          return { points: 0, explain: "Civ: не защитился → 0" };
+        }
+
+        // Защитился: 100 за революцию + 0..100 за год
+        const y = parseYearFromRow(row);
+        if (!y) return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
+
+        const yearPts = civYearPointsFromYear(y);
+        const total = 100 + yearPts;
+        return { points: total, explain: `Civ: революция 100 + год ${y} → ${yearPts} = ${total}` };
+      }
 
       if (!eligibleForScoring(row)){
         return { points: null, explain: "Не начисляем: нет подтверждения участия (нужно 0 в посещаемости)" };
@@ -706,37 +737,33 @@ color: var(--text);
         return { points: null, explain: "Пейнтбол: не зачётный этап" };
       }
 
-      if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
-        if (!includesAny(stage, ["революц", "revolution"])) return { points: null, explain: "Civ: не революция — не в зачёт" };
-
-        const y = parseYearFromRow(row);
-        const yearPts = y ? civYearPointsFromYear(y) : null;
-
-        const win = revolutionIsWin(row);
-        const winPts = win ? 100 : 0;
-
-        if (yearPts === null){
-          if (win) return { points: 100, explain: "Civ: победа в революции → 100 (год не найден)" };
-          return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
-        }
-
-        const total = winPts + yearPts;
-        const winText = win ? "+ победа 100" : "+ победа 0";
-        return { points: total, explain: `Civ: год ${y} → ${yearPts} ${winText} = ${total}` };
-      }
-
       return { points: null, explain: "Пока не начисляем (добавим позже)" };
     }
 
     function computeScoredSessions(id){
       const sessions = DB.sessionsById.get(id) || [];
       const out = [];
+
+      /* ✅ CHANGED (CIV ONLY): count civ revolution only once per tournament (Solo/Duel) */
+      const civSeen = new Set();
+
       for (const s of sessions){
+        const tKey = normTournamentKey(s.tournament);
+
+        if ((tKey === "Civilization: Solo" || tKey === "Civilization: DUEL") && isCivRevolutionRow(s)){
+          const a = String(s.score_or_attendance ?? "").trim();
+          if (a === "0"){
+            const key = tKey; // once per tournament
+            if (civSeen.has(key)) continue;
+            civSeen.add(key);
+          }
+        }
+
         const scored = scoreSession(s);
         if (typeof scored.points === "number" && Number.isFinite(scored.points)){
           out.push({
             ...s,
-            tournamentKey: normTournamentKey(s.tournament),
+            tournamentKey: tKey,
             points: scored.points,
             explain: scored.explain
           });
