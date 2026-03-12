@@ -5,45 +5,21 @@
       <stop offset="0.45" stop-color="#6b86ff"/>
       <stop offset="1" stop-color="#21d4ff"/>
     </linearGradient>
-
-    <!-- мягкий “стеклянный” блик -->
     <linearGradient id="shine" x1="20" y1="18" x2="96" y2="96" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="rgba(255,255,255,0.55)"/>
-      <stop offset="0.35" stop-color="rgba(255,255,255,0.12)"/>
+      <stop offset="0" stop-color="rgba(255,255,255,0.50)"/>
+      <stop offset="0.35" stop-color="rgba(255,255,255,0.10)"/>
       <stop offset="1" stop-color="rgba(255,255,255,0)"/>
     </linearGradient>
-
-    <!-- тень -->
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000000" flood-opacity="0.35"/>
-    </filter>
-
-    <!-- лёгкий внутренний свет -->
-    <filter id="inner" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
-      <feComposite in="blur" in2="SourceAlpha" operator="out" result="innerBlur"/>
-      <feColorMatrix in="innerBlur" type="matrix"
-        values="0 0 0 0 1
-                0 0 0 0 1
-                0 0 0 0 1
-                0 0 0 0.18 0"/>
-      <feComposite in2="SourceGraphic" operator="over"/>
-    </filter>
   </defs>
 
-  <!-- фон -->
-  <rect x="10" y="10" width="108" height="108" rx="28" fill="url(#bg)" filter="url(#shadow)"/>
-  <!-- тонкая рамка -->
+  <rect x="10" y="10" width="108" height="108" rx="28" fill="url(#bg)"/>
   <rect x="10.75" y="10.75" width="106.5" height="106.5" rx="27.25"
         fill="none" stroke="rgba(255,255,255,0.22)"/>
 
-  <!-- блик сверху -->
   <path d="M26 22h54c12 0 22 10 22 22v0c0 4-3 7-7 7H26c-6 0-10-4-10-10v-9c0-6 4-10 10-10z"
         fill="url(#shine)" opacity="0.55"/>
 
-  <!-- текст -->
   <text x="64" y="80" text-anchor="middle"
         font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial"
-        font-size="40" font-weight="900" fill="#ffffff" letter-spacing="2"
-        filter="url(#inner)">КЛТ</text>
+        font-size="40" font-weight="900" fill="#ffffff" letter-spacing="2">КЛТ</text>
 </svg>
