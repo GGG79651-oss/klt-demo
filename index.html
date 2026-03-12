@@ -611,6 +611,7 @@ color: var(--text);
       if (!m) return null;
       const y = Number(m[1]);
       return Number.isFinite(y) ? y : null;
+      
     }
 
     function playoffRoundPoints(denom){
@@ -626,12 +627,12 @@ color: var(--text);
     }
 
     function civYearPointsFromYear(year){
-      const best = 1652;
-      const worst = 1800;
-      const y = clamp(year, best, worst);
-      const score = 100 - ((y - best) / (worst - best)) * 100;
-      return clamp(Math.round(score), 0, 100);
-    }
+  const best = 1660;
+  const worst = 1800;
+  const y = clamp(year, best, worst);
+  const score = 100 - ((y - best) / (worst - best)) * 100;
+  return clamp(Math.round(score), 0, 100);
+}
 
     function revolutionIsWin(row){
       const s = [
@@ -706,18 +707,34 @@ color: var(--text);
         return { points: null, explain: "Пейнтбол: не зачётный этап" };
       }
 
-      if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
-        if (!includesAny(stage, ["революц", "revolution"])) return { points: null, explain: "Civ: не революция — не в зачёт" };
+    if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
+  // ✅ революция определяется по label: год или "Не защитился"
+  if (!isCivRevolutionRow(row)) return { points: null, explain: "Civ: не революция — не в зачёт" };
 
-        const y = parseYearFromRow(row);
-        const yearPts = y ? civYearPointsFromYear(y) : null;
+  const lbl = String(row.label ?? "").trim();
 
-        const win = revolutionIsWin(row);
-        const winPts = win ? 100 : 0;
+  // ✅ Не защитился = 0 баллов
+  if (lbl.toLowerCase().includes("не защит")) {
+    return { points: 0, explain: "Civ: не защитился → 0" };
+  }
 
-        if (yearPts === null){
-          if (win) return { points: 100, explain: "Civ: победа в революции → 100 (год не найден)" };
-          return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
+  // ✅ Защитился: 100 за революцию + 0..100 за год
+  const y = parseYearFromRow(row);
+  if (!y) return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
+
+  const yearPts = civYearPointsFromYear(y);
+  const total = 100 + yearPts;
+  return { points: total, explain: `Civ: революция 100 + год ${y} → ${yearPts} = ${total}` };
+}
+
+          function isCivRevolutionRow(row){
+  // у вас революция хранится в label: либо "Не защитился", либо год (например 1680)
+  const lbl = String(row.label ?? "").trim().toLowerCase();
+  if (!lbl) return false;
+  if (lbl.includes("не защит")) return true;
+  // год 16xx..18xx
+  return /(16\d{2}|17\d{2}|18\d{2})/.test(lbl);
+            
         }
 
         const total = winPts + yearPts;
