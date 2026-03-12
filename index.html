@@ -253,6 +253,33 @@
       .menu{display:none}
       .kpiGrid{grid-template-columns: 1fr}
     }
+
+    @media (max-width: 700px){
+  .chartRow{
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+  .chartCard{
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+      .chartTitle{
+  white-space: normal;
+  word-break: break-word;
+}
+
+      canvas{ max-width:100%; height:220px; display:block; }
+
+.table{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table th, .table td{ white-space: nowrap; }
+      
+}
+
+    /* --- Mobile layout hard-fix (prevents “vertical letters”/overlap) --- */
+.card, .chartCard, .kpi, .notice { min-width: 0; }
+.dash, .chartRow, .kpiGrid { min-width: 0; }
+    
   </style>
 </head>
 <body>
