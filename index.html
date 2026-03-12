@@ -552,14 +552,17 @@
     }
 
     function eligibleForScoring(row){
-      const a = String(row.score_or_attendance ?? "").trim();
-      if (a !== "0") return false;
+  const a = String(row.score_or_attendance ?? "").trim();
+  if (a !== "0") return false;
 
-      const pr = String(row.place_or_result ?? "").trim();
-      if (!pr) return true;
-      if (pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")) return false;
-      return true;
-    }
+  const pr = String(row.place_or_result ?? "").trim();
+
+  // ✅ если результата нет (пусто или прочерк) — баллы не считаем
+  if (!pr || pr === "—" || pr === "-") return false;
+
+  if (pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")) return false;
+  return true;
+}
 
     function normTournamentKey(name){
       const s = String(name ?? "").toLowerCase();
@@ -1815,7 +1818,7 @@
                   <th>Этап</th>
                   <th>Сессия</th>
                   <th>Игра</th>
-                  <th>Очки/Посещаемость</th>
+                  <th>Посещаемость</th>
                   <th>Место/Результат</th>
                   <th>Комментарий</th>
                 </tr>
