@@ -225,22 +225,32 @@
       text-underline-offset: 3px;
     }
 
-    /* ----- Slides inside results page ----- */
-    .resultsHeader{
-      display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap:12px;
+    /* ---- Pre-Input Slides (only when ID empty) ---- */
+    .preIntro{
       margin-top:12px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:12px;
       align-items:stretch;
     }
-    .slidesCard{padding:14px; display:flex; flex-direction:column; gap:10px;}
+    .preText{
+      padding:18px;
+    }
+    .preText h3{margin:0 0 8px; font-size:18px; letter-spacing:-.2px}
+    .preText p{margin:0; color:var(--muted); font-weight:800; line-height:1.6}
+    .preSlider{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
     .heroSlider{
       border-radius: 22px;
       border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.03);
       overflow:hidden;
       position:relative;
-      min-height: 300px;
+      min-height: 260px;
     }
     .heroSlide{
       position:absolute;
@@ -295,32 +305,18 @@
       background: rgba(255,255,255,.85);
       border-color: rgba(255,255,255,.85);
     }
-    .slidesMiniRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    .slidesMini{
-      padding:12px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.02);
-    }
-    .slidesMini .k{color:var(--muted); font-weight:1000; font-size:12px;}
-    .slidesMini .v{margin-top:6px; font-weight:1000; line-height:1.55; color: rgba(234,240,255,.92);}
 
     @media (max-width: 980px){
       .kpiGrid{grid-template-columns: 1fr 1fr}
       .dash{grid-template-columns: 1fr}
       .chartRow{grid-template-columns: 1fr; grid-template-rows: auto;}
-      .resultsHeader{grid-template-columns: 1fr;}
+      .preIntro{grid-template-columns:1fr;}
     }
     @media (max-width: 520px){
       .kpiGrid{grid-template-columns: 1fr}
       input[type="text"]{ min-width: 0; width: 100%; }
       .formRow .btn{ width: 100%; }
-      .heroSlider{min-height:240px;}
-      .slidesMiniRow{grid-template-columns:1fr;}
+      .heroSlider{min-height:220px;}
     }
 
     /* Mobile chart hard-fix */
@@ -354,8 +350,6 @@
         <div class="logo" aria-hidden="true"></div>
         <div>КЛТ <span class="muted">Рейтинг</span></div>
       </a>
-
-      <!-- оставляем только одну “вкладку” -->
       <a class="btn" href="#/rating" aria-label="Показать результаты">Показать результаты</a>
     </div>
   </div>
@@ -363,9 +357,6 @@
   <main class="wrap" id="app" aria-live="polite"></main>
 
   <script>
-    // ---------------------------
-    // Base URLs (robust with hash routing)
-    // ---------------------------
     function baseNoHash(){
       const u = new URL(location.href);
       u.hash = "";
@@ -388,9 +379,6 @@
       thresholds: { goldN:0, silverN:0, totalN:0 },
     };
 
-    // ---------------------------
-    // Slides (local files in /img)
-    // ---------------------------
     const SLIDES = [
       { src: "./img/video_slide1.webp", label: "Командно-лидерский турнир" },
       { src: "./img/video_slide2.webp", label: "Турниры и командная работа" },
@@ -398,11 +386,7 @@
       { src: "./img/video_slide5.webp", label: "Стратегия • дисциплина • результат" },
       { src: "./img/video_slide7.webp", label: "Лидерство в действии" },
     ];
-    const VIDEO_LINK = "https://yandex.ru/video/preview/669671511627713429";
 
-    // ---------------------------
-    // Helpers
-    // ---------------------------
     const app = document.getElementById("app");
     const esc = (s)=> String(s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
     const html = (strings, ...vals)=> strings.map((s,i)=> s + (vals[i] ?? "")).join("");
@@ -428,15 +412,12 @@
         const yy = Number(mISO[1]);
         const mm = Number(mISO[2]);
         const dd = Number(mISO[3]);
-
         if (!Number.isFinite(yy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null;
         if (mm < 1 || mm > 12) return null;
         if (dd < 1 || dd > 31) return null;
-
         const d = new Date(yy, mm - 1, dd);
         if (isNaN(+d)) return null;
         if (d.getFullYear() !== yy || (d.getMonth()+1) !== mm || d.getDate() !== dd) return null;
-
         return d;
       }
 
@@ -562,7 +543,6 @@
       return null;
     }
 
-    // ✅ strict eligibility: points only if score_or_attendance === "0"
     function eligibleForScoring(row){
       const a = String(row.score_or_attendance ?? "").trim();
       if (a !== "0") return false;
@@ -653,9 +633,6 @@
       return false;
     }
 
-    // ---------------------------
-    // Scoring (STRICT)
-    // ---------------------------
     function scoreSession(row){
       const t = normTournamentKey(row.tournament);
       const stage = String(row.stage || row.label || "").toLowerCase();
@@ -792,6 +769,25 @@
       return { label:"Бронзовая", cls:"b-bad" };
     }
 
+    function leagueText(league){
+      const ui = leagueBadge(league);
+      return `
+        <span class="badge ${esc(ui.cls)}">${esc(ui.label)}</span>
+        <div class="small" style="margin-top:16px">Оценка САОК КЛТ</div>
+      `;
+    }
+
+    function getRankPlaceOnly(id){
+      const list = Array.from(DB.studentsById.keys())
+        .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status))
+        .map(sid => ({ sid, total: computeStudentTotalPoints(sid) }))
+        .sort((a,b)=> b.total - a.total);
+
+      const idx = list.findIndex(x=>x.sid===id);
+      if (idx < 0) return "—";
+      return String(idx+1);
+    }
+
     function calcTrackers(student, sessions, scored){
       const attSessions = sessions.filter(s=> isAttendanceValue(s.score_or_attendance));
       const presentCount = attSessions.reduce((acc, s)=> acc + (attendanceIsPresent(s.score_or_attendance) === true ? 1 : 0), 0);
@@ -901,9 +897,7 @@
       return { text, badge };
     }
 
-    // ---------------------------
-    // Charts (unchanged)
-    // ---------------------------
+    /* ----- Charts (same as your base) ----- */
     function setupCanvas(id){
       const c = document.getElementById(id);
       if (!c) return null;
@@ -1420,12 +1414,10 @@
     }
 
     async function route(){
-      const {parts, params} = parseHash();
-
-      // всегда ведём на рейтинг (одна страница)
+      // одна страница
       renderRatingSkeleton();
       await ensureDBLoaded(false);
-      renderRating(params);
+      renderRating(parseHash().params);
     }
 
     window.addEventListener("hashchange", ()=>{ route(); });
@@ -1440,28 +1432,6 @@
       `;
     }
 
-    function leagueText(league){
-      const ui = leagueBadge(league);
-      return `
-        <span class="badge ${esc(ui.cls)}">${esc(ui.label)}</span>
-        <div class="small" style="margin-top:16px">Оценка САОК КЛТ</div>
-      `;
-    }
-
-    function getRankPlaceOnly(id){
-      const list = Array.from(DB.studentsById.keys())
-        .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status))
-        .map(sid => ({ sid, total: computeStudentTotalPoints(sid) }))
-        .sort((a,b)=> b.total - a.total);
-
-      const idx = list.findIndex(x=>x.sid===id);
-      if (idx < 0) return "—";
-      return String(idx+1);
-    }
-
-    // ---------------------------
-    // Rating page
-    // ---------------------------
     function renderRating(params){
       const presetId = (params.get("id") || "").trim();
 
@@ -1473,9 +1443,11 @@
           <div class="formRow">
             <input id="studentId" type="text" inputmode="numeric" maxlength="4" placeholder="Введите ID (4 цифры)" />
             <button class="btn" type="button" id="btnShow">Показать</button>
-            <a class="btn secondary" href="${esc(VIDEO_LINK)}" target="_blank" rel="noreferrer">Смотреть видео</a>
           </div>
           <div class="small" style="margin-top:8px">Если вы не знаете свой ID — обратитесь к сотруднику <b>САОК КЛТ</b>.</div>
+
+          <!-- PRE-INTRO (только пока ID пустой) -->
+          <div id="preIntro"></div>
 
           <div id="out" style="margin-top:14px"></div>
 
@@ -1492,6 +1464,7 @@
       const idInput = document.getElementById("studentId");
       const out = document.getElementById("out");
       const btnShow = document.getElementById("btnShow");
+      const preIntro = document.getElementById("preIntro");
 
       const supportLink = document.getElementById("supportLink");
       const supportBox = document.getElementById("supportBox");
@@ -1499,7 +1472,90 @@
         supportBox.style.display = (supportBox.style.display === "block") ? "none" : "block";
       });
 
-      idInput.addEventListener("input", ()=>{ idInput.value = idInput.value.replace(/\D/g,"").slice(0,4); });
+      idInput.addEventListener("input", ()=>{
+        idInput.value = idInput.value.replace(/\D/g,"").slice(0,4);
+        renderPreIntroIfNeeded(); // показываем/скрываем фотоблок
+      });
+
+      function renderPreIntroIfNeeded(){
+        const v = idInput.value.trim();
+        if (v.length > 0){
+          preIntro.innerHTML = "";
+          return;
+        }
+
+        preIntro.innerHTML = html`
+          <div class="preIntro">
+            <div class="card preText">
+              <h3>Командно-лидерский турнир</h3>
+              <p>
+                Введите ваш ID, чтобы увидеть прогресс, сильные результаты и начисление баллов по зачётным сессиям.
+              </p>
+              <div class="divider"></div>
+              <div class="small">Подсказка: ID состоит из 4 цифр (например, 0766).</div>
+            </div>
+
+            <div class="card preSlider">
+              <div class="heroSlider" id="heroSlider">
+                ${SLIDES.map((s,i)=>`
+                  <div class="heroSlide ${i===0?"active":""}" data-i="${i}">
+                    <img src="${esc(s.src)}" alt="${esc(s.label)}"
+                      onerror="this.style.display='none'; this.parentElement.style.background='rgba(255,255,255,.04)';" />
+                  </div>
+                `).join("")}
+                <div class="heroOverlay">
+                  <div class="heroCaption" id="heroCaption">${esc(SLIDES[0].label)}</div>
+                  <div class="heroDots" id="heroDots">
+                    ${SLIDES.map((_,i)=>`<div class="heroDot ${i===0?"active":""}" data-i="${i}" role="button" tabindex="0" aria-label="Слайд ${i+1}"></div>`).join("")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        initSlides(); // запускаем авто-слайды
+      }
+
+      function initSlides(){
+        const slider = document.getElementById("heroSlider");
+        const caption = document.getElementById("heroCaption");
+        const dotsWrap = document.getElementById("heroDots");
+        if (!slider || !caption || !dotsWrap) return;
+
+        const slides = Array.from(slider.querySelectorAll(".heroSlide"));
+        const dots = Array.from(dotsWrap.querySelectorAll(".heroDot"));
+        let idx = 0;
+        let timer = null;
+
+        function setSlide(i){
+          idx = (i + SLIDES.length) % SLIDES.length;
+          slides.forEach((el, k)=> el.classList.toggle("active", k===idx));
+          dots.forEach((el, k)=> el.classList.toggle("active", k===idx));
+          caption.textContent = SLIDES[idx].label;
+        }
+
+        function start(){
+          stop();
+          timer = setInterval(()=> setSlide(idx+1), 4200);
+        }
+        function stop(){
+          if (timer) clearInterval(timer);
+          timer = null;
+        }
+
+        dotsWrap.addEventListener("click", (e)=>{
+          const d = e.target.closest(".heroDot");
+          if (!d) return;
+          setSlide(Number(d.getAttribute("data-i")));
+          start();
+        });
+
+        slider.addEventListener("mouseenter", stop);
+        slider.addEventListener("mouseleave", start);
+
+        start();
+      }
 
       async function show(){
         const id = normalizeId(idInput.value);
@@ -1512,8 +1568,7 @@
         if (!DB.loaded){
           out.innerHTML = `
             <div class="notice bad">
-              CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b><br/>
-              Проверь, что файлы лежат рядом с index.html.
+              CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b>
             </div>
           `;
           return;
@@ -1524,7 +1579,7 @@
           return;
         }
 
-        // ✅ SECRET: 9999 — показать топ лучших (только обучающиеся)
+        // ✅ SECRET: 9999 — топ лучших (только обучающиеся)
         if (id === "9999") {
           const activeIds = Array.from(DB.studentsById.keys())
             .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status));
@@ -1541,10 +1596,7 @@
           const top = ranking.slice(0, TOP_N);
 
           out.innerHTML = html`
-            <div class="notice ok">
-              Топ-${esc(TOP_N)} участников (только обучающиеся)
-            </div>
-
+            <div class="notice ok">Топ-${esc(TOP_N)} участников (только обучающиеся)</div>
             <div class="chartCard" style="margin-top:12px">
               <p class="chartTitle">Топ лучших игроков</p>
               <table class="table">
@@ -1589,10 +1641,10 @@
             tr.style.cursor = "pointer";
             tr.addEventListener("click", ()=>{
               idInput.value = rec.id;
+              renderPreIntroIfNeeded();
               show();
             });
           });
-
           return;
         }
 
@@ -1630,49 +1682,19 @@
           cls: strong.badge.cls
         });
 
+        /* ✅ IMPORTANT:
+           Здесь — базовая раскладка дашборда (без фото/слайдера).
+           Слайдер показывается только когда ID пустой. */
         out.innerHTML = html`
-          <div class="resultsHeader">
-            <div>
-              <div class="notice ${isExpelled ? "expelled" : "ok"}" style="margin-top:0">
-                <b>${esc(student.name_short || student.name_full || "Студент")}</b> ·
-                ID: <b>${esc(student.id)}</b> ·
-                Группа: <b>${esc(student.group || "—")}</b>
-                ${student.status ? ` · Статус: <b>${esc(student.status)}</b>` : ""}
-              </div>
+          <div class="notice ${isExpelled ? "expelled" : "ok"}">
+            <b>${esc(student.name_short || student.name_full || "Студент")}</b> ·
+            ID: <b>${esc(student.id)}</b> ·
+            Группа: <b>${esc(student.group || "—")}</b>
+            ${student.status ? ` · Статус: <b>${esc(student.status)}</b>` : ""}
+          </div>
 
-              <div class="notice" style="margin-top:10px">
-                Баллы и дашборд ведутся <b>исключительно для информационных целей</b> и <b>не влияют</b> на выплаты/начисления.
-              </div>
-            </div>
-
-            <div class="card slidesCard">
-              <div class="heroSlider" id="heroSlider">
-                ${SLIDES.map((s,i)=>`
-                  <div class="heroSlide ${i===0?"active":""}" data-i="${i}">
-                    <img src="${esc(s.src)}" alt="${esc(s.label)}"
-                      onerror="this.style.display='none'; this.parentElement.style.background='rgba(255,255,255,.04)';" />
-                  </div>
-                `).join("")}
-
-                <div class="heroOverlay">
-                  <div class="heroCaption" id="heroCaption">${esc(SLIDES[0].label)}</div>
-                  <div class="heroDots" id="heroDots" aria-label="Переключение слайдов">
-                    ${SLIDES.map((_,i)=>`<div class="heroDot ${i===0?"active":""}" role="button" tabindex="0" aria-label="Слайд ${i+1}" data-i="${i}"></div>`).join("")}
-                  </div>
-                </div>
-              </div>
-
-              <div class="slidesMiniRow">
-                <div class="slidesMini">
-                  <div class="k">Фокус недели</div>
-                  <div class="v">${esc(advice[0]?.title || "Дисциплина")}</div>
-                </div>
-                <div class="slidesMini">
-                  <div class="k">Сильная сторона</div>
-                  <div class="v">${esc(strong.badge.text === "—" ? "Пока нет" : strong.badge.text)}</div>
-                </div>
-              </div>
-            </div>
+          <div class="notice" style="margin-top:10px">
+            Баллы и дашборд ведутся <b>исключительно для информационных целей</b> и <b>не влияют</b> на выплаты/начисления.
           </div>
 
           <div class="kpiGrid">
@@ -1809,9 +1831,6 @@
           </div>
         `;
 
-        // slider
-        initSlides();
-
         drawProgressDots("progressChart", scored);
         attachDotTooltip("progressChart");
 
@@ -1824,56 +1843,15 @@
         attachBarTooltip("top3Chart");
       }
 
-      function initSlides(){
-        const slider = document.getElementById("heroSlider");
-        const caption = document.getElementById("heroCaption");
-        const dotsWrap = document.getElementById("heroDots");
-        if (!slider || !caption || !dotsWrap) return;
-
-        const slides = Array.from(slider.querySelectorAll(".heroSlide"));
-        const dots = Array.from(dotsWrap.querySelectorAll(".heroDot"));
-        let idx = 0;
-        let timer = null;
-
-        function setSlide(i){
-          idx = (i + SLIDES.length) % SLIDES.length;
-          slides.forEach((el, k)=> el.classList.toggle("active", k===idx));
-          dots.forEach((el, k)=> el.classList.toggle("active", k===idx));
-          caption.textContent = SLIDES[idx].label;
-        }
-
-        function start(){
-          stop();
-          timer = setInterval(()=> setSlide(idx+1), 4200);
-        }
-        function stop(){
-          if (timer) clearInterval(timer);
-          timer = null;
-        }
-
-        dotsWrap.addEventListener("click", (e)=>{
-          const d = e.target.closest(".heroDot");
-          if (!d) return;
-          setSlide(Number(d.getAttribute("data-i")));
-          start();
-        });
-
-        slider.addEventListener("mouseenter", stop);
-        slider.addEventListener("mouseleave", start);
-
-        start();
-      }
-
       btnShow.addEventListener("click", show);
       idInput.addEventListener("keydown", (e)=>{ if (e.key==="Enter") show(); });
 
       if (presetId) idInput.value = presetId.replace(/\D/g,"").slice(0,4);
-      show();
+
+      // Показать слайды сразу (пока ID пустой)
+      renderPreIntroIfNeeded();
     }
 
-    // ---------------------------
-    // Boot
-    // ---------------------------
     window.addEventListener("load", async ()=>{
       if (!location.hash) location.hash = "#/rating";
       await route();
