@@ -1460,7 +1460,10 @@
           <!-- PRE-INTRO (только пока ID пустой) -->
           <div id="preIntro"></div>
 
-          <div id="out" style="margin-top:14px"></div>
+          <div id="out" style="margin-top:14px">
+  <div id="hero"></div>
+  <div id="dash"></div>
+</div>
 
           <div class="supportWrap">
             <div class="small">© ${new Date().getFullYear()} · КЛТ Рейтинг</div>
@@ -1474,6 +1477,8 @@
 
       const idInput = document.getElementById("studentId");
       const out = document.getElementById("out");
+      const hero = document.getElementById("hero");
+const dash = document.getElementById("dash");
       const btnShow = document.getElementById("btnShow");
       const preIntro = document.getElementById("preIntro");
 
@@ -1484,52 +1489,46 @@
       });
 
       idInput.addEventListener("input", ()=>{
-        idInput.value = idInput.value.replace(/\D/g,"").slice(0,4);
-        renderPreIntroIfNeeded(); // показываем/скрываем фотоблок
-      });
+  idInput.value = idInput.value.replace(/\D/g,"").slice(0,4);
+});
 
       function renderPreIntroIfNeeded(){
-        const v = idInput.value.trim();
-        if (v.length > 0){
-          preIntro.innerHTML = "";
-          return;
-        }
+  // показываем блок ВСЕГДА (и до, и после ввода ID)
+  preIntro.innerHTML = html`
+    <div class="preIntro">
+      <div class="card preText">
+        <h3>Командно-лидерский турнир</h3>
+        <p>
+          Введите ваш ID, чтобы увидеть прогресс, сильные результаты и начисление баллов по зачётным сессиям.
+        </p>
+        <div class="divider"></div>
+        <div class="muted" style="font-weight:800; line-height:1.65">
+          В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса, формирующая будущих профессионалов и лидеров.
+        </div>
+        <div class="small" style="margin-top:10px">Дата последнего обновления: <b>10.03.2026</b></div>
+      </div>
 
-        preIntro.innerHTML = html`
-          <div class="preIntro">
-            <div class="card preText">
-  <h3>Командно-лидерский турнир</h3>
-  <p>
-    Введите ваш ID, чтобы увидеть прогресс, сильные результаты и начисление баллов по зачётным сессиям.
-  </p>
-  <div class="divider"></div>
-  <div class="muted" style="font-weight:800; line-height:1.65">
-    В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса, формирующая будущих профессионалов и лидеров.
-  </div>
-  <div class="small" style="margin-top:10px">Дата последнего обновления: <b>10.03.2026</b></div>
-</div>
-
-            <div class="card preSlider">
-              <div class="heroSlider" id="heroSlider">
-                ${SLIDES.map((s,i)=>`
-                  <div class="heroSlide ${i===0?"active":""}" data-i="${i}">
-                    <img src="${esc(s.src)}" alt="${esc(s.label)}"
-                      onerror="this.style.display='none'; this.parentElement.style.background='rgba(255,255,255,.04)';" />
-                  </div>
-                `).join("")}
-                <div class="heroOverlay">
-                  <div class="heroCaption" id="heroCaption">${esc(SLIDES[0].label)}</div>
-                  <div class="heroDots" id="heroDots">
-                    ${SLIDES.map((_,i)=>`<div class="heroDot ${i===0?"active":""}" data-i="${i}" role="button" tabindex="0" aria-label="Слайд ${i+1}"></div>`).join("")}
-                  </div>
-                </div>
-              </div>
+      <div class="card preSlider">
+        <div class="heroSlider" id="heroSlider">
+          ${SLIDES.map((s,i)=>`
+            <div class="heroSlide ${i===0?"active":""}" data-i="${i}">
+              <img src="${esc(s.src)}" alt="${esc(s.label)}"
+                onerror="this.style.display='none'; this.parentElement.style.background='rgba(255,255,255,.04)';" />
+            </div>
+          `).join("")}
+          <div class="heroOverlay">
+            <div class="heroCaption" id="heroCaption">${esc(SLIDES[0].label)}</div>
+            <div class="heroDots" id="heroDots">
+              ${SLIDES.map((_,i)=>`<div class="heroDot ${i===0?"active":""}" data-i="${i}" role="button" tabindex="0" aria-label="Слайд ${i+1}"></div>`).join("")}
             </div>
           </div>
-        `;
+        </div>
+      </div>
+    </div>
+  `;
 
-        initSlides(); // запускаем авто-слайды
-      }
+  initSlides();
+}
 
       function initSlides(){
         const slider = document.getElementById("heroSlider");
