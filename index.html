@@ -1,1905 +1,1786 @@
-<!doctype html>
-<html lang="ru">
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>КЛТ — Рейтинг</title>
-  <style>
-    :root{
-      --bg:#0b1020;
-      --text:#eaf0ff;
-      --muted:#a9b4d6;
-      --accent:#7c5cff;
-      --accent2:#21d4ff;
-      --ok:#25c26e;
-      --warn:#f6c343;
-      --bad:#ff4d6d;
-      --border:rgba(255,255,255,.10);
-      --shadow: 0 14px 40px rgba(0,0,0,.35);
-      --r: 18px;
-      --r2: 26px;
-      --max: 1120px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 600px at 25% -10%, rgba(124,92,255,.35), transparent 55%),
-        radial-gradient(900px 500px at 85% 0%, rgba(33,212,255,.22), transparent 55%),
-        linear-gradient(180deg, #070a14 0%, var(--bg) 40%, #070a14 100%);
-      min-height:100vh;
-    }
-    a{color:inherit; text-decoration:none}
-    .wrap{max-width:var(--max); margin:0 auto; padding:24px}
-    .topbar{
-      position:sticky; top:0; z-index:20;
-      backdrop-filter: blur(10px);
-      background: rgba(7,10,20,.65);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px;
-      max-width:var(--max); margin:0 auto; padding:14px 24px;
-    }
-    .brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.2px;}
-    .logo{
-      width:38px; height:38px; border-radius:12px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 10px 25px rgba(124,92,255,.25);
-    }
-    .logoImg{
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  display:block;
-  filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
-  transform: translateZ(0);
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>КЛТ — Рейтинг</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-router@4/dist/vue-router.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   THEME TOKENS
+═══════════════════════════════════════ */
+:root { --r:18px; --r-sm:10px; --trans:.3s ease; }
+
+[data-theme="dark"] {
+  --bg:#04070f; --bg2:#070c1a; --bg3:#0a1028;
+  --surf:rgba(255,255,255,0.04); --surf2:rgba(255,255,255,0.08);
+  --bord:rgba(255,255,255,0.08); --bord2:rgba(255,255,255,0.16);
+  --t1:#eef2ff; --t2:#6e85b2; --t3:#3a4d6a;
+  --ac:#38bdf8; --ac2:#f59e0b; --ac3:#818cf8;
+  --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  --gold:#fbbf24; --silv:#94a3b8; --brnz:#d97706; --wood:#6b7280;
+  --nav-bg:rgba(4,7,15,.85); --shadow:0 8px 40px rgba(0,0,0,.55);
+  --glow-ac:rgba(56,189,248,.2); --glow-3:rgba(129,140,248,.15);
 }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:10px; padding:12px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.10);
-color: var(--text);
-      font-weight:1000;
-      box-shadow: 0 14px 35px rgba(124,92,255,.25);
-      transition:.15s ease;
-      cursor:pointer;
-      user-select:none;
-      white-space: nowrap;
-    }
-    .btn:hover{
-  transform: translateY(-1px);
-  border-color: rgba(255,255,255,.28);
-  background: rgba(255,255,255,.14);
+[data-theme="light"] {
+  --bg:#f0f5ff; --bg2:#e8effe; --bg3:#dde8ff;
+  --surf:rgba(255,255,255,.85); --surf2:rgba(255,255,255,.95);
+  --bord:rgba(20,50,160,.1); --bord2:rgba(20,50,160,.2);
+  --t1:#0e1830; --t2:#4060a0; --t3:#8090c0;
+  --ac:#0284c7; --ac2:#d97706; --ac3:#6d28d9;
+  --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+  --gold:#b45309; --silv:#475569; --brnz:#92400e; --wood:#374151;
+  --nav-bg:rgba(240,245,255,.9); --shadow:0 8px 32px rgba(0,30,100,.12);
+  --glow-ac:rgba(2,132,199,.12); --glow-3:rgba(109,40,217,.08);
 }
-    .btn.secondary{
-      background: rgba(255,255,255,.03);
-      color: var(--text);
-      border-color: rgba(255,255,255,.16);
-      box-shadow:none;
-      font-weight:900;
-    }
 
-    .card{
-      background: rgba(255,255,255,.03);
-      border:1px solid var(--border);
-      border-radius: var(--r2);
-      box-shadow: var(--shadow);
-    }
-    .crumbs{color:var(--muted); font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.22px}
-    .pageTitle{margin:6px 0 8px; font-size:28px; letter-spacing:-.4px}
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--t1);
+  min-height:100vh;
+  display:flex; flex-direction:column;
+  transition:background var(--trans),color var(--trans);
+  overflow-x:hidden;
+}
 
-    input[type="text"]{
-      padding:12px 14px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(8,12,24,.55);
-      color: var(--text);
-      font-weight:1000;
-      letter-spacing:.6px;
-      outline:none;
-      min-width: 240px;
-    }
-    input[type="text"]::placeholder{color: rgba(169,180,214,.65); letter-spacing:.2px}
-    .formRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+/* Background mesh */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 1100px 650px at 10% -8%, rgba(56,189,248,.11) 0%,transparent 60%),
+    radial-gradient(ellipse 900px 550px at 92% 4%,  rgba(129,140,248,.09) 0%,transparent 55%),
+    radial-gradient(ellipse 700px 400px at 55% 92%, rgba(245,158,11,.05) 0%, transparent 50%);
+  transition:opacity var(--trans);
+}
+[data-theme="light"] body::before{
+  background:
+    radial-gradient(ellipse 1100px 650px at 10% -8%, rgba(2,132,199,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 900px 550px at 92% 4%, rgba(109,40,217,.05) 0%,transparent 55%);
+}
 
-    .notice{
-      padding:12px 14px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      color:var(--muted);
-      font-weight:800;
-      line-height:1.5;
-      margin-top:12px;
-    }
-    .notice.ok{border-color: rgba(37,194,110,.35)}
-    .notice.bad{border-color: rgba(255,77,109,.35)}
-    .notice.expelled{
-      border-color: rgba(255,77,109,.75);
-      background: rgba(255,77,109,.12);
-      color: rgba(255,220,226,.98);
-    }
+/* ═══════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--nav-bg);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--bord);
+  height:60px;display:flex;align-items:center;
+  padding:0 24px;gap:12px;
+  transition:background var(--trans);
+}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t1)}
+.brand-logo{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--ac) 0%,var(--ac3) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Exo 2',sans-serif;font-size:12px;font-weight:900;color:#fff;letter-spacing:.5px;
+}
+.brand-name{font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;letter-spacing:.3px}
+.topbar-spacer{flex:1}
+.topbar-nav{display:flex;align-items:center;gap:6px}
+.nbtn{
+  display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:8px;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
+  text-decoration:none;border:none;background:transparent;color:var(--t2);
+  font-family:'Nunito',sans-serif;
+}
+.nbtn:hover{background:var(--surf2);color:var(--t1)}
+.nbtn.active{background:var(--surf2);color:var(--ac)}
+.nbtn.cta{
+  background:linear-gradient(135deg,var(--ac),var(--ac3));
+  color:#fff;padding:6px 16px;
+}
+.nbtn.cta:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 20px var(--glow-ac)}
+.nbtn.logout{color:var(--bad)}
+.nbtn.logout:hover{background:rgba(239,68,68,.1)}
+.theme-btn{
+  width:34px;height:34px;border-radius:8px;
+  border:1px solid var(--bord2);background:var(--surf);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:15px;transition:all .2s;color:var(--t2);
+}
+.theme-btn:hover{background:var(--surf2);color:var(--t1)}
 
-    .small{font-size:12px; color:var(--muted); font-weight:800}
-    .muted{color:var(--muted)}
-    .divider{height:1px; background: var(--border); margin:14px 0}
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.page{max-width:1200px;margin:0 auto;padding:32px 20px 60px;flex:1;animation:pageIn .4s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.crumbs{font-size:11px;color:var(--t3);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+.crumbs b{color:var(--t2)}
+.page-title{font-family:'Exo 2',sans-serif;font-size:28px;font-weight:900;color:var(--t1);margin-bottom:28px;letter-spacing:.3px}
 
-    .kpiGrid{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:10px;
-      margin-top:12px;
-    }
-    .kpi{
-      padding:12px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-    }
-    .kpi .k{color:var(--muted); font-weight:900; font-size:12px}
-    .kpi .v{font-weight:1100; font-size:18px; margin-top:6px}
-    .kpi .c{color:var(--muted); font-weight:800; font-size:12px; margin-top:6px}
+/* ═══════════════════════════════════════
+   CARD
+═══════════════════════════════════════ */
+.card{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:24px;
+  transition:background var(--trans),border-color var(--trans);
+}
+.card-title{
+  font-family:'Exo 2',sans-serif;font-size:12px;font-weight:800;
+  color:var(--t2);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;
+}
+.card-title .ct-icon{margin-right:6px}
 
-    .dash{
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:12px;
-      margin-top:12px;
-    }
+/* ═══════════════════════════════════════
+   RATING PAGE — HERO
+═══════════════════════════════════════ */
+.hero{
+  text-align:center;padding:52px 20px 44px;
+  margin-bottom:28px;position:relative;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 16px;border-radius:100px;
+  border:1px solid var(--bord2);background:var(--surf);
+  font-size:11px;font-weight:800;color:var(--ac);
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:22px;
+}
+.hero h1{
+  font-family:'Exo 2',sans-serif;
+  font-size:clamp(30px,6vw,54px);font-weight:900;
+  line-height:1.1;margin-bottom:14px;
+  background:linear-gradient(135deg,var(--t1) 0%,var(--ac) 45%,var(--ac3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero p{font-size:15px;color:var(--t2);max-width:520px;margin:0 auto 34px;line-height:1.65}
 
-    .chartRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto;
-      gap:12px;
-      margin-top:12px;
-      align-items:stretch;
-    }
+/* ID Form */
+.id-form{display:flex;gap:10px;max-width:380px;margin:0 auto}
+.id-input{
+  flex:1;height:50px;border-radius:12px;
+  border:1.5px solid var(--bord2);background:var(--surf2);
+  color:var(--t1);font-family:'Exo 2',sans-serif;
+  font-size:18px;font-weight:700;padding:0 18px;
+  text-align:center;letter-spacing:5px;outline:none;transition:all .2s;
+}
+.id-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow-ac)}
+.id-input::placeholder{font-size:13px;letter-spacing:1px;color:var(--t3);font-weight:500}
+.btn-go{
+  height:50px;padding:0 22px;border-radius:12px;
+  background:linear-gradient(135deg,var(--ac),var(--ac3));
+  border:none;color:#fff;font-family:'Exo 2',sans-serif;
+  font-size:14px;font-weight:800;letter-spacing:.5px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-go:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 20px var(--glow-ac)}
+.btn-go:active{transform:translateY(0)}
+.id-hint{font-size:12px;color:var(--t3);text-align:center;margin-top:10px}
+.id-error{
+  font-size:13px;color:var(--bad);text-align:center;margin-top:12px;
+  padding:8px 16px;border-radius:8px;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+}
 
-    .chartCard{
-      padding:14px;
-      border-radius: 18px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-    }
-    .chartTitle{font-weight:1000; margin:0 0 10px}
-    canvas{width:100%; height:260px; display:block}
-    #top3Chart{height:240px;}
+/* Hero stats row */
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.hstat{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:20px;text-align:center;
+  position:relative;overflow:hidden;transition:all .2s;
+}
+.hstat:hover{border-color:var(--bord2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.hstat::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--ac),var(--ac3));
+}
+.hstat-val{
+  font-family:'Exo 2',sans-serif;font-size:30px;font-weight:900;
+  color:var(--ac);display:block;margin-bottom:4px;
+}
+.hstat-label{font-size:12px;color:var(--t2);font-weight:700;letter-spacing:.3px}
 
-    .table{
-      width:100%;
-      border-collapse: collapse;
-      margin-top:12px;
-      overflow:hidden;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.02);
-    }
-    .table th, .table td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      text-align:left;
-      font-size: 13px;
-      vertical-align: top;
-    }
-    .table th{color: var(--muted); font-weight:1000; letter-spacing:.2px}
+/* Info blocks */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+.info-block{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:24px;
+}
+.info-block h3{
+  font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;
+  margin-bottom:10px;color:var(--t1);
+}
+.info-block p{font-size:13px;color:var(--t2);line-height:1.6}
+.update-line{font-size:11px;color:var(--t3);margin-top:10px;font-weight:600}
 
-    .badge{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:6px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      font-weight:1000;
-      font-size:12px;
-      white-space: nowrap;
-    }
-    .b-ok{border-color: rgba(37,194,110,.35)}
-    .b-warn{border-color: rgba(246,195,67,.35)}
-    .b-bad{border-color: rgba(255,77,109,.35)}
+/* ═══════════════════════════════════════
+   STUDENT PAGE
+═══════════════════════════════════════ */
+/* Student header card */
+.stu-header{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:24px;margin-bottom:22px;
+  display:flex;align-items:center;gap:18px;
+}
+.stu-avatar{
+  width:56px;height:56px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--ac),var(--ac3));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Exo 2',sans-serif;font-size:18px;font-weight:900;color:#fff;
+}
+.stu-name{font-family:'Exo 2',sans-serif;font-size:20px;font-weight:900;color:var(--t1);margin-bottom:6px}
+.stu-chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:6px;
+  background:var(--surf2);border:1px solid var(--bord);
+  font-size:12px;font-weight:700;color:var(--t2);
+}
+.chip.ok{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--ok)}
+.chip.bad{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--bad)}
+.stu-spacer{flex:1}
+.league-pill{
+  display:flex;flex-direction:column;align-items:center;
+  padding:10px 18px;border-radius:12px;
+  background:var(--surf2);border:1px solid var(--bord2);text-align:center;
+}
+.league-pill .lp-emoji{font-size:22px;line-height:1;margin-bottom:4px}
+.league-pill .lp-name{
+  font-family:'Exo 2',sans-serif;font-size:13px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.league-pill.gold{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3)}
+.league-pill.gold .lp-name{color:var(--gold)}
+.league-pill.silver{background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.3)}
+.league-pill.silver .lp-name{color:var(--silv)}
+.league-pill.bronze{background:rgba(217,119,6,.1);border-color:rgba(217,119,6,.3)}
+.league-pill.bronze .lp-name{color:var(--brnz)}
+.league-pill.wood .lp-name{color:var(--wood)}
 
-    .supportWrap{
-      margin-top:14px;
-      padding:14px 0 8px;
-      border-top: 1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .supportLink{
-      color: rgba(234,240,255,.92);
-      font-weight:1000;
-      border-bottom: 1px dashed rgba(255,255,255,.28);
-      cursor:pointer;
-      user-select:none;
-    }
-    .supportBox{
-      display:none;
-      margin-top:10px;
-      padding:12px 14px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      color: var(--muted);
-      font-weight:800;
-      line-height:1.6;
-    }
-    .supportBox a{
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
+/* KPI Grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:18px;position:relative;overflow:hidden;
+  transition:all .2s;
+}
+.kpi:hover{border-color:var(--bord2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.kpi::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:var(--kpi-c,var(--ac));opacity:.5;
+}
+.kpi-icon{font-size:20px;display:block;margin-bottom:8px}
+.kpi-lbl{font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.kpi-val{font-family:'Exo 2',sans-serif;font-size:24px;font-weight:900;color:var(--t1);display:block;margin-bottom:3px}
+.kpi-sub{font-size:11px;color:var(--t3);font-weight:600}
 
-    /* ---- Pre-Input Slides (only when ID empty) ---- */
-    .preIntro{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:12px;
-      align-items:stretch;
-    }
-    .preText{
-      padding:18px;
-    }
-    .preText h3{margin:0 0 8px; font-size:18px; letter-spacing:-.2px}
-    .preText p{margin:0; color:var(--muted); font-weight:800; line-height:1.6}
-    .preSlider{
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .heroSlider{
-      border-radius: 22px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      overflow:hidden;
-      position:relative;
-      min-height: 260px;
-    }
-    .heroSlide{
-      position:absolute;
-      inset:0;
-      opacity:0;
-      transition: opacity .6s ease;
-    }
-    .heroSlide.active{opacity:1;}
-    .heroSlide img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-      filter:saturate(1.05);
-      opacity:.92;
-    }
-    .heroSlider::after{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        radial-gradient(900px 260px at 20% 0%, rgba(124,92,255,.22), transparent 55%),
-        radial-gradient(700px 240px at 85% 20%, rgba(33,212,255,.14), transparent 60%),
-        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.42));
-      pointer-events:none;
-    }
-    .heroOverlay{
-      position:absolute;
-      left:14px; right:14px; bottom:14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      z-index:2;
-    }
-    .heroCaption{
-      padding:10px 12px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.16);
-      background: rgba(7,10,20,.55);
-      color: rgba(234,240,255,.92);
-      font-weight:900;
-      line-height:1.35;
-    }
-    .heroDots{display:flex; gap:8px; align-items:center;}
-    .heroDot{
-      width:9px; height:9px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.35);
-      background: rgba(255,255,255,.10);
-      cursor:pointer;
-    }
-    .heroDot.active{
-      background: rgba(255,255,255,.85);
-      border-color: rgba(255,255,255,.85);
-    }
+/* Rank progress bar */
+.rank-bar-wrap{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);padding:18px;margin-bottom:22px}
+.rank-bar-label{font-size:12px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.rank-bar-track{height:8px;background:var(--bord);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.rank-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--ac));transition:width 1.2s ease}
+.rank-bar-info{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);font-weight:600}
 
-    @media (max-width: 980px){
-      .kpiGrid{grid-template-columns: 1fr 1fr}
-      .dash{grid-template-columns: 1fr}
-      .chartRow{grid-template-columns: 1fr; grid-template-rows: auto;}
-      .preIntro{grid-template-columns:1fr;}
-    }
-    @media (max-width: 520px){
-      .kpiGrid{grid-template-columns: 1fr}
-      input[type="text"]{ min-width: 0; width: 100%; }
-      .formRow .btn{ width: 100%; }
-      .heroSlider{min-height:220px;}
-    }
+/* Dashboard grid */
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.dgrid-3{grid-template-columns:1fr 1fr 1fr}
+.dspan{grid-column:1/-1}
 
-    /* Mobile chart hard-fix */
-    @media (max-width: 700px){
-      .chartRow{
-        grid-template-columns: 1fr !important;
-        grid-template-rows: auto !important;
-      }
-      .chartCard{
-        grid-column: auto !important;
-        grid-row: auto !important;
-      }
-      .chartTitle{
-        white-space: normal;
-        word-break: break-word;
-      }
-      canvas{ max-width:100%; height:220px; display:block; }
-      .table{ display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-      .table th, .table td{ white-space: nowrap; }
-    }
+/* Charts */
+.chart-box{position:relative;height:240px}
+.chart-box-sm{position:relative;height:200px}
+.radar-box{position:relative;height:290px}
 
-    /* prevents “vertical letters”/overlap */
-    .card, .chartCard, .kpi, .notice { min-width: 0; }
-    .dash, .chartRow, .kpiGrid { min-width: 0; }
-  </style>
+/* Top results */
+.top-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:10px;background:var(--surf2);
+  margin-bottom:8px;transition:all .2s;
+}
+.top-item:last-child{margin-bottom:0}
+.top-item:hover{transform:translateX(4px);border-left:2px solid var(--ac)}
+.pos-badge{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Exo 2',sans-serif;font-size:12px;font-weight:900;
+}
+.pos-1{background:rgba(251,191,36,.2);color:var(--gold)}
+.pos-2{background:rgba(148,163,184,.2);color:var(--silv)}
+.pos-3{background:rgba(217,119,6,.2);color:var(--brnz)}
+.top-game{font-size:13px;font-weight:700;color:var(--t1)}
+.top-detail{font-size:11px;color:var(--t2);margin-top:2px}
+.top-pts{font-family:'Exo 2',sans-serif;font-size:16px;font-weight:900;color:var(--ac2);margin-left:auto}
+
+/* Sessions table */
+.tbl-wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{
+  position:sticky;top:0;z-index:1;
+  padding:8px 12px;text-align:left;
+  background:var(--bg2);color:var(--t2);
+  font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:1px solid var(--bord);font-size:10px;
+}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--bord);color:var(--t1)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--surf2)}
+.game-tag{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:800;
+}
+.gt-cats{background:rgba(245,158,11,.15);color:#f59e0b}
+.gt-paint{background:rgba(239,68,68,.15);color:#ef4444}
+.gt-civ{background:rgba(56,189,248,.15);color:#38bdf8}
+.gt-civd{background:rgba(167,139,250,.15);color:#a78bfa}
+.gt-other{background:rgba(107,114,128,.15);color:#9ca3af}
+
+/* Leaderboard styles */
+.lb-search-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.lb-search{flex:1;min-width:160px;height:44px;border-radius:10px;border:1.5px solid var(--bord2);background:var(--surf);color:var(--t1);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;padding:0 16px;outline:none;transition:all .2s}
+.lb-search:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow-ac)}
+.lb-select{height:44px;border-radius:10px;border:1.5px solid var(--bord2);background:var(--surf);color:var(--t1);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;padding:0 14px;outline:none;cursor:pointer}
+.lb-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:18px}
+.lb-pager span{font-size:13px;color:var(--t2)}
+.lb-pager button{
+  padding:6px 16px;border-radius:8px;border:1px solid var(--bord2);background:var(--surf);
+  color:var(--t2);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+}
+.lb-pager button:hover{background:var(--surf2);color:var(--t1)}
+.lb-pager button:disabled{opacity:.5;cursor:not-allowed}
+.lb-table{width:100%;border-collapse:collapse;font-size:13px}
+.lb-table th{
+  text-align:left;padding:12px;background:var(--surf);border-bottom:1px solid var(--bord);
+  font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;font-size:11px;
+}
+.lb-table td{padding:14px 12px;border-bottom:1px solid var(--bord);color:var(--t1)}
+.lb-table tr:hover td{background:var(--surf2);cursor:pointer}
+.lb-rank{font-family:'Exo 2',sans-serif;font-weight:900;color:var(--ac)}
+.lb-name{font-weight:700}
+.lb-group{font-size:12px;color:var(--t2)}
+.lb-league{font-size:16px;line-height:1}
+.lb-pts{font-family:'Exo 2',sans-serif;font-weight:900;color:var(--ac2)}
+.lb-attend{font-size:12px}
+
+/* Notice */
+.notice{
+  padding:10px 16px;border-radius:8px;font-size:12px;
+  margin-bottom:18px;
+}
+.notice.info{background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);color:var(--t2)}
+.notice.warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);color:var(--t2)}
+
+/* ═══════════════════════════════════════
+   ADMIN LOGIN
+═══════════════════════════════════════ */
+.login-wrap{max-width:400px;margin:70px auto;text-align:center;animation:pageIn .4s ease}
+.login-ico{
+  width:68px;height:68px;border-radius:18px;margin:0 auto 22px;
+  background:linear-gradient(135deg,#dc2626,var(--ac3));
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+}
+.login-wrap h2{font-family:'Exo 2',sans-serif;font-size:24px;font-weight:900;margin-bottom:6px}
+.login-wrap .sub{font-size:14px;color:var(--t2);margin-bottom:28px}
+.fgroup{margin-bottom:14px;text-align:left}
+.flabel{display:block;font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.finput{
+  width:100%;height:48px;border-radius:10px;
+  border:1.5px solid var(--bord2);background:var(--surf);
+  color:var(--t1);font-family:'Nunito',sans-serif;
+  font-size:15px;font-weight:700;padding:0 16px;outline:none;transition:all .2s;
+}
+.finput:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow-ac)}
+.errmsg{
+  margin-top:12px;padding:8px 14px;border-radius:8px;
+  font-size:13px;color:var(--bad);
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+}
+
+/* ═══════════════════════════════════════
+   ADMIN DASHBOARD
+═══════════════════════════════════════ */
+.admin-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 14px;border-radius:100px;
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);
+  font-size:11px;font-weight:800;color:var(--bad);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;
+}
+.astats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.astat{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:18px;
+  transition:all .2s;overflow:hidden;position:relative;
+}
+.astat:hover{border-color:var(--bord2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.astat-icon{font-size:22px;display:block;margin-bottom:8px}
+.astat-lbl{font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.astat-val{font-family:'Exo 2',sans-serif;font-size:26px;font-weight:900;color:var(--t1)}
+.astat-sub{font-size:11px;color:var(--t3);margin-top:3px}
+.astat-bar{height:3px;background:var(--bord);border-radius:2px;overflow:hidden;margin-top:10px}
+.astat-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ac),var(--ac3));transition:width 1.2s ease}
+
+/* Records */
+.records{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.rec{
+  background:var(--surf);border:1px solid var(--bord);
+  border-radius:var(--r);padding:18px;
+  display:flex;align-items:center;gap:14px;transition:all .2s;
+}
+.rec:hover{border-color:var(--bord2);box-shadow:var(--shadow)}
+.rec-icon{
+  width:46px;height:46px;border-radius:12px;flex-shrink:0;
+  background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.rec-lbl{font-size:10px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.rec-val{font-family:'Exo 2',sans-serif;font-size:20px;font-weight:900;color:var(--ac)}
+.rec-sub{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* League list */
+.league-items{margin-top:12px}
+.litem{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--bord);font-size:13px;
+}
+.litem:last-child{border-bottom:none}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lname{flex:1;font-weight:700}
+.lcount{font-family:'Exo 2',sans-serif;font-size:15px;font-weight:900}
+.lpct{font-size:11px;color:var(--t2);width:38px;text-align:right}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--bord);padding-bottom:0}
+.tab{
+  padding:8px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;color:var(--t2);border:none;background:transparent;
+  font-family:'Nunito',sans-serif;
+}
+.tab:hover{color:var(--t1)}
+.tab.active{background:var(--surf2);color:var(--ac);border-bottom:2px solid var(--ac)}
+
+/* ═══════════════════════════════════════
+   LOADING / EMPTY
+═══════════════════════════════════════ */
+.loading{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:280px;gap:16px;
+  color:var(--t2);font-size:14px;
+}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--bord);
+  border-top-color:var(--ac);border-radius:50%;
+  animation:spin .75s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--t2)}
+.empty-icon{font-size:40px;display:block;margin-bottom:12px}
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+.footer{
+  background:var(--surf);border-top:1px solid var(--bord);
+  padding:14px 24px;display:flex;align-items:center;
+  justify-content:space-between;font-size:12px;color:var(--t3);
+}
+.footer a{color:var(--t2);text-decoration:none;font-weight:700}
+.footer a:hover{color:var(--ac)}
+
+/* ═══════════════════════════════════════
+   UTILS
+═══════════════════════════════════════ */
+.txt-ac{color:var(--ac)} .txt-muted{color:var(--t2)} .txt-sm{font-size:12px}
+.mb8{margin-bottom:8px} .mb16{margin-bottom:16px} .mb24{margin-bottom:24px}
+.flex-row{display:flex;align-items:center;gap:10px}
+.flex1{flex:1}
+.bold{font-weight:800}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:768px){
+  .kpi-grid,.astats{grid-template-columns:repeat(2,1fr)}
+  .dgrid,.dgrid-3,.info-grid,.records{grid-template-columns:1fr}
+  .hstats{grid-template-columns:repeat(2,1fr)}
+  .page{padding:20px 14px 40px}
+  .page-title{font-size:22px}
+  .topbar-nav .nbtn:not(.cta):not(.theme-btn){display:none}
+  .lb-search-row{flex-direction:column}
+  .lb-search{flex:1}
+}
+@media(max-width:480px){
+  .kpi-grid,.hstats,.astats{grid-template-columns:1fr 1fr}
+  .stu-header{flex-wrap:wrap}
+  .lb-table{font-size:12px}
+  .lb-table td{padding:10px 8px}
+}
+</style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="nav">
-      <a class="brand" href="#/rating" aria-label="КЛТ Рейтинг">
-        <img class="logoImg" src="./img/logo.svg" alt="КЛТ" />
-        <div>КЛТ <span class="muted">Рейтинг</span></div>
-      </a>
-      <a class="btn" href="#/rating" aria-label="Показать результаты">Показать результаты</a>
-    </div>
-  </div>
-
-  <main class="wrap" id="app" aria-live="polite"></main>
-
-  <script>
-    function baseNoHash(){
-      const u = new URL(location.href);
-      u.hash = "";
-      u.search = "";
-      return u.toString();
-    }
-    const DATA_URLS = {
-      students: new URL("./site_students.csv", baseNoHash()).toString(),
-      sessions: new URL("./site_sessions.csv", baseNoHash()).toString(),
-    };
-
-    const DB = {
-      loaded: false,
-      loading: false,
-      loadError: "",
-      studentsById: new Map(),
-      sessionsById: new Map(),
-      totalsById: new Map(),
-      leagueById: new Map(),
-      thresholds: { goldN:0, silverN:0, totalN:0 },
-    };
-
-    const SLIDES = [
-      { src: "./img/video_slide1.webp", label: "Лидерство в действии" },
-      { src: "./img/video_slide2.webp", label: "Турниры и командная работа" },
-      { src: "./img/video_slide3.webp", label: "Команда • решения • темп" },
-      { src: "./img/video_slide5.webp", label: "Стратегия • дисциплина • результат" },
-      { src: "./img/video_slide7.webp", label: "Командно-лидерский турнир" },
-    ];
-
-    const app = document.getElementById("app");
-    const esc = (s)=> String(s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
-    const html = (strings, ...vals)=> strings.map((s,i)=> s + (vals[i] ?? "")).join("");
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-    const normalizeId = (v) => {
-      const raw = String(v ?? "").trim().replace(/\D/g,"");
-      if (!raw) return "";
-      return raw.padStart(4,"0").slice(-4);
-    };
-
-    function isExpelledStatus(status){
-      const s = String(status ?? "").toLowerCase().replace(/\s+/g, " ").trim();
-      return s.includes("отчисл");
-    }
-
-    function parseISODateMaybe(s){
-      const t = String(s ?? "").trim();
-      if (!t) return null;
-
-      const mISO = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (mISO){
-        const yy = Number(mISO[1]);
-        const mm = Number(mISO[2]);
-        const dd = Number(mISO[3]);
-        if (!Number.isFinite(yy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null;
-        if (mm < 1 || mm > 12) return null;
-        if (dd < 1 || dd > 31) return null;
-        const d = new Date(yy, mm - 1, dd);
-        if (isNaN(+d)) return null;
-        if (d.getFullYear() !== yy || (d.getMonth()+1) !== mm || d.getDate() !== dd) return null;
-        return d;
-      }
-
-      if (/^\d{2}\.\d{2}\.\d{4}$/.test(t)) {
-        const [ddS, mmS, yyS] = t.split(".");
-        const dd = Number(ddS), mm = Number(mmS), yy = Number(yyS);
-        if (mm < 1 || mm > 12) return null;
-        if (dd < 1 || dd > 31) return null;
-        const d = new Date(yy, mm-1, dd);
-        if (isNaN(+d)) return null;
-        if (d.getFullYear() !== yy || (d.getMonth()+1) !== mm || d.getDate() !== dd) return null;
-        return d;
-      }
-
-      const d = new Date(t);
-      return isNaN(+d) ? null : d;
-    }
-
-    function formatDateRU(s){
-      const raw = String(s ?? "").trim();
-      const d = parseISODateMaybe(raw);
-      if (!d) return "—";
-      const dd = String(d.getDate()).padStart(2,"0");
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const yy = String(d.getFullYear());
-      return `${dd}.${mm}.${yy}`;
-    }
-
-    function includesAny(hay, needles){
-      const s = String(hay ?? "").toLowerCase();
-      return needles.some(n => s.includes(String(n).toLowerCase()));
-    }
-
-    function detectDelimiter(firstLine){
-      let comma = 0, semi = 0, tab = 0;
-      let inQuotes = false;
-      for (let i=0;i<firstLine.length;i++){
-        const ch = firstLine[i];
-        const next = firstLine[i+1];
-        if (ch === '"' && inQuotes && next === '"'){ i++; continue; }
-        if (ch === '"'){ inQuotes = !inQuotes; continue; }
-        if (!inQuotes){
-          if (ch === ",") comma++;
-          else if (ch === ";") semi++;
-          else if (ch === "\t") tab++;
-        }
-      }
-      if (tab >= semi && tab >= comma) return "\t";
-      if (semi >= comma) return ";";
-      return ",";
-    }
-
-    function parseCSV(text){
-      const clean = String(text ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-      const firstNonEmpty = clean.split("\n").find(l=>l.trim().length) || "";
-      const delim = detectDelimiter(firstNonEmpty);
-
-      const rows = [];
-      let row = [];
-      let cur = "";
-      let inQuotes = false;
-
-      for (let i=0;i<clean.length;i++){
-        const ch = clean[i];
-        const next = clean[i+1];
-
-        if (ch === '"' && inQuotes && next === '"'){ cur += '"'; i++; continue; }
-        if (ch === '"'){ inQuotes = !inQuotes; continue; }
-
-        if (!inQuotes && ch === "\n"){
-          row.push(cur);
-          rows.push(row);
-          row = [];
-          cur = "";
-          continue;
-        }
-
-        if (!inQuotes && ch === delim){
-          row.push(cur);
-          cur = "";
-          continue;
-        }
-
-        cur += ch;
-      }
-      if (cur.length || row.length){
-        row.push(cur);
-        rows.push(row);
-      }
-      return rows.filter(r=> r.some(x=> String(x).trim().length));
-    }
-
-    const normalizeHeader = (h) =>
-      String(h ?? "").replace(/^\uFEFF/, "").trim().toLowerCase();
-
-    const findHeader = (arr, variants) => {
-      const set = variants.map(v=> String(v).toLowerCase());
-      return arr.findIndex(x=> set.includes(x));
-    };
-
-    function toNumberMaybe(v){
-      const s = String(v ?? "").trim();
-      if (!s) return null;
-      const n = Number(s.replace(",", "."));
-      return Number.isFinite(n) ? n : null;
-    }
-
-    function isAttendanceValue(v){
-      const s = String(v ?? "").trim();
-      if (!s) return false;
-      if (s === "С" || s === "c" || s === "C") return true;
-      const n = toNumberMaybe(s);
-      return n === 0 || n === -1 || n === 1;
-    }
-
-    function attendanceIsPresent(v){
-      const s = String(v ?? "").trim();
-      if (!s) return null;
-      if (s === "С" || s === "c" || s === "C") return true;
-      const n = toNumberMaybe(s);
-      if (n === -1) return false;
-      if (n === 0 || n === 1) return true;
-      return null;
-    }
-
-    function eligibleForScoring(row){
-  const a = String(row.score_or_attendance ?? "").trim();
-  if (a !== "0") return false;
-
-  const pr = String(row.place_or_result ?? "").trim();
-
-  // ✅ если результата нет (пусто или прочерк) — баллы не считаем
-  if (!pr || pr === "—" || pr === "-") return false;
-
-  if (pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")) return false;
-  return true;
-}
-
-    function normTournamentKey(name){
-      const s = String(name ?? "").toLowerCase();
-      if (s.includes("business") || s.includes("cats") || s.includes("бизнес")) return "Business Cats";
-      if (s.includes("пейнтбол") || s.includes("paint")) return "Пейнтбол";
-      if (s.includes("civilization") || s.includes("civ")){
-        if (s.includes("duel") || s.includes("дуel") || s.includes("дуэль")) return "Civilization: DUEL";
-        if (s.includes("ceo")) return "Civilization: CEO";
-        return "Civilization: Solo";
-      }
-      if (s.includes("бенди") || s.includes("bandy")) return "Бенди";
-      if (s.includes("feudal")) return "Life is Feudal";
-      return (name || "—").trim() || "—";
-    }
-
-    function parsePlaceNumber(s){
-      const txt = String(s ?? "").trim();
-      if (!txt) return null;
-      if (txt === "#Н/Д" || txt === "#N/A" || txt.toLowerCase().includes("н/д")) return null;
-      const m = txt.match(/(\d{1,3})/);
-      if (!m) return null;
-      const n = Number(m[1]);
-      return Number.isFinite(n) ? n : null;
-    }
-
-    function bcPointsFromPlace(place){
-      const p = clamp(place, 1, 20);
-      const score = Math.round(((20 - p) / 19) * 100);
-      return clamp(score, 0, 100);
-    }
-
-    function parseYearFromRow(row){
-      const s = [
-        row.place_or_result,
-        row.score_or_attendance,
-        row.comment,
-        row.extra,
-        row.label,
-        row.stage
-      ].map(x=>String(x ?? "")).join(" ");
-      const m = s.match(/(16\d{2}|17\d{2}|18\d{2})/);
-      if (!m) return null;
-      const y = Number(m[1]);
-      return Number.isFinite(y) ? y : null;
-    }
-
-    /* ✅ CHANGED (CIV ONLY): detect revolution rows by label (year or "Не защитился") */
-    function isCivRevolutionRow(row){
-      const lbl = String(row.label ?? "").trim().toLowerCase();
-      if (!lbl) return false;
-      if (lbl.includes("не защит")) return true;
-      return /(16\d{2}|17\d{2}|18\d{2})/.test(lbl);
-    }
-
-    function playoffRoundPoints(denom){
-      const map = { 32:20, 16:30, 8:40, 4:60, 2:80 };
-      return map[denom] ?? null;
-    }
-    function extractPlayoffDenom(text){
-      const blob = String(text ?? "").toLowerCase();
-      const m = blob.match(/1\s*[/\\]\s*(32|16|8|4|2)/);
-      if (!m) return null;
-      const denom = Number(m[1]);
-      return Number.isFinite(denom) ? denom : null;
-    }
-
-    function civYearPointsFromYear(year){
-      const best = 1652;
-      const worst = 1800;
-      const y = clamp(year, best, worst);
-      const score = 100 - ((y - best) / (worst - best)) * 100;
-      return clamp(Math.round(score), 0, 100);
-    }
-
-    function revolutionIsWin(row){
-      const s = [
-        row.place_or_result,
-        row.score_or_attendance,
-        row.comment,
-        row.extra,
-        row.label,
-        row.stage
-      ].map(x=>String(x ?? "")).join(" ").toLowerCase();
-
-      if (includesAny(s, ["побед", "win", "лучший", "защит"])) return true;
-      if (includesAny(s, ["проиг", "loss", "не защит", "выбыл"])) return false;
-      return false;
-    }
-
-    function scoreSession(row){
-      const t = normTournamentKey(row.tournament);
-      const stage = String(row.stage || row.label || "").toLowerCase();
-      const placeText = String(row.place_or_result || "").trim();
-      const valText = String(row.score_or_attendance || "").trim();
-      const comment = String(row.comment || row.extra || row.label || "").trim();
-      const blobAll = (stage + " " + placeText + " " + valText + " " + comment).toLowerCase();
-
-      /* ✅ CHANGED (CIV ONLY): Civ scoring BEFORE eligibleForScoring, because civ uses label (year/не защитился) */
-      if (t === "Civilization: Solo" || t === "Civilization: DUEL"){
-        const a = String(row.score_or_attendance ?? "").trim();
-        if (a !== "0") return { points: null, explain: "Civ: не начисляем (нужно 0 в посещаемости)" };
-
-        if (!isCivRevolutionRow(row)) return { points: null, explain: "Civ: не революция — не в зачёт" };
-
-        const lbl = String(row.label ?? "").trim().toLowerCase();
-
-        // Не защитился = 0
-        if (lbl.includes("не защит")) {
-          return { points: 0, explain: "Civ: не защитился → 0" };
-        }
-
-        // Защитился: 100 за революцию + 0..100 за год
-        const y = parseYearFromRow(row);
-        if (!y) return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
-
-        const yearPts = civYearPointsFromYear(y);
-        const total = 100 + yearPts;
-        return { points: total, explain: `Civ: революция 100 + год ${y} → ${yearPts} = ${total}` };
-      }
-
-      if (!eligibleForScoring(row)){
-        return { points: null, explain: "Не начисляем: нет подтверждения участия (нужно 0 в посещаемости)" };
-      }
-
-      if (includesAny(stage, ["трен", "training"])) {
-        return { points: null, explain: "Тренировочная — не в зачёт" };
-      }
-
-      if (t === "Business Cats"){
-        if (!includesAny(stage, ["рейтинг", "рейтин", "rating"])) return { points: null, explain: "Не рейтинговая — не в зачёт" };
-
-        const pRaw = String(placeText || "").trim();
-        if (pRaw === "#Н/Д" || pRaw === "#N/A" || pRaw.toLowerCase().includes("н/д")){
-          return { points: null, explain: "Нет места (#Н/Д) — не начисляем" };
-        }
-
-        const p = parsePlaceNumber(placeText) ?? parsePlaceNumber(comment);
-        if (p === null) return { points: null, explain: "Нет места — баллы не посчитаны" };
-        const pts = bcPointsFromPlace(p);
-        return { points: pts, explain: `Business Cats: место ${p} → ${pts} баллов` };
-      }
-
-      if (t === "Пейнтбол"){
-        if (includesAny(stage, ["групп", "group"])){
-          const win = includesAny(blobAll, ["побед", "win"]);
-          const lose = includesAny(blobAll, ["проиг", "loss", "пораж", "выбыл"]);
-          if (win) return { points: 100, explain: "Пейнтбол (группа): Победа → 100" };
-          if (lose) return { points: 0, explain: "Пейнтбол (группа): Поражение/выбыл → 0" };
-          return { points: null, explain: "Пейнтбол (группа): нет результата" };
-        }
-
-        if (includesAny(blobAll, ["плей", "playoff", "1/", "1\\", "финал", "final", "1/32", "1/16", "1/8", "1/4", "1/2"])){
-          const lose = includesAny(blobAll, ["выбыл", "проиг", "loss", "пораж"]);
-          if (lose) return { points: 0, explain: "Пейнтбол (плей-офф): выбыл/проигрыш → 0" };
-
-          const win = includesAny(blobAll, ["побед", "win"]);
-          if (win) return { points: 100, explain: "Пейнтбол (плей-офф): Победа → 100" };
-
-          const denom = extractPlayoffDenom(blobAll);
-          if (denom){
-            const pts = playoffRoundPoints(denom);
-            if (pts !== null) return { points: pts, explain: `Пейнтбол (плей-офф): 1/${denom} → ${pts}` };
-          }
-
-          return { points: 0, explain: "Пейнтбол (плей-офф): выбыл/не распознан → 0" };
-        }
-
-        return { points: null, explain: "Пейнтбол: не зачётный этап" };
-      }
-
-      return { points: null, explain: "Пока не начисляем (добавим позже)" };
-    }
-
-    function computeScoredSessions(id){
-      const sessions = DB.sessionsById.get(id) || [];
-      const out = [];
-
-      /* ✅ CHANGED (CIV ONLY): count civ revolution only once per tournament (Solo/Duel) */
-      const civSeen = new Set();
-
-      for (const s of sessions){
-        const tKey = normTournamentKey(s.tournament);
-
-        if ((tKey === "Civilization: Solo" || tKey === "Civilization: DUEL") && isCivRevolutionRow(s)){
-          const a = String(s.score_or_attendance ?? "").trim();
-          if (a === "0"){
-            const key = tKey; // once per tournament
-            if (civSeen.has(key)) continue;
-            civSeen.add(key);
-          }
-        }
-
-        const scored = scoreSession(s);
-        if (typeof scored.points === "number" && Number.isFinite(scored.points)){
-          out.push({
-            ...s,
-            tournamentKey: tKey,
-            points: scored.points,
-            explain: scored.explain
-          });
-        }
-      }
-      out.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
-      return out;
-    }
-
-    function computeStudentTotalPoints(id){
-      const scored = computeScoredSessions(id);
-      return scored.reduce((sum, x)=> sum + (x.points || 0), 0);
-    }
-
-    function recomputeLeagues(){
-      const ids = Array.from(DB.studentsById.keys()).filter(id=>{
-        const st = DB.studentsById.get(id)?.status;
-        return !isExpelledStatus(st);
-      });
-
-      const totals = ids.map(id => ({ id, total: computeStudentTotalPoints(id) }));
-      totals.sort((a,b)=> b.total - a.total);
-
-      const totalN = totals.length || 1;
-      const goldN = Math.max(1, Math.ceil(totalN * 0.05));
-      const silverN = Math.max(goldN, Math.ceil(totalN * 0.20));
-
-      DB.totalsById.clear();
-      DB.leagueById.clear();
-
-      totals.forEach((x, idx)=>{
-        DB.totalsById.set(x.id, x.total);
-        let league = "Бронзовая";
-        if (idx < goldN) league = "Золотая";
-        else if (idx < silverN) league = "Серебряная";
-        DB.leagueById.set(x.id, league);
-      });
-
-      DB.thresholds = { goldN, silverN, totalN };
-    }
-
-    function leagueBadge(league){
-      if (league === "Золотая") return { label:"Золотая", cls:"b-ok" };
-      if (league === "Серебряная") return { label:"Серебряная", cls:"b-warn" };
-      return { label:"Бронзовая", cls:"b-bad" };
-    }
-
-    function leagueText(league){
-      const ui = leagueBadge(league);
-      return `
-        <span class="badge ${esc(ui.cls)}">${esc(ui.label)}</span>
-        <div class="small" style="margin-top:16px">Оценка САОК КЛТ</div>
-      `;
-    }
-
-    function getRankPlaceOnly(id){
-      const list = Array.from(DB.studentsById.keys())
-        .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status))
-        .map(sid => ({ sid, total: computeStudentTotalPoints(sid) }))
-        .sort((a,b)=> b.total - a.total);
-
-      const idx = list.findIndex(x=>x.sid===id);
-      if (idx < 0) return "—";
-      return String(idx+1);
-    }
-
-    function calcTrackers(student, sessions, scored){
-      const attSessions = sessions.filter(s=> isAttendanceValue(s.score_or_attendance));
-      const presentCount = attSessions.reduce((acc, s)=> acc + (attendanceIsPresent(s.score_or_attendance) === true ? 1 : 0), 0);
-      const attTotal = attSessions.length || 0;
-      const absences = Math.max(0, attTotal - presentCount);
-      const attPercent = attTotal ? Math.round(presentCount / attTotal * 100) : 0;
-
-      const pts = scored.map(s=>s.points||0).sort((a,b)=>a-b);
-      const typical = pts.length ? pts[Math.floor(pts.length/2)] : 0;
-
-      const last = scored.slice(-6);
-      const recentAvg = last.length ? Math.round(last.reduce((a,x)=>a+(x.points||0),0)/last.length) : 0;
-
-      return { attPercent, absences, typical, recentAvg };
-    }
-
-    function buildAdvice(track){
-      const advice = [];
-
-      if (track.absences >= 4){
-        advice.push({
-          title: "Дисциплина посещений",
-          text: `У вас ${track.absences} прогул(а/ов) — это зона риска. Верните ритм: регулярное участие быстро поднимает и уверенность, и результат.`,
-          tag: "Риск",
-          cls: "b-warn"
-        });
-      } else if (track.attPercent < 85){
-        advice.push({
-          title: "Дисциплина посещений",
-          text: `Посещаемость ${track.attPercent}%. Чуть больше регулярности — и прогресс станет заметнее уже в ближайших зачётных активностях.`,
-          tag: "Фокус",
-          cls: "b-warn"
-        });
-      } else {
-        advice.push({
-          title: "Дисциплина посещений",
-          text: `Отлично: посещаемость ${track.attPercent}%. Такой ритм — сильное преимущество. Продолжайте в том же духе.`,
-          tag: "ОК",
-          cls: "b-ok"
-        });
-      }
-
-      const t = track.typical || 0;
-      let levelText = "";
-      let tag = "Старт";
-      let cls = "b-warn";
-
-      if (t >= 90){
-        levelText = `Высокий уровень: ваш типичный результат — ${t}. Это уже уровень лидеров. Сохраняйте темп и смело усложняйте задачи — так растёт максимум.`;
-        tag = "Лидеры"; cls = "b-ok";
-      } else if (t >= 75){
-        levelText = `Крепкий уровень: ваш типичный результат — ${t}. Отличная основа для рывка. Немного системности — и результаты станут стабильнее и выше.`;
-        tag = "Крепко"; cls = "b-ok";
-      } else if (t >= 55){
-        levelText = `Хорошая точка роста: ваш типичный результат — ${t}. Сейчас лучше всего работает фокус на одном-двух навыках и повторение сильных решений.`;
-        tag = "Рост"; cls = "b-warn";
-      } else {
-        levelText = `Стартовый уровень: ваш типичный результат — ${t}. Это нормальная точка начала. Самое важное сейчас — регулярность и уверенный, понятный план действий.`;
-        tag = "Старт"; cls = "b-warn";
-      }
-
-      advice.push({ title: "Стабильность результата", text: levelText, tag, cls });
-
-      let focus = "аналитики";
-      if (track.absences >= 4) focus = "дисциплины";
-      else if (t < 60) focus = "коммуникации";
-      else if (t < 75) focus = "аналитики и планирования";
-      else focus = "тактики и принятия решений";
-
-      advice.push({
-        title: "План на следующую неделю",
-        text: `Ваш текущий темп — в среднем ${track.recentAvg} баллов. Выберите один фокус: ${focus}. Сделайте его вашей сильной привычкой недели — фиксируйте лучшие решения и повторяйте их. Так результат будет расти устойчиво и предсказуемо.`,
-        tag: "План",
-        cls: "b-ok"
-      });
-
-      return advice;
-    }
-
-    function computeStrongSide(scored){
-      const byT = new Map();
-      for (const s of (scored || [])){
-        const k = s.tournamentKey || normTournamentKey(s.tournament);
-        if (!byT.has(k)) byT.set(k, []);
-        byT.get(k).push(s.points || 0);
-      }
-
-      const stats = Array.from(byT.entries()).map(([k, arr])=>{
-        const sum = arr.reduce((a,x)=>a+x,0);
-        const avg = arr.length ? sum/arr.length : 0;
-        const peak = arr.length ? Math.max(...arr) : 0;
-        return { k, avg, peak, n: arr.length };
-      }).sort((a,b)=> (b.avg - a.avg) || (b.peak - a.peak));
-
-      if (!stats.length){
-        return { text: "Пока нет зачётных результатов. Как только появятся — мы покажем вашу сильную сторону и точку роста.", badge:{text:"—", cls:"b-warn"} };
-      }
-
-      const top = stats[0];
-      let badge = { text:"Сильная", cls:"b-ok" };
-      if (top.avg < 60) badge = { text:"В рост", cls:"b-warn" };
-
-      const text = (top.avg >= 75)
-        ? `Лучше всего у вас получается этап «${top.k}». Продолжайте опираться на это — и переносите подход в другие этапы.`
-        : `Сейчас лучший фокус для роста — этап «${top.k}». Стабильный план и регулярная практика помогут поднять результат.`;
-
-      return { text, badge };
-    }
-
-    /* ----- Charts (same as your base) ----- */
-    function setupCanvas(id){
-      const c = document.getElementById(id);
-      if (!c) return null;
-      const ctx = c.getContext("2d");
-      const dpr = window.devicePixelRatio || 1;
-      const rect = c.getBoundingClientRect();
-      const w = Math.floor(rect.width * dpr);
-      const h = Math.floor(rect.height * dpr);
-      if (c.width !== w || c.height !== h){
-        c.width = w; c.height = h;
-      }
-      ctx.setTransform(1,0,0,1,0,0);
-      ctx.scale(dpr, dpr);
-      return { c, ctx, w: rect.width, h: rect.height };
-    }
-
-    function roundRect(ctx, x, y, w, h, r){
-      const rr = Math.min(r, w/2, h/2);
-      ctx.beginPath();
-      ctx.moveTo(x+rr, y);
-      ctx.arcTo(x+w, y, x+w, y+h, rr);
-      ctx.arcTo(x+w, y+h, x, y+h, rr);
-      ctx.arcTo(x, y+h, x, y, rr);
-      ctx.arcTo(x, y, x+w, y, rr);
-      ctx.closePath();
-    }
-
-    function drawDonut(id, present, absent){
-      const pack = setupCanvas(id);
-      if (!pack) return;
-      const {ctx, w, h} = pack;
-      ctx.clearRect(0,0,w,h);
-
-      const cx = w/2, cy = h/2;
-      const r = Math.min(w,h) * 0.32;
-      const thick = Math.max(14, r*0.35);
-
-      const total = Math.max(1, present + absent);
-      const p = present / total;
-
-      ctx.lineCap = "round";
-      ctx.lineWidth = thick;
-
-      ctx.strokeStyle = "rgba(255,255,255,.10)";
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI*2);
-      ctx.stroke();
-
-      const start = -Math.PI/2;
-      const end = start + Math.PI*2*p;
-      const g = ctx.createLinearGradient(cx-r, cy, cx+r, cy);
-      g.addColorStop(0, "rgba(124,92,255,.95)");
-      g.addColorStop(1, "rgba(33,212,255,.55)");
-      ctx.strokeStyle = g;
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, start, end);
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(234,240,255,.95)";
-      ctx.font = "900 28px ui-sans-serif, system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText(Math.round(p*100) + "%", cx, cy + 6);
-
-      ctx.fillStyle = "rgba(169,180,214,.85)";
-      ctx.font = "900 12px ui-sans-serif, system-ui";
-      ctx.fillText("посещаемость", cx, cy + 28);
-    }
-
-    function drawProgressDots(id, scored){
-      const pack = setupCanvas(id);
-      if (!pack) return;
-      const {ctx, w, h, c} = pack;
-      ctx.clearRect(0,0,w,h);
-
-      const padL = 44, padR = 16, padT = 16, padB = 28;
-      const left = padL, right = w - padR;
-      const top = padT, bottom = h - padB;
-
-      const points = (scored || []).slice(-80);
-      const n = Math.max(1, points.length);
-      const xs = points.map((_,i)=> left + (i*(right-left)/Math.max(1,n-1)));
-
-      const maxV = Math.max(100, ...points.map(p=>p.points||0), 1);
-      const minV = 0;
-
-      const ys = points.map(p=>{
-        const v = clamp(p.points||0, minV, maxV);
-        return bottom - ((v-minV)/(maxV-minV))*(bottom-top);
-      });
-
-      ctx.strokeStyle = "rgba(255,255,255,.10)";
-      ctx.lineWidth = 1;
-      ctx.fillStyle = "rgba(169,180,214,.85)";
-      ctx.font = "900 12px ui-sans-serif, system-ui";
-      ctx.textAlign = "right";
-
-      const ticks = 4;
-      for (let i=0;i<=ticks;i++){
-        const tt = i/ticks;
-        const y = top + tt*(bottom-top);
-        const val = Math.round((1-tt)*maxV);
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(right, y);
-        ctx.stroke();
-        ctx.fillText(String(val), left-8, y+4);
-      }
-
-      if (points.length >= 2){
-        ctx.beginPath();
-        ctx.moveTo(xs[0], ys[0]);
-        for (let i=1;i<points.length;i++) ctx.lineTo(xs[i], ys[i]);
-        ctx.lineTo(xs[points.length-1], bottom);
-        ctx.lineTo(xs[0], bottom);
-        ctx.closePath();
-        const g = ctx.createLinearGradient(0, top, 0, bottom);
-        g.addColorStop(0, "rgba(124,92,255,.22)");
-        g.addColorStop(1, "rgba(33,212,255,.06)");
-        ctx.fillStyle = g;
-        ctx.fill();
-      }
-
-      if (points.length >= 2){
-        ctx.beginPath();
-        ctx.moveTo(xs[0], ys[0]);
-        for (let i=1;i<points.length;i++) ctx.lineTo(xs[i], ys[i]);
-        ctx.strokeStyle = "rgba(234,240,255,.85)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      c.__dots = [];
-      for (let i=0;i<points.length;i++){
-        const x = xs[i], y = ys[i];
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(33,212,255,.75)";
-        ctx.fill();
-        c.__dots.push({ x, y, r: 9, data: points[i] });
-      }
-
-      ctx.fillStyle = "rgba(169,180,214,.85)";
-      ctx.font = "900 12px ui-sans-serif, system-ui";
-      ctx.textAlign = "left";
-      ctx.fillText("сессии (последние)", left, h - 8);
-    }
-
-    function drawActivityByDate(id, scored){
-      const pack = setupCanvas(id);
-      if (!pack) return;
-      const {ctx, w, h, c} = pack;
-      ctx.clearRect(0,0,w,h);
-
-      const padL = 44, padR = 16, padT = 16, padB = 30;
-      const left = padL, right = w - padR;
-      const top = padT, bottom = h - padB;
-
-      const m = new Map();
-      for (const s of (scored || [])){
-        const key = formatDateRU(s.date || "");
-        if (key === "—") continue;
-        m.set(key, (m.get(key)||0) + (s.points||0));
-      }
-      const items = Array.from(m.entries())
-        .map(([date, pts])=>({ date, pts }))
-        .sort((a,b)=>{
-          const da = parseISODateMaybe(a.date) || new Date(0);
-          const db = parseISODateMaybe(b.date) || new Date(0);
-          return +da - +db;
-        });
-
-      const data = items.slice(-28);
-      const n = Math.max(1, data.length);
-      const maxV = Math.max(100, ...data.map(x=>x.pts), 1);
-
-      ctx.strokeStyle = "rgba(255,255,255,.10)";
-      ctx.lineWidth = 1;
-      ctx.fillStyle = "rgba(169,180,214,.85)";
-      ctx.font = "900 12px ui-sans-serif, system-ui";
-      ctx.textAlign = "right";
-
-      const ticks = 4;
-      for (let i=0;i<=ticks;i++){
-        const tt = i/ticks;
-        const y = top + tt*(bottom-top);
-        const val = Math.round((1-tt)*maxV);
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(right, y);
-        ctx.stroke();
-        ctx.fillText(String(val), left-8, y+4);
-      }
-
-      const gap = 10;
-      const barW = Math.max(10, (right-left - gap*(n-1))/n);
-
-      c.__bars = [];
-
-      for (let i=0;i<data.length;i++){
-        const x = left + i*(barW+gap);
-        const v = data[i].pts;
-        const bh = (v/maxV) * (bottom-top-8);
-        const y = bottom - bh;
-
-        const g = ctx.createLinearGradient(x, y, x, bottom);
-        g.addColorStop(0, "rgba(124,92,255,.95)");
-        g.addColorStop(1, "rgba(33,212,255,.55)");
-        ctx.fillStyle = g;
-
-        roundRect(ctx, x, y, barW, bh, 10);
-        ctx.fill();
-
-        ctx.fillStyle = "rgba(169,180,214,.85)";
-        ctx.font = "12px ui-sans-serif, system-ui";
-        ctx.textAlign = "center";
-        const dLabel = data[i].date.slice(0,5);
-        ctx.fillText(dLabel, x+barW/2, bottom+16);
-
-        c.__bars.push({ x, y, w: barW, h: bh, date: data[i].date, value: v });
-      }
-    }
-
-    function drawTop3(id, scored){
-      const pack = setupCanvas(id);
-      if (!pack) return;
-      const {ctx, w, h, c} = pack;
-      ctx.clearRect(0,0,w,h);
-
-      const best = (scored || [])
-        .slice()
-        .sort((a,b)=> (b.points||0) - (a.points||0))
-        .slice(0,3);
-
-      const padL = 16, padR = 16, padT = 16, padB = 16;
-      const left = padL, right = w - padR;
-      const top = padT, bottom = h - padB;
-
-      const rowH = (bottom - top) / 3;
-      const maxV = Math.max(1, ...best.map(x=>x.points||0), 100);
-
-      c.__bars = [];
-
-      ctx.globalAlpha = 0.5;
-      ctx.strokeStyle = "rgba(255,255,255,.10)";
-      ctx.lineWidth = 1;
-      for (let i=0;i<3;i++){
-        const y = top + i*rowH;
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(right, y);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-
-      for (let i=0;i<3;i++){
-        const y0 = top + i*rowH + 10;
-        const barH = Math.max(18, rowH - 20);
-
-        const item = best[i];
-        if (!item){
-          ctx.fillStyle = "rgba(169,180,214,.75)";
-          ctx.font = "900 13px ui-sans-serif, system-ui";
-          ctx.textAlign = "left";
-          ctx.fillText("—", left, y0 + barH/2 + 5);
-          continue;
-        }
-
-        const v = item.points || 0;
-        const barW = (right - left) * (v / maxV);
-
-        const g = ctx.createLinearGradient(left, y0, left + barW, y0);
-        g.addColorStop(0, "rgba(124,92,255,.95)");
-        g.addColorStop(1, "rgba(33,212,255,.55)");
-        ctx.fillStyle = g;
-
-        roundRect(ctx, left, y0, Math.max(10, barW), barH, 12);
-        ctx.fill();
-
-        const title = `${item.tournamentKey || normTournamentKey(item.tournament)} • ${formatDateRU(item.date || "—")}`;
-        const sub = `${item.stage || item.label || "—"} • ${item.place_or_result || item.score_or_attendance || "—"}`;
-
-        ctx.fillStyle = "rgba(234,240,255,.95)";
-        ctx.font = "1000 13px ui-sans-serif, system-ui";
-        ctx.textAlign = "left";
-        ctx.fillText(title, left + 12, y0 + 18);
-
-        ctx.fillStyle = "rgba(169,180,214,.85)";
-        ctx.font = "900 12px ui-sans-serif, system-ui";
-        ctx.fillText(sub, left + 12, y0 + 36);
-
-        ctx.fillStyle = "rgba(234,240,255,.95)";
-        ctx.font = "1100 14px ui-sans-serif, system-ui";
-        ctx.textAlign = "right";
-        ctx.fillText(`${v} баллов`, right, y0 + 22);
-
-        c.__bars.push({
-          x:left, y:y0, w:Math.max(10, barW), h:barH,
-          title, sub, value:v
-        });
-      }
-    }
-
-    function ensureTooltip(){
-      let tip = document.getElementById("tip");
-      if (!tip){
-        tip = document.createElement("div");
-        tip.id = "tip";
-        tip.style.position = "fixed";
-        tip.style.zIndex = 9999;
-        tip.style.pointerEvents = "none";
-        tip.style.padding = "8px 10px";
-        tip.style.borderRadius = "12px";
-        tip.style.border = "1px solid rgba(255,255,255,.16)";
-        tip.style.background = "rgba(7,10,20,.88)";
-        tip.style.color = "rgba(234,240,255,.95)";
-        tip.style.font = "12px ui-sans-serif, system-ui";
-        tip.style.fontWeight = "900";
-        tip.style.display = "none";
-        tip.style.maxWidth = "360px";
-        document.body.appendChild(tip);
-      }
-      return tip;
-    }
-
-    function attachDotTooltip(canvasId){
-      const c = document.getElementById(canvasId);
-      if (!c) return;
-      const tip = ensureTooltip();
-
-      function getPos(e){
-        const r = c.getBoundingClientRect();
-        return { x: e.clientX - r.left, y: e.clientY - r.top };
-      }
-
-      c.addEventListener("mousemove", (e)=>{
-        const dots = c.__dots || [];
-        const p = getPos(e);
-        const hit = dots.find(d=>{
-          const dx = p.x - d.x, dy = p.y - d.y;
-          return (dx*dx + dy*dy) <= (d.r*d.r);
-        });
-        if (!hit){
-          tip.style.display = "none";
-          return;
-        }
-        const s = hit.data;
-        const title = `${s.tournamentKey || normTournamentKey(s.tournament)} • ${formatDateRU(s.date || "—")}`;
-        const stage = (s.stage || s.label || "—");
-        const res = (s.place_or_result || s.score_or_attendance || "—");
-        tip.innerHTML = `${esc(title)}<br><span style="color:rgba(169,180,214,.9)">${esc(stage)} • ${esc(res)}</span><br><b>${esc(s.points)} баллов</b>`;
-        tip.style.display = "block";
-        tip.style.left = (e.clientX + 12) + "px";
-        tip.style.top = (e.clientY + 12) + "px";
-      });
-
-      c.addEventListener("mouseleave", ()=> tip.style.display = "none");
-    }
-
-    function attachBarTooltip(canvasId){
-      const c = document.getElementById(canvasId);
-      if (!c) return;
-      const tip = ensureTooltip();
-
-      function getPos(e){
-        const r = c.getBoundingClientRect();
-        return { x: e.clientX - r.left, y: e.clientY - r.top };
-      }
-
-      c.addEventListener("mousemove", (e)=>{
-        const bars = c.__bars || [];
-        const p = getPos(e);
-        const hit = bars.find(b=> p.x >= b.x && p.x <= b.x+b.w && p.y >= b.y && p.y <= b.y+b.h);
-        if (!hit){
-          tip.style.display = "none";
-          return;
-        }
-
-        if (hit.date){
-          tip.textContent = `${hit.date}: ${hit.value} баллов`;
-        } else {
-          tip.innerHTML = `${esc(hit.title)}<br><span style="color:rgba(169,180,214,.9)">${esc(hit.sub)}</span><br><b>${esc(hit.value)} баллов</b>`;
-        }
-
-        tip.style.display = "block";
-        tip.style.left = (e.clientX + 12) + "px";
-        tip.style.top = (e.clientY + 12) + "px";
-      });
-
-      c.addEventListener("mouseleave", ()=> tip.style.display = "none");
-    }
-
-    async function fetchTextOrThrow(url, label){
-      let res;
-      try{
-        res = await fetch(url, { cache:"no-store" });
-      }catch(e){
-        throw new Error(`${label}: сеть/доступ заблокирован (${String(e?.message || e)})`);
-      }
-      if (!res.ok){
-        throw new Error(`${label}: HTTP ${res.status} ${res.statusText}`);
-      }
-      const txt = await res.text();
-      if (!String(txt).trim()){
-        throw new Error(`${label}: файл пустой`);
-      }
-      return txt;
-    }
-
-    async function ensureDBLoaded(force=false){
-      if (DB.loaded && !force) return true;
-      if (DB.loading) return false;
-      DB.loading = true;
-      DB.loadError = "";
-
-      try{
-        const [stuTxt, sesTxt] = await Promise.all([
-          fetchTextOrThrow(DATA_URLS.students, "site_students.csv"),
-          fetchTextOrThrow(DATA_URLS.sessions, "site_sessions.csv"),
-        ]);
-
-        const stuRows = parseCSV(stuTxt);
-        const sesRows = parseCSV(sesTxt);
-
-        if (stuRows.length < 2) throw new Error("site_students.csv: мало строк (нет данных)");
-        if (sesRows.length < 2) throw new Error("site_sessions.csv: мало строк (нет данных)");
-
-        const stuHeader = stuRows.shift().map(normalizeHeader);
-        const sesHeader = sesRows.shift().map(normalizeHeader);
-
-        const s_id = findHeader(stuHeader, ["id"]);
-        const s_nf = findHeader(stuHeader, ["name_full","фио","ф.и.о","ф.и.о.","фамилия имя"]);
-        const s_ns = findHeader(stuHeader, ["name_short","кратко"]);
-        const s_gr = findHeader(stuHeader, ["group","группа"]);
-        const s_st = findHeader(stuHeader, ["status","статус","статус обучения"]);
-        if (s_id < 0) throw new Error("students: нет колонки id");
-
-        DB.studentsById.clear();
-        for (const r of stuRows){
-          const id = normalizeId(r[s_id]);
-          if (!id) continue;
-          DB.studentsById.set(id, {
-            id,
-            name_full: (s_nf >= 0 ? (r[s_nf] ?? "") : ""),
-            name_short: (s_ns >= 0 ? (r[s_ns] ?? "") : ""),
-            group: (s_gr >= 0 ? (r[s_gr] ?? "") : ""),
-            status: (s_st >= 0 ? (r[s_st] ?? "") : ""),
-          });
-        }
-
-        const c_id = findHeader(sesHeader, ["id"]);
-        const c_t = findHeader(sesHeader, ["tournament","турнир"]);
-        const c_stage = findHeader(sesHeader, ["stage","этап","стадия"]);
-        const c_sno = findHeader(sesHeader, ["session_no","session","сессия"]);
-        const c_gno = findHeader(sesHeader, ["game_no","game","игра"]);
-        const c_date = findHeader(sesHeader, ["date","дата"]);
-        const c_score = findHeader(sesHeader, ["score_or_attendance","score","очки","посещаемость","значение"]);
-        const c_place = findHeader(sesHeader, ["place_or_result","place","место","результат"]);
-        const c_comment = findHeader(sesHeader, ["comment","комментарий"]);
-        const c_extra = findHeader(sesHeader, ["extra","доп"]);
-        const c_label = findHeader(sesHeader, ["label","заголовок"]);
-
-        if (c_id < 0) throw new Error("sessions: нет колонки id");
-        if (c_t < 0) throw new Error("sessions: нет колонки tournament/турнир");
-        if (c_stage < 0) throw new Error("sessions: нет колонки stage/этап");
-        if (c_date < 0) throw new Error("sessions: нет колонки date/дата");
-
-        DB.sessionsById.clear();
-
-        for (const r of sesRows){
-          const id = normalizeId(r[c_id]);
-          if (!id) continue;
-
-          const rowObj = {
-            id,
-            tournament: (c_t >= 0 ? (r[c_t] ?? "") : ""),
-            stage: (c_stage >= 0 ? (r[c_stage] ?? "") : ""),
-            session_no: (c_sno >= 0 ? (r[c_sno] ?? "") : ""),
-            game_no: (c_gno >= 0 ? (r[c_gno] ?? "") : ""),
-            date: (c_date >= 0 ? String(r[c_date] ?? "").trim() : ""),
-            score_or_attendance: (c_score >= 0 ? String(r[c_score] ?? "").trim() : ""),
-            place_or_result: (c_place >= 0 ? String(r[c_place] ?? "").trim() : ""),
-            comment: (c_comment >= 0 ? String(r[c_comment] ?? "").trim() : ""),
-            extra: (c_extra >= 0 ? String(r[c_extra] ?? "").trim() : ""),
-            label: (c_label >= 0 ? String(r[c_label] ?? "").trim() : ""),
-          };
-
-          if (!DB.sessionsById.has(id)) DB.sessionsById.set(id, []);
-          DB.sessionsById.get(id).push(rowObj);
-        }
-
-        for (const [id, arr] of DB.sessionsById){
-          arr.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
-        }
-
-        DB.loaded = true;
-        recomputeLeagues();
-        return true;
-      }catch(e){
-        DB.loaded = false;
-        DB.loadError = String(e?.message || e);
-        return false;
-      }finally{
-        DB.loading = false;
-      }
-    }
-
-    function parseHash(){
-      const raw = (location.hash || "#/rating").replace("#", "");
-      const [path, qs] = raw.split("?");
-      const parts = path.split("/").filter(Boolean);
-      const params = new URLSearchParams(qs || "");
-      return { parts, params };
-    }
-
-    async function route(){
-      // одна страница
-      renderRatingSkeleton();
-      await ensureDBLoaded(false);
-      renderRating(parseHash().params);
-    }
-
-    window.addEventListener("hashchange", ()=>{ route(); });
-
-    function renderRatingSkeleton(){
-      app.innerHTML = html`
-        <div class="crumbs">КЛТ / Рейтинг</div>
-        <h2 class="pageTitle">Рейтинг</h2>
-        <div class="card" style="padding:18px">
-          <div class="notice">Загружаю данные CSV…</div>
-        </div>
-      `;
-    }
-
-    function renderRating(params){
-      const presetId = (params.get("id") || "").trim();
-
-      app.innerHTML = html`
-        <div class="crumbs">КЛТ / Рейтинг</div>
-        <h2 class="pageTitle">Рейтинг</h2>
-
-        <div class="card" style="padding:18px">
-          <div class="formRow">
-            <input id="studentId" type="text" inputmode="numeric" maxlength="4" placeholder="Введите ID (4 цифры)" />
-            <button class="btn" type="button" id="btnShow">Показать</button>
-          </div>
-          <div class="small" style="margin-top:8px">Если вы не знаете свой ID — обратитесь к сотруднику <b>САОК КЛТ</b>.</div>
-
-          <!-- PRE-INTRO (только пока ID пустой) -->
-          <div id="preIntro"></div>
-
-          <div id="out" style="margin-top:14px">
-  <div id="hero"></div>
-  <div id="dash"></div>
-</div>
-
-          <div class="supportWrap">
-            <div class="small">© ${new Date().getFullYear()} · КЛТ Рейтинг</div>
-            <div class="supportLink" id="supportLink">Поддержка</div>
-          </div>
-          <div class="supportBox" id="supportBox">
-            MAX: <a href="https://clck.ru/3RdkWv" target="_blank" rel="noreferrer">https://clck.ru/3RdkWv</a>
-          </div>
-        </div>
-      `;
-
-      const idInput = document.getElementById("studentId");
-      const out = document.getElementById("out");
-      const hero = document.getElementById("hero");
-const dash = document.getElementById("dash");
-      const btnShow = document.getElementById("btnShow");
-      const preIntro = document.getElementById("preIntro");
-
-      const supportLink = document.getElementById("supportLink");
-      const supportBox = document.getElementById("supportBox");
-      supportLink.addEventListener("click", ()=>{
-        supportBox.style.display = (supportBox.style.display === "block") ? "none" : "block";
-      });
-
-      idInput.addEventListener("input", ()=>{
-  idInput.value = idInput.value.replace(/\D/g,"").slice(0,4);
+<div id="app"></div>
+
+<script>
+const { createApp, ref, reactive, computed, onMounted, nextTick, watch } = Vue;
+const { createRouter, createWebHashHistory } = VueRouter;
+
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
+const STUDENTS_URL = 'https://raw.githubusercontent.com/GGG79651-oss/klt-demo/main/site_students.csv';
+const SESSIONS_URL = 'https://raw.githubusercontent.com/GGG79651-oss/klt-demo/main/site_sessions.csv';
+const UPDATE_DATE  = '15.03.2026';
+const ADMIN_LOGIN  = 'Admin';
+const ADMIN_PASS   = '2121';
+
+/* ══════════════════════════════════════
+   STORE
+══════════════════════════════════════ */
+const store = reactive({
+  students: [],
+  sessions: [],
+  loaded: false,
+  error: null,
+  isAdmin: sessionStorage.getItem('klt_admin') === '1',
+  theme: localStorage.getItem('klt_theme') || 'dark',
+  colMap: {},
 });
 
-      function renderPreIntroIfNeeded(){
-  // показываем блок ВСЕГДА (и до, и после ввода ID)
-  preIntro.innerHTML = html`
-    <div class="preIntro">
-      <div class="card preText">
-        <h3>Командно-лидерский турнир</h3>
-        <p>
-          Введите ваш ID, чтобы увидеть прогресс, сильные результаты и начисление баллов по зачётным сессиям.
-        </p>
-        <div class="divider"></div>
-        <div class="muted" style="font-weight:800; line-height:1.65">
-          В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса, формирующая будущих профессионалов и лидеров.
+/* ══════════════════════════════════════
+   CSV PARSER
+══════════════════════════════════════ */
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (!lines.length) return [];
+  const headers = lines[0].split(';').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split(';');
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+    return obj;
+  });
+}
+
+function detectColMap(cols, students, sample) {
+  const ids = new Set(students.map(s => s['id']));
+  let idCol = cols.find(c => /^id$/i.test(c));
+  if (!idCol) idCol = cols.find(c => /student|stuд|id/i.test(c));
+  if (!idCol) {
+    for (const c of cols) {
+      if (ids.has((sample[c] || '').trim())) { idCol = c; break; }
+    }
+  }
+  if (!idCol) idCol = cols[0];
+
+  const find = (...pats) => cols.find(c => pats.some(p => new RegExp(p,'i').test(c)));
+  return {
+    id:   idCol,
+    date: find('дат','date') || cols[1],
+    tournament: find('турн','tourn','tournament') || cols[2],
+    phase: find('этап','phase','stage') || cols[3],
+    session: find('сессия','session') || cols[4],
+    game: find('игра','game') || cols[5],
+    attend: find('посещ','attend') || cols[6],
+    result: find('место','result','резул') || cols[7],
+    comment: find('коммент','comment') || cols[8],
+  };
+}
+
+/* ══════════════════════════════════════
+   DATA LOADER
+══════════════════════════════════════ */
+async function loadData() {
+  try {
+    const [r1, r2] = await Promise.all([fetch(STUDENTS_URL), fetch(SESSIONS_URL)]);
+    if (!r1.ok || !r2.ok) throw new Error('Ошибка загрузки CSV');
+    const [t1, t2] = await Promise.all([r1.text(), r2.text()]);
+    store.students = parseCSV(t1);
+    store.sessions = parseCSV(t2);
+    if (store.sessions.length > 0) {
+      const cols = Object.keys(store.sessions[0]);
+      store.colMap = detectColMap(cols, store.students, store.sessions[0]);
+    }
+    store.loaded = true;
+  } catch(e) {
+    store.error = e.message;
+  }
+}
+
+/* ══════════════════════════════════════
+   DATA HELPERS
+══════════════════════════════════════ */
+function getStudent(id) {
+  return store.students.find(s => s['id'] === String(id));
+}
+function getSessions(id) {
+  const c = store.colMap.id;
+  if (!c) return [];
+  return store.sessions.filter(s => (s[c] || '').trim() === String(id));
+}
+function extractPoints(session) {
+  const c = store.colMap;
+  const comment = session[c.comment] || '';
+  const m = comment.match(/[→>]\s*(\d+)/);
+  if (m) return parseInt(m[1]);
+  const result = session[c.result] || '';
+  const pts = comment.match(/(\d+)\s*балл/i);
+  if (pts) return parseInt(pts[1]);
+  return 0;
+}
+function totalPoints(sessions) {
+  return sessions.reduce((s, row) => s + extractPoints(row), 0);
+}
+function attendanceRate(sessions) {
+  if (!sessions.length) return 0;
+  const c = store.colMap.attend;
+  const present = sessions.filter(s => (s[c] || '1') !== '0').length;
+  return Math.round((present / sessions.length) * 100);
+}
+
+/* Global ranking */
+let _rankCache = null;
+function getGlobalRank(studentId) {
+  if (!_rankCache) {
+    const rows = store.students
+      .map(s => ({ id: s['id'], pts: totalPoints(getSessions(s['id'])) }))
+      .sort((a, b) => b.pts - a.pts);
+    _rankCache = {};
+    rows.forEach((r, i) => { _rankCache[r.id] = i + 1; });
+  }
+  return _rankCache[String(studentId)] || '—';
+}
+
+function leagueInfo(rank, total) {
+  if (!rank || rank === '—') return { name: 'Деревянная', color: 'wood', emoji: '🪵' };
+  const p = rank / total;
+  if (p <= 0.04) return { name: 'Золотая', color: 'gold', emoji: '🥇' };
+  if (p <= 0.08) return { name: 'Серебряная', color: 'silver', emoji: '🥈' };
+  if (p <= 0.22) return { name: 'Бронзовая', color: 'bronze', emoji: '🥉' };
+  return { name: 'Деревянная', color: 'wood', emoji: '🪵' };
+}
+
+function getGameTag(tournament) {
+  const t = (tournament || '').toLowerCase();
+  if (t.includes('business') || t.includes('cat') || t.includes('кот')) return ['gt-cats','🐱'];
+  if (t.includes('пейнт') || t.includes('paint')) return ['gt-paint','🔫'];
+  if (t.includes('duel') || t.includes('дуэл')) return ['gt-civd','⚔️'];
+  if (t.includes('civ') || t.includes('цива') || t.includes('civilization')) return ['gt-civ','🏛️'];
+  return ['gt-other','🎮'];
+}
+
+/* ══════════════════════════════════════
+   RADAR METRICS
+══════════════════════════════════════ */
+const RADAR_LABELS = ['Лидерство','Команда','Стратегия','Коммуникация','Настойчивость','Активность'];
+
+function computeRadar(sessions) {
+  const c = store.colMap;
+  const byTournament = (kw) => sessions.filter(s => (s[c.tournament]||'').toLowerCase().includes(kw));
+
+  const cats  = byTournament('business').concat(byTournament('cat')).concat(byTournament('кот'));
+  const paint = byTournament('пейнт').concat(byTournament('paint'));
+  const civs  = byTournament('solo');
+  const civd  = byTournament('duel').concat(byTournament('дуэл'));
+
+  let leadership = 30;
+  if (cats.length) {
+    const scores = cats.map(s => {
+      const r = (s[c.result] || '').trim();
+      if (r === '1') return 100; if (r === '2') return 82; if (r === '3') return 68;
+      const n = parseInt(r);
+      return isNaN(n) ? 35 : Math.max(10, 95 - (n-1)*8);
+    });
+    leadership = Math.min(100, scores.reduce((a,b)=>a+b,0)/scores.length);
+  }
+
+  let teamwork = 25;
+  if (paint.length) {
+    const wins = paint.filter(s => {
+      const r = (s[c.result]||'').toLowerCase();
+      const cm = (s[c.comment]||'').toLowerCase();
+      return r==='1' || cm.includes('победа') || r.includes('победа');
+    }).length;
+    teamwork = Math.min(100, 35 + (wins/paint.length)*65);
+  }
+
+  let strategy = 25;
+  if (civs.length) {
+    const scores = civs.map(s => {
+      const r = (s[c.result]||'—').trim();
+      if (r === '—' || r === '') return 45;
+      const n = parseInt(r);
+      return isNaN(n) ? 45 : Math.max(10, 100 - (n-1)*9);
+    });
+    strategy = Math.min(100, scores.reduce((a,b)=>a+b,0)/scores.length);
+  }
+
+  let communication = 20;
+  if (civd.length) {
+    const att = civd.filter(s => (s[c.attend]||'1') !== '0').length;
+    communication = Math.min(100, 30 + (att/civd.length)*70);
+  }
+
+  const persistence = Math.min(100, attendanceRate(sessions));
+
+  const types = new Set(sessions.map(s => s[c.tournament]||'')).size;
+  const activity = Math.min(100, 15 + types*14 + Math.min(sessions.length, 20)*1.5);
+
+  return [leadership, teamwork, strategy, communication, persistence, activity].map(Math.round);
+}
+
+/* ══════════════════════════════════════
+   ADMIN STATS
+══════════════════════════════════════ */
+function computeAdminStats() {
+  const c = store.colMap;
+  const students = store.students;
+  const sessions = store.sessions;
+  const total = students.length;
+
+  let totalPresent = 0, totalSess = 0;
+  for (const s of students) {
+    const ss = getSessions(s['id']);
+    if (ss.length) {
+      const pr = ss.filter(r => (r[c.attend]||'1') !== '0').length;
+      totalPresent += pr; totalSess += ss.length;
+    }
+  }
+  const avgAtt = totalSess > 0 ? Math.round((totalPresent/totalSess)*100) : 0;
+
+  _rankCache = null;
+  const leagueMap = { Золотая:0, Серебряная:0, Бронзовая:0, Деревянная:0 };
+  for (const s of students) {
+    const rank = getGlobalRank(s['id']);
+    const lg = leagueInfo(rank, total);
+    leagueMap[lg.name] = (leagueMap[lg.name]||0)+1;
+  }
+
+  const groupPts = {};
+  const groupCnt = {};
+  for (const s of students) {
+    const g = s['group'] || '—';
+    if (g === '—') continue;
+    const pts = totalPoints(getSessions(s['id']));
+    groupPts[g] = (groupPts[g]||0) + pts;
+    groupCnt[g] = (groupCnt[g]||0) + 1;
+  }
+  let bestGroup = '—', bestAvg = 0;
+  for (const g in groupPts) {
+    const avg = groupPts[g] / groupCnt[g];
+    if (avg > bestAvg) { bestAvg = avg; bestGroup = g; }
+  }
+
+  const paintSess = sessions.filter(s => {
+    const t = (s[c.tournament]||'').toLowerCase();
+    return t.includes('пейнт')||t.includes('paint');
+  });
+  const paintRecord = (() => {
+    let best = '—';
+    for (const s of paintSess) {
+      const r = (s[c.result]||'').trim();
+      if (r && r !== '—') { best = r; break; }
+    }
+    return best;
+  })();
+
+  const civSolo = sessions.filter(s => (s[c.tournament]||'').toLowerCase().includes('solo'));
+  let civSoloRecord = '—';
+  for (const s of civSolo) {
+    const cm = s[c.comment]||'';
+    const m = cm.match(/(\d{3,5})\s*[гg]/i);
+    if (m) { civSoloRecord = m[1]+'г'; break; }
+    const r = (s[c.result]||'').trim();
+    if (r && r !== '—' && !isNaN(parseInt(r))) { civSoloRecord = r; break; }
+  }
+
+  const civDuel = sessions.filter(s => {
+    const t = (s[c.tournament]||'').toLowerCase();
+    return t.includes('duel')||t.includes('дуэл');
+  });
+  let civDuelRecord = '—';
+  for (const s of civDuel) {
+    const cm = s[c.comment]||'';
+    const m = cm.match(/(\d{3,5})\s*[гg]/i);
+    if (m) { civDuelRecord = m[1]+'г'; break; }
+  }
+
+  const weekData = [0,0,0,0,0,0,0,0,0,0,0,0];
+  const weekMax  = [0,0,0,0,0,0,0,0,0,0,0,0];
+  const datesSorted = [...new Set(sessions.map(s=>s[c.date]||''))].filter(Boolean).sort();
+  const chunkSize = Math.max(1, Math.floor(datesSorted.length/12));
+  const dateWeek = {};
+  datesSorted.forEach((d,i)=>{ dateWeek[d] = Math.min(11, Math.floor(i/chunkSize)); });
+  for (const s of sessions) {
+    const w = dateWeek[s[c.date]||''];
+    if (w === undefined) continue;
+    weekMax[w]++;
+    if ((s[c.attend]||'1') !== '0') weekData[w]++;
+  }
+
+  const sample = students.slice(0,200);
+  const sums = [0,0,0,0,0,0];
+  let sc = 0;
+  for (const s of sample) {
+    const ss = getSessions(s['id']);
+    if (!ss.length) continue;
+    const r = computeRadar(ss);
+    r.forEach((v,i)=>sums[i]+=v);
+    sc++;
+  }
+  const avgRadar = sc > 0 ? sums.map(v=>Math.round(v/sc)) : [50,50,50,50,50,50];
+
+  // Group performance data
+  const groupPerfLabels = Object.keys(groupPts).sort((a,b) => (groupPts[b]/groupCnt[b]) - (groupPts[a]/groupCnt[a])).slice(0,10);
+  const groupPerfData = groupPerfLabels.map(g => Math.round(groupPts[g]/groupCnt[g]));
+
+  return { total, avgAtt, leagueMap, bestGroup, paintRecord, civSoloRecord, civDuelRecord,
+           weekData, weekMax, avgRadar, groupPerfLabels, groupPerfData };
+}
+
+/* ══════════════════════════════════════
+   THEME
+══════════════════════════════════════ */
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('klt_theme', t);
+}
+applyTheme(store.theme);
+
+/* ══════════════════════════════════════
+   ANIMATED COUNTER
+══════════════════════════════════════ */
+function animateCounter(el, target, duration=900) {
+  let start = 0;
+  const step = target / (duration / 16);
+  const tick = () => {
+    start = Math.min(start + step, target);
+    el.textContent = Math.round(start).toLocaleString();
+    if (start < target) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ══════════════════════════════════════
+   CHART HELPERS
+══════════════════════════════════════ */
+const isDark = () => store.theme === 'dark';
+const gridCol   = () => isDark() ? 'rgba(255,255,255,.07)' : 'rgba(0,30,120,.08)';
+const tickCol   = () => isDark() ? '#6e85b2' : '#4060a0';
+const tooltipBg = () => isDark() ? '#0a1028' : '#fff';
+
+function radarConfig(data, labels) {
+  return {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Профиль',
+        data,
+        backgroundColor: 'rgba(56,189,248,.15)',
+        borderColor: '#38bdf8',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#38bdf8',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1000, easing: 'easeOutQuart' },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { stepSize: 25, color: tickCol(), font: { size: 10 }, backdropColor:'transparent' },
+          grid: { color: gridCol() },
+          angleLines: { color: gridCol() },
+          pointLabels: { color: tickCol(), font: { size: 11, weight: '700', family:"'Exo 2'" } }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: tooltipBg(), titleColor: isDark()?'#eef2ff':'#0e1830', bodyColor: tickCol() }
+      }
+    }
+  };
+}
+
+function lineConfig(labels, datasets) {
+  return {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 800 },
+      scales: {
+        x: { grid:{ color:gridCol() }, ticks:{ color:tickCol(), font:{size:10} } },
+        y: { grid:{ color:gridCol() }, ticks:{ color:tickCol(), font:{size:10} }, beginAtZero:true }
+      },
+      plugins: {
+        legend: { labels:{ color:tickCol(), font:{size:11} } },
+        tooltip: { backgroundColor:tooltipBg(), titleColor:isDark()?'#eef2ff':'#0e1830', bodyColor:tickCol() }
+      }
+    }
+  };
+}
+
+function barConfig(labels, datasets) {
+  const cfg = lineConfig(labels, datasets);
+  cfg.type = 'bar';
+  return cfg;
+}
+
+function doughnutConfig(labels, data, colors) {
+  return {
+    type: 'doughnut',
+    data: { labels, datasets:[{ data, backgroundColor:colors, borderColor:isDark()?'#04070f':'#f0f5ff', borderWidth:2 }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      cutout:'62%',
+      plugins: {
+        legend: { position:'right', labels:{ color:tickCol(), font:{size:11}, boxWidth:12, padding:10 } },
+        tooltip: { backgroundColor:tooltipBg(), titleColor:isDark()?'#eef2ff':'#0e1830', bodyColor:tickCol() }
+      }
+    }
+  };
+}
+
+/* ══════════════════════════════════════
+   COMPONENTS
+══════════════════════════════════════ */
+
+/* ── Topbar ── */
+const Topbar = {
+  setup() {
+    const router = VueRouter.useRouter();
+    const route  = VueRouter.useRoute();
+    const toggleTheme = () => {
+      store.theme = store.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(store.theme);
+    };
+    const logout = () => {
+      store.isAdmin = false;
+      sessionStorage.removeItem('klt_admin');
+      router.push('/rating');
+    };
+    return { store, route, toggleTheme, logout };
+  },
+  template: `
+    <div class="topbar">
+      <a class="brand" href="#/rating">
+        <div class="brand-logo">КЛТ</div>
+        <span class="brand-name">КЛТ Рейтинг</span>
+      </a>
+      <div class="topbar-spacer"></div>
+      <nav class="topbar-nav">
+        <a class="nbtn" :class="{active:route.path==='/rating'}" href="#/rating">🏠 Главная</a>
+        <a class="nbtn" :class="{active:route.path==='/leaderboard'}" href="#/leaderboard">🏆 Рейтинг</a>
+        <template v-if="store.isAdmin">
+          <a class="nbtn" :class="{active:route.path==='/admin'}" href="#/admin">📊 Дашборд</a>
+          <button class="nbtn logout" @click="logout">Выйти</button>
+        </template>
+        <template v-else>
+          <a class="nbtn cta" href="#/admin-login">🔒 Войти</a>
+        </template>
+        <button class="theme-btn" @click="toggleTheme" :title="store.theme==='dark'?'Светлая тема':'Тёмная тема'">
+          {{store.theme==='dark'?'☀️':'🌙'}}
+        </button>
+      </nav>
+    </div>
+  `
+};
+
+/* ── Rating Page (Home) ── */
+const RatingPage = {
+  setup() {
+    const router = VueRouter.useRouter();
+    const idVal = ref('');
+    const err   = ref('');
+
+    const heroStats = computed(() => {
+      if (!store.loaded) return [];
+      return [
+        { label: 'Студентов', val: store.students.length, icon: '🎓' },
+        { label: 'Сессий', val: store.sessions.length, icon: '🎮' },
+        { label: 'Дата обновления', val: UPDATE_DATE, icon: '📅' },
+      ];
+    });
+
+    const goStudent = () => {
+      const id = idVal.value.trim();
+      if (!id || id.length < 3) { err.value = 'Введите корректный ID (3-4 цифры)'; return; }
+      if (!store.loaded) { err.value = 'Данные ещё загружаются…'; return; }
+      const found = getStudent(id);
+      if (!found) { err.value = `Студент с ID ${id} не найден`; return; }
+      err.value = '';
+      router.push(`/student/${id}`);
+    };
+
+    const onKey = (e) => { if (e.key === 'Enter') goStudent(); };
+
+    const studentCountEl = ref(null);
+    const sessionCountEl = ref(null);
+
+    onMounted(async () => {
+      await nextTick();
+      if (studentCountEl.value) animateCounter(studentCountEl.value, store.students.length);
+      if (sessionCountEl.value) animateCounter(sessionCountEl.value, store.sessions.length);
+    });
+
+    return { store, idVal, err, heroStats, goStudent, onKey, studentCountEl, sessionCountEl };
+  },
+  template: `
+    <div class="page">
+      <div class="hero">
+        <div class="hero-badge">⚡ Алабуга Политех · КЛТ</div>
+        <h1>Командно-Лидерский<br>Турнир</h1>
+        <p>Введите ваш ID, чтобы увидеть прогресс, рейтинг и диаграмму лидерских способностей.</p>
+        <div class="id-form">
+          <input
+            class="id-input" v-model="idVal" type="text" inputmode="numeric"
+            placeholder="ID" maxlength="4" @keyup="onKey"
+          />
+          <button class="btn-go" @click="goStudent" :disabled="!store.loaded">
+            {{ store.loaded ? 'Показать →' : '…' }}
+          </button>
         </div>
-        <div class="small" style="margin-top:10px">Дата последнего обновления: <b>15.03.2026</b></div>
+        <div class="id-hint">Если вы не знаете свой ID — обратитесь к сотруднику САОК КЛТ</div>
+        <div class="id-error" v-if="err">{{ err }}</div>
       </div>
 
-      <div class="card preSlider">
-        <div class="heroSlider" id="heroSlider">
-          ${SLIDES.map((s,i)=>`
-            <div class="heroSlide ${i===0?"active":""}" data-i="${i}">
-              <img src="${esc(s.src)}" alt="${esc(s.label)}"
-                onerror="this.style.display='none'; this.parentElement.style.background='rgba(255,255,255,.04)';" />
-            </div>
-          `).join("")}
-          <div class="heroOverlay">
-            <div class="heroCaption" id="heroCaption">${esc(SLIDES[0].label)}</div>
-            <div class="heroDots" id="heroDots">
-              ${SLIDES.map((_,i)=>`<div class="heroDot ${i===0?"active":""}" data-i="${i}" role="button" tabindex="0" aria-label="Слайд ${i+1}"></div>`).join("")}
-            </div>
-          </div>
+      <div class="hstats" v-if="store.loaded">
+        <div class="hstat" v-for="s in heroStats" :key="s.label">
+          <span class="hstat-val" :ref="s.icon.includes('🎓') ? 'studentCountEl' : s.icon.includes('🎮') ? 'sessionCountEl' : null">{{ s.val }}</span>
+          <span class="hstat-label">{{ s.icon }} {{ s.label }}</span>
+        </div>
+      </div>
+      <div class="loading" v-else-if="!store.error">
+        <div class="spinner"></div>Загрузка данных…
+      </div>
+      <div class="notice warn" v-else>⚠️ {{ store.error }}</div>
+
+      <div class="info-grid">
+        <div class="info-block">
+          <h3>🏆 Командно-лидерский турнир</h3>
+          <p>Введите ваш ID, чтобы увидеть прогресс, сильные результаты и начисление баллов по зачётным сессиям. Дашборд обновляется автоматически.</p>
+          <div class="update-line">📅 Дата последнего обновления: {{ UPDATE_DATE }}</div>
+        </div>
+        <div class="info-block">
+          <h3>🎮 Дисциплины турнира</h3>
+          <p>Турнир включает 4 игровых направления:<br>
+          🐱 <b>Business Cats</b> — командный бизнес-симулятор<br>
+          🔫 <b>Пейнтбол</b> — командная тактика на поле<br>
+          🏛️ <b>Civilization Solo</b> — стратегия 1vs1<br>
+          ⚔️ <b>Civilization DUEL</b> — парные дуэли</p>
         </div>
       </div>
     </div>
-  `;
+  `
+};
 
-  initSlides();
-}
+/* ── Leaderboard Page ── */
+const LeaderboardPage = {
+  setup() {
+    const router = VueRouter.useRouter();
+    const searchQ = ref('');
+    const groupFilter = ref('');
+    const currentPage = ref(0);
+    const pageSize = 25;
 
-      function initSlides(){
-        const slider = document.getElementById("heroSlider");
-        const caption = document.getElementById("heroCaption");
-        const dotsWrap = document.getElementById("heroDots");
-        if (!slider || !caption || !dotsWrap) return;
+    const groups = computed(() => {
+      if (!store.loaded) return [];
+      return [...new Set(store.students.map(s=>s['group']||'').filter(Boolean))].sort();
+    });
 
-        const slides = Array.from(slider.querySelectorAll(".heroSlide"));
-        const dots = Array.from(dotsWrap.querySelectorAll(".heroDot"));
-        let idx = 0;
-        let timer = null;
-
-        function setSlide(i){
-          idx = (i + SLIDES.length) % SLIDES.length;
-          slides.forEach((el, k)=> el.classList.toggle("active", k===idx));
-          dots.forEach((el, k)=> el.classList.toggle("active", k===idx));
-          caption.textContent = SLIDES[idx].label;
-        }
-
-        function start(){
-          stop();
-          timer = setInterval(()=> setSlide(idx+1), 4200);
-        }
-        function stop(){
-          if (timer) clearInterval(timer);
-          timer = null;
-        }
-
-        dotsWrap.addEventListener("click", (e)=>{
-          const d = e.target.closest(".heroDot");
-          if (!d) return;
-          setSlide(Number(d.getAttribute("data-i")));
-          start();
+    const filteredStudents = computed(() => {
+      if (!store.loaded) return [];
+      return store.students
+        .map(s => ({
+          ...s,
+          pts: totalPoints(getSessions(s['id'])),
+          rank: getGlobalRank(s['id']),
+          league: leagueInfo(getGlobalRank(s['id']), store.students.length),
+          attend: attendanceRate(getSessions(s['id']))
+        }))
+        .sort((a, b) => (a.rank || 99999) - (b.rank || 99999))
+        .filter(s => {
+          const matchSearch = !searchQ.value ||
+            (s.name_short||'').toLowerCase().includes(searchQ.value.toLowerCase()) ||
+            s.id.includes(searchQ.value);
+          const matchGroup = !groupFilter.value || s.group === groupFilter.value;
+          return matchSearch && matchGroup;
         });
+    });
 
-        slider.addEventListener("mouseenter", stop);
-        slider.addEventListener("mouseleave", start);
+    const paginatedStudents = computed(() => {
+      const start = currentPage.value * pageSize;
+      return filteredStudents.value.slice(start, start + pageSize);
+    });
 
-        start();
+    const totalPages = computed(() => Math.ceil(filteredStudents.value.length / pageSize));
+
+    const goStudent = (id) => {
+      router.push(`/student/${id}`);
+    };
+
+    const prevPage = () => {
+      if (currentPage.value > 0) currentPage.value--;
+    };
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value - 1) currentPage.value++;
+    };
+
+    watch([searchQ, groupFilter], () => {
+      currentPage.value = 0;
+    });
+
+    return {
+      store, searchQ, groupFilter, currentPage, groups,
+      paginatedStudents, totalPages, filteredStudents,
+      goStudent, prevPage, nextPage, leagueInfo
+    };
+  },
+  template: `
+    <div class="page">
+      <div class="crumbs">КЛТ / <b>Рейтинг</b></div>
+      <div class="page-title">Общий рейтинг студентов</div>
+
+      <div class="lb-search-row">
+        <input class="lb-search" v-model="searchQ" placeholder="🔍 Поиск по имени или ID…" />
+        <select class="lb-select" v-model="groupFilter">
+          <option value="">Все группы ({{ filteredStudents.length }})</option>
+          <option v-for="g in groups" :key="g" :value="g">{{ g }}</option>
+        </select>
+      </div>
+
+      <table class="lb-table" v-if="paginatedStudents.length">
+        <thead>
+          <tr>
+            <th style="width:50px">Место</th>
+            <th style="flex:1">Имя</th>
+            <th style="width:80px">Группа</th>
+            <th style="width:50px">Лига</th>
+            <th style="width:70px">Баллы</th>
+            <th style="width:80px">Посещ.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="s in paginatedStudents" :key="s.id" @click="goStudent(s.id)" style="cursor:pointer">
+            <td><span class="lb-rank">#{{ s.rank }}</span></td>
+            <td><span class="lb-name">{{ s.name_short || '—' }}</span><br><span class="lb-group">ID: {{ s.id }}</span></td>
+            <td><span class="lb-group">{{ s.group || '—' }}</span></td>
+            <td><span class="lb-league">{{ s.league.emoji }}</span></td>
+            <td><span class="lb-pts">{{ s.pts }}</span></td>
+            <td><span class="lb-attend">{{ s.attend }}%</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty" v-else>
+        <span class="empty-icon">🔍</span>
+        <p>Студенты не найдены</p>
+      </div>
+
+      <div class="lb-pager" v-if="totalPages > 1">
+        <button :disabled="currentPage === 0" @click="prevPage">← Назад</button>
+        <span>Страница {{ currentPage + 1 }} из {{ totalPages }}</span>
+        <button :disabled="currentPage === totalPages - 1" @click="nextPage">Далее →</button>
+      </div>
+
+      <div style="text-align:center;margin-top:24px">
+        <a class="nbtn" href="#/rating" style="display:inline-flex">← Назад на главную</a>
+      </div>
+    </div>
+  `
+};
+
+/* ── Student Page ── */
+const StudentPage = {
+  props: ['id'],
+  setup(props) {
+    const student   = computed(() => getStudent(props.id));
+    const sessions  = computed(() => getSessions(props.id));
+    const points    = computed(() => totalPoints(sessions.value));
+    const attend    = computed(() => attendanceRate(sessions.value));
+    const rank      = computed(() => store.loaded ? getGlobalRank(props.id) : '…');
+    const league    = computed(() => leagueInfo(rank.value, store.students.length));
+    const radar     = computed(() => store.loaded ? computeRadar(sessions.value) : []);
+
+    const topResults = computed(() => {
+      const c = store.colMap;
+      const scored = sessions.value.map(s => ({ s, pts: extractPoints(s) }))
+        .filter(x => x.pts > 0).sort((a,b) => b.pts - a.pts).slice(0,3);
+      return scored.map((x,i) => ({
+        rank: i+1,
+        game: x.s[c.tournament]||'—',
+        detail: x.s[c.comment] || (x.s[c.result] ? `Место: ${x.s[c.result]}` : ''),
+        pts: x.pts,
+        date: x.s[c.date]||''
+      }));
+    });
+
+    const sortedSessions = computed(() => {
+      const c = store.colMap;
+      return [...sessions.value].sort((a,b) => {
+        const da = a[c.date]||'', db = b[c.date]||'';
+        const pd = d => { const p=d.split('.'); return p.length===3?new Date(`${p[2]}-${p[1]}-${p[0]}`):new Date(0); };
+        return pd(db) - pd(da);
+      });
+    });
+
+    const progressChartData = computed(() => {
+      const c = store.colMap;
+      const sorted = [...sessions.value]
+        .filter(s => extractPoints(s) > 0)
+        .sort((a,b) => {
+          const pd = d => { const p=(d||'').split('.'); return p.length===3?new Date(`${p[2]}-${p[1]}-${p[0]}`):new Date(0); };
+          return pd(a[c.date]) - pd(b[c.date]);
+        });
+      let cum = 0;
+      const labels = [], data = [];
+      for (const s of sorted) {
+        cum += extractPoints(s);
+        labels.push(s[c.date]||'');
+        data.push(cum);
       }
+      return { labels, data };
+    });
 
-      async function show(){
-        const id = normalizeId(idInput.value);
+    const radarCanvas    = ref(null);
+    const progressCanvas = ref(null);
+    let radarChart = null, progressChart = null;
 
-        if (!DB.loaded && !DB.loading){
-          out.innerHTML = `<div class="notice">Загружаю данные…</div>`;
-          await ensureDBLoaded(false);
-        }
+    const buildCharts = () => {
+      if (radarCanvas.value && radar.value.length) {
+        if (radarChart) radarChart.destroy();
+        radarChart = new Chart(radarCanvas.value, radarConfig(radar.value, RADAR_LABELS));
+      }
+      if (progressCanvas.value && progressChartData.value.labels.length) {
+        if (progressChart) progressChart.destroy();
+        const pd = progressChartData.value;
+        progressChart = new Chart(progressCanvas.value, lineConfig(pd.labels, [{
+          label: 'Баллы (накопительно)',
+          data: pd.data,
+          borderColor: '#38bdf8',
+          backgroundColor: 'rgba(56,189,248,.12)',
+          fill: true, tension: 0.4,
+          pointRadius: 3, pointBackgroundColor: '#38bdf8',
+        }]));
+      }
+    };
 
-        if (!DB.loaded){
-          out.innerHTML = `
-            <div class="notice bad">
-              CSV не загрузились: <b>${esc(DB.loadError || "неизвестная ошибка")}</b>
-            </div>
-          `;
-          return;
-        }
+    onMounted(async () => {
+      if (!store.loaded) {
+        await new Promise(r => { const t = setInterval(() => { if(store.loaded||store.error){clearInterval(t);r();} }, 100); });
+      }
+      await nextTick();
+      buildCharts();
+    });
 
-        if (!id){
-          out.innerHTML = `<div class="notice bad">Введите ID (4 цифры).</div>`;
-          return;
-        }
+    watch(() => store.theme, async () => {
+      await nextTick();
+      buildCharts();
+    });
 
-        // ✅ SECRET: 9999 — топ лучших (только обучающиеся)
-        if (id === "9999") {
-          const activeIds = Array.from(DB.studentsById.keys())
-            .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status));
+    return {
+      student, sessions, points, attend, rank, league, radar,
+      topResults, sortedSessions,
+      radarCanvas, progressCanvas,
+      store, getGameTag, extractPoints, leagueInfo
+    };
+  },
+  template: `
+    <div class="page">
+      <div v-if="store.loaded && !student" class="empty">
+        <span class="empty-icon">🔍</span>
+        <p>Студент с ID {{ id }} не найден</p>
+        <a class="nbtn cta" href="#/rating" style="display:inline-flex;margin-top:16px">← Назад</a>
+      </div>
 
-          const ranking = activeIds
-            .map(sid => ({
-              id: sid,
-              total: computeStudentTotalPoints(sid),
-              student: DB.studentsById.get(sid)
-            }))
-            .sort((a,b)=> b.total - a.total);
+      <div v-else-if="!store.loaded && !store.error" class="loading">
+        <div class="spinner"></div>Загрузка данных…
+      </div>
 
-          const TOP_N = 25;
-          const top = ranking.slice(0, TOP_N);
+      <div class="notice warn" v-else-if="store.error">⚠️ {{ store.error }}</div>
 
-          out.innerHTML = html`
-            <div class="notice ok">Топ-${esc(TOP_N)} участников (только обучающиеся)</div>
-            <div class="chartCard" style="margin-top:12px">
-              <p class="chartTitle">Топ лучших игроков</p>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Участник</th>
-                    <th>ID</th>
-                    <th>Группа</th>
-                    <th>Лига</th>
-                    <th>Баллы</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${
-                    top.length
-                      ? top.map((x, i) => {
-                          const league = DB.leagueById.get(x.id) || "Бронзовая";
-                          const b = leagueBadge(league);
-                          return html`
-                            <tr>
-                              <td><b>${esc(i+1)}</b></td>
-                              <td><b>${esc((x.student?.name_short || "—").toString().trim() || "—")}</b></td>
-                              <td class="muted">${esc(x.id)}</td>
-                              <td class="muted">${esc((x.student?.group || "—").toString().trim() || "—")}</td>
-                              <td><span class="badge ${esc(b.cls)}">${esc(b.label)}</span></td>
-                              <td><b>${esc(x.total)}</b></td>
-                            </tr>
-                          `;
-                        }).join("")
-                      : `<tr><td colspan="6" class="muted">Нет данных для рейтинга.</td></tr>`
-                  }
-                </tbody>
-              </table>
-            </div>
-          `;
+      <template v-else-if="student">
+        <div class="crumbs">КЛТ / <b>Рейтинг</b></div>
+        <div class="page-title">Профиль студента</div>
 
-          const rows = out.querySelectorAll("tbody tr");
-          rows.forEach((tr, idx)=>{
-            const rec = top[idx];
-            if (!rec) return;
-            tr.style.cursor = "pointer";
-            tr.addEventListener("click", ()=>{
-              idInput.value = rec.id;
-              renderPreIntroIfNeeded();
-              show();
-            });
-          });
-          return;
-        }
-
-        const student = DB.studentsById.get(id);
-        const sessions = DB.sessionsById.get(id) || [];
-        if (!student){
-          out.innerHTML = `<div class="notice bad">Студент с ID <b>${esc(id)}</b> не найден.</div>`;
-          return;
-        }
-
-        const isExpelled = isExpelledStatus(student.status);
-
-        const attSessions = sessions.filter(s=> isAttendanceValue(s.score_or_attendance));
-        const presentCount = attSessions.reduce((acc, s)=> acc + (attendanceIsPresent(s.score_or_attendance) === true ? 1 : 0), 0);
-        const attTotal = attSessions.length || 0;
-        const absences = Math.max(0, attTotal - presentCount);
-        const attPercent = attTotal ? Math.round(presentCount / attTotal * 100) : 0;
-
-        const riskByAbsences = absences >= 4 ? {t:"Риск", cls:"b-warn"} : {t:"Норма", cls:"b-ok"};
-
-        const scored = computeScoredSessions(id);
-        const totalPoints = scored.reduce((sum,x)=> sum + (x.points || 0), 0);
-
-        const league = DB.leagueById.get(id) || "Бронзовая";
-        const rankPlace = getRankPlaceOnly(id);
-
-        const track = calcTrackers(student, sessions, scored);
-        const advice = buildAdvice(track);
-
-        const strong = computeStrongSide(scored);
-        advice.push({
-          title: "Сильная сторона",
-          text: strong.text,
-          tag: strong.badge.text,
-          cls: strong.badge.cls
-        });
-
-        /* ✅ IMPORTANT:
-           Здесь — базовая раскладка дашборда (без фото/слайдера).
-           Слайдер показывается только когда ID пустой. */
-        out.innerHTML = html`
-          <div class="notice ${isExpelled ? "expelled" : "ok"}">
-            <b>${esc(student.name_short || student.name_full || "Студент")}</b> ·
-            ID: <b>${esc(student.id)}</b> ·
-            Группа: <b>${esc(student.group || "—")}</b>
-            ${student.status ? ` · Статус: <b>${esc(student.status)}</b>` : ""}
-          </div>
-
-          <div class="notice" style="margin-top:10px">
-            Баллы и дашборд ведутся <b>исключительно для информационных целей</b> и <b>не влияют</b> на выплаты/начисления.
-          </div>
-
-          <div class="kpiGrid">
-            <div class="kpi">
-              <div class="k">Лига</div>
-              <div class="v">${leagueText(league)}</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Баллы (сумма)</div>
-              <div class="v">${esc(totalPoints)}</div>
-              <div class="c">За зачётные сессии</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Посещаемость</div>
-              <div class="v">${esc(attPercent)}%</div>
-              <div class="c"><span class="badge ${esc(riskByAbsences.cls)}">${esc(riskByAbsences.t)}</span> · прогулов: ${esc(absences)}</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Позиция в общем зачёте</div>
-              <div class="v">${esc(rankPlace)}</div>
-              <div class="c">место по сумме баллов</div>
+        <div class="stu-header">
+          <div class="stu-avatar">{{ (student.name_short||student['name_short']||'?').charAt(0) }}</div>
+          <div>
+            <div class="stu-name">{{ student.name_short || student['name_short'] }}</div>
+            <div class="stu-chips">
+              <span class="chip">🪪 ID: {{ id }}</span>
+              <span class="chip" v-if="student.group">🏫 {{ student.group }}</span>
+              <span class="chip" :class="(student.status||'').includes('Обучает')?'ok':'bad'">
+                {{ student.status || '—' }}
+              </span>
             </div>
           </div>
-
-          <div class="dash">
-            <div class="chartCard">
-              <p class="chartTitle">Прогресс по этапам</p>
-              <canvas id="progressChart" width="900" height="320"></canvas>
-              <div class="small">Точки = зачётные сессии (наведи — увидишь игру/этап/результат).</div>
-            </div>
-            <div class="chartCard">
-              <p class="chartTitle">Посещаемость</p>
-              <canvas id="attChart" width="600" height="320"></canvas>
-              <div class="small">Присутствовал: ${esc(presentCount)} из ${esc(attTotal)} · прогулов: ${esc(absences)}</div>
-            </div>
+          <div class="stu-spacer"></div>
+          <div class="league-pill" :class="league.color">
+            <span class="lp-emoji">{{ league.emoji }}</span>
+            <span class="lp-name">{{ league.name }} лига</span>
           </div>
+        </div>
 
-          <div class="chartRow">
-            <div class="chartCard" style="grid-column:1; grid-row:1;">
-              <p class="chartTitle">Активность по времени (баллы по датам)</p>
-              <canvas id="activityChart" width="900" height="320"></canvas>
-              <div class="small">Сумма баллов за день (последние 28 дат с баллами).</div>
-            </div>
+        <div class="notice info">
+          ℹ️ Баллы и дашборд ведутся исключительно для информационных целей и не влияют на выплаты/начисления.
+        </div>
 
-            <div class="chartCard" style="grid-column:1; grid-row:2;">
-              <p class="chartTitle">Топ-3 сильных результата</p>
-              <canvas id="top3Chart" width="900" height="240"></canvas>
-            </div>
+        <div class="kpi-grid">
+          <div class="kpi" style="--kpi-c:var(--gold)">
+            <span class="kpi-icon">🏆</span>
+            <div class="kpi-lbl">Лига</div>
+            <span class="kpi-val">{{ league.emoji }}</span>
+            <div class="kpi-sub">{{ league.name }} лига</div>
+          </div>
+          <div class="kpi" style="--kpi-c:var(--ac2)">
+            <span class="kpi-icon">⭐</span>
+            <div class="kpi-lbl">Баллы (сумма)</div>
+            <span class="kpi-val">{{ points }}</span>
+            <div class="kpi-sub">По зачётным сессиям</div>
+          </div>
+          <div class="kpi" style="--kpi-c:var(--ok)">
+            <span class="kpi-icon">📋</span>
+            <div class="kpi-lbl">Посещаемость</div>
+            <span class="kpi-val">{{ attend }}%</span>
+            <div class="kpi-sub">{{ sessions.filter(s=>s[store.colMap.attend]!=='0').length }} из {{ sessions.length }} сессий</div>
+          </div>
+          <div class="kpi" style="--kpi-c:var(--ac3)">
+            <span class="kpi-icon">📊</span>
+            <div class="kpi-lbl">Позиция</div>
+            <span class="kpi-val">#{{ rank }}</span>
+            <div class="kpi-sub">в общем зачёте</div>
+          </div>
+        </div>
 
-            <div class="chartCard" style="grid-column:2; grid-row:1 / span 2;">
-              <p class="chartTitle">Рекомендации по улучшению результата</p>
-              <div style="display:grid; gap:10px">
-                ${advice.map(a=>html`
-                  <div style="padding:12px 12px; border-radius:16px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.02)">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
-                      <div style="font-weight:1100">${esc(a.title)}</div>
-                      <span class="badge ${esc(a.cls)}">${esc(a.tag)}</span>
-                    </div>
-                    <div class="muted" style="margin-top:6px; font-weight:800; line-height:1.6">
-                      ${esc(a.text)}
-                    </div>
-                  </div>
-                `).join("")}
+        <div class="rank-bar-wrap" v-if="rank !== '—' && rank !== '…'">
+          <div class="rank-bar-label">📊 Ваша позиция в рейтинге</div>
+          <div class="rank-bar-track">
+            <div class="rank-bar-fill" :style="{width: ((store.students.length - rank) / store.students.length * 100) + '%'}"></div>
+          </div>
+          <div class="rank-bar-info">
+            <span>#{{ rank }} из {{ store.students.length }}</span>
+            <span>Лучше чем {{ Math.round((store.students.length - rank) / store.students.length * 100) }}% участников</span>
+          </div>
+        </div>
+
+        <div class="dgrid">
+          <div class="card">
+            <div class="card-title">🎯 Профиль компетенций</div>
+            <div class="radar-box"><canvas ref="radarCanvas"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">📈 Динамика баллов</div>
+            <div class="chart-box"><canvas ref="progressCanvas"></canvas></div>
+          </div>
+        </div>
+
+        <div v-if="topResults.length" class="card">
+          <div class="card-title">🥇 Лучшие результаты</div>
+          <div>
+            <div v-for="r in topResults" :key="r.rank" class="top-item">
+              <span class="pos-badge" :class="'pos-'+r.rank">{{ r.rank }}</span>
+              <div style="flex:1">
+                <div class="top-game">{{ r.game }}</div>
+                <div class="top-detail">{{ r.detail }}</div>
               </div>
+              <span class="top-pts">+{{ r.pts }}</span>
             </div>
           </div>
+        </div>
 
-          <div class="chartCard" style="margin-top:12px">
-            <p class="chartTitle">Начисление баллов</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Дата</th>
-                  <th>Этап</th>
-                  <th>Сессия</th>
-                  <th>Результат/место</th>
-                  <th>Баллы</th>
-                  <th>Как посчитали</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  scored.length
-                    ? scored.map(s=>html`
-                      <tr>
-                        <td>${esc(formatDateRU(s.date || "—"))}</td>
-                        <td><b>${esc(s.tournamentKey)}</b></td>
-                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || s.score_or_attendance || "—")}</td>
-                        <td><b>${esc(s.points)}</b></td>
-                        <td class="muted">${esc(s.explain)}</td>
-                      </tr>
-                    `).join("")
-                    : `<tr><td colspan="6" class="muted">Нет зачётных сессий.</td></tr>`
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <div class="chartCard" style="margin-top:12px">
-            <p class="chartTitle">Все сессии студента</p>
-            <table class="table">
+        <div class="card">
+          <div class="card-title">📋 История сессий</div>
+          <div class="tbl-wrap">
+            <table class="tbl">
               <thead>
                 <tr>
                   <th>Дата</th>
                   <th>Турнир</th>
                   <th>Этап</th>
-                  <th>Сессия</th>
                   <th>Игра</th>
-                  <th>Посещаемость</th>
-                  <th>Место/Результат</th>
+                  <th>Место</th>
+                  <th>Баллы</th>
                   <th>Комментарий</th>
                 </tr>
               </thead>
               <tbody>
-                ${
-                  sessions.length
-                    ? sessions.map(s=>html`
-                      <tr>
-                        <td>${esc(formatDateRU(s.date || "—"))}</td>
-                        <td><b>${esc(normTournamentKey(s.tournament))}</b></td>
-                        <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                        <td class="muted">${esc(s.session_no || "—")}</td>
-                        <td class="muted">${esc(s.game_no || "—")}</td>
-                        <td class="muted">${esc(s.score_or_attendance || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || "—")}</td>
-                        <td class="muted">${esc(s.comment || s.extra || "")}</td>
-                      </tr>
-                    `).join("")
-                    : `<tr><td colspan="8" class="muted">Нет записей.</td></tr>`
-                }
+                <tr v-for="(s, i) in sortedSessions" :key="i">
+                  <td>{{ s[store.colMap.date] }}</td>
+                  <td><span class="game-tag" :class="getGameTag(s[store.colMap.tournament])[0]">{{ getGameTag(s[store.colMap.tournament])[1] }} {{ s[store.colMap.tournament] }}</span></td>
+                  <td>{{ s[store.colMap.phase] }}</td>
+                  <td>{{ s[store.colMap.game] }}</td>
+                  <td>{{ s[store.colMap.result] }}</td>
+                  <td style="font-weight:700">+{{ extractPoints(s) }}</td>
+                  <td style="font-size:11px;color:var(--t2)">{{ s[store.colMap.comment] }}</td>
+                </tr>
               </tbody>
             </table>
           </div>
-        `;
+        </div>
 
-        drawProgressDots("progressChart", scored);
-        attachDotTooltip("progressChart");
+        <div style="text-align:center;margin-top:24px">
+          <a class="nbtn" href="#/rating" style="display:inline-flex">← Назад на главную</a>
+        </div>
+      </template>
+    </div>
+  `
+};
 
-        drawDonut("attChart", presentCount, Math.max(0, attTotal - presentCount));
+/* ── Admin Login ── */
+const AdminLogin = {
+  setup() {
+    const router = VueRouter.useRouter();
+    const login = ref('');
+    const pass  = ref('');
+    const err   = ref('');
 
-        drawActivityByDate("activityChart", scored);
-        attachBarTooltip("activityChart");
+    const doLogin = () => {
+      err.value = '';
+      if (login.value === ADMIN_LOGIN && pass.value === ADMIN_PASS) {
+        store.isAdmin = true;
+        sessionStorage.setItem('klt_admin', '1');
+        router.push('/admin');
+      } else {
+        err.value = 'Неверный логин или пароль';
+      }
+    };
 
-        drawTop3("top3Chart", scored);
-        attachBarTooltip("top3Chart");
+    const onKey = (e) => { if (e.key === 'Enter') doLogin(); };
+    return { login, pass, err, doLogin, onKey };
+  },
+  template: `
+    <div class="login-wrap">
+      <div class="login-ico">🔒</div>
+      <h2>Вход администратора</h2>
+      <div class="sub">Только для сотрудников САОК КЛТ</div>
+      <div class="fgroup">
+        <label class="flabel">Логин</label>
+        <input class="finput" v-model="login" type="text" placeholder="Введите логин" @keyup="onKey" />
+      </div>
+      <div class="fgroup">
+        <label class="flabel">Пароль</label>
+        <input class="finput" v-model="pass" type="password" placeholder="Введите пароль" @keyup="onKey" />
+      </div>
+      <button class="btn-go" style="width:100%" @click="doLogin">Войти</button>
+      <div class="errmsg" v-if="err">{{ err }}</div>
+      <div style="text-align:center;margin-top:20px">
+        <a href="#/rating" style="font-size:13px;color:var(--t2);text-decoration:none">← На главную</a>
+      </div>
+    </div>
+  `
+};
+
+/* ── Admin Dashboard ── */
+const AdminDashboard = {
+  setup() {
+    const router = VueRouter.useRouter();
+    if (!store.isAdmin) { router.replace('/admin-login'); return {}; }
+
+    const stats    = ref(null);
+    const loading  = ref(true);
+    const activeTab = ref('overview');
+    const searchQ = ref('');
+    const groupFilter = ref('');
+
+    const radarCanvasA   = ref(null);
+    const doughnutCanvasA = ref(null);
+    const barCanvas     = ref(null);
+    const groupBarCanvas = ref(null);
+    let charts = {};
+
+    const groups = computed(() => {
+      if (!store.loaded) return [];
+      return [...new Set(store.students.map(s=>s['group']||'').filter(Boolean))].sort();
+    });
+
+    const buildCharts = async () => {
+      await nextTick();
+      if (!stats.value) return;
+      const s = stats.value;
+
+      Object.values(charts).forEach(c => c && c.destroy());
+      charts = {};
+
+      // Overview tab charts
+      if (activeTab.value === 'overview') {
+        if (radarCanvasA.value) {
+          charts.radar = new Chart(radarCanvasA.value, radarConfig(s.avgRadar, RADAR_LABELS));
+        }
+        if (doughnutCanvasA.value) {
+          const lm = s.leagueMap;
+          charts.doughnut = new Chart(doughnutCanvasA.value, doughnutConfig(
+            Object.keys(lm), Object.values(lm),
+            ['#fbbf24','#94a3b8','#d97706','#6b7280']
+          ));
+        }
       }
 
-      btnShow.addEventListener("click", show);
-      idInput.addEventListener("keydown", (e)=>{ if (e.key==="Enter") show(); });
+      // Charts tab
+      if (activeTab.value === 'charts') {
+        if (barCanvas.value) {
+          const labels = s.weekData.map((_,i) => `Нед ${i+1}`);
+          charts.bar = new Chart(barCanvas.value, barConfig(labels, [
+            { label:'Присутствовали', data: s.weekData, backgroundColor:'rgba(56,189,248,.6)', borderRadius:4 },
+            { label:'Всего сессий',   data: s.weekMax,  backgroundColor:'rgba(129,140,248,.3)', borderRadius:4 },
+          ]));
+        }
+        if (groupBarCanvas.value && s.groupPerfLabels && s.groupPerfLabels.length) {
+          if(charts.groupBar) charts.groupBar.destroy();
+          charts.groupBar = new Chart(groupBarCanvas.value, {
+            type: 'bar',
+            data: {
+              labels: s.groupPerfLabels,
+              datasets: [{ label:'Средний балл', data:s.groupPerfData, backgroundColor:'rgba(56,189,248,.6)', borderRadius:5 }]
+            },
+            options: {
+              indexAxis:'y', responsive:true, maintainAspectRatio:false,
+              scales: {
+                x: { grid:{color:gridCol()}, ticks:{color:tickCol()} },
+                y: { grid:{color:gridCol()}, ticks:{color:tickCol()} }
+              },
+              plugins: { legend:{display:false}, tooltip:{backgroundColor:tooltipBg()} }
+            }
+          });
+        }
+      }
+    };
 
-      if (presetId) idInput.value = presetId.replace(/\D/g,"").slice(0,4);
-
-      // Показать слайды сразу (пока ID пустой)
-      renderPreIntroIfNeeded();
-    }
-
-    window.addEventListener("load", async ()=>{
-      if (!location.hash) location.hash = "#/rating";
-      await route();
+    onMounted(async () => {
+      if (!store.loaded) {
+        await new Promise(r => { const t = setInterval(() => { if(store.loaded||store.error){clearInterval(t);r();} }, 100); });
+      }
+      stats.value  = computeAdminStats();
+      loading.value = false;
+      await nextTick();
+      buildCharts();
     });
-  </script>
+
+    watch(() => store.theme, async () => { await nextTick(); buildCharts(); });
+    watch(activeTab, async () => { await nextTick(); buildCharts(); });
+
+    const topStudents = computed(() => {
+      if (!store.loaded) return [];
+      const filtered = store.students
+        .map(s => ({ ...s, pts: totalPoints(getSessions(s['id'])), rank: getGlobalRank(s['id']) }))
+        .sort((a,b) => (a.rank||99999) - (b.rank||99999));
+
+      return filtered.filter(s => {
+        const matchSearch = !searchQ.value ||
+          (s.name_short||'').toLowerCase().includes(searchQ.value.toLowerCase()) ||
+          s.id.includes(searchQ.value);
+        const matchGroup = !groupFilter.value || s.group === groupFilter.value;
+        return matchSearch && matchGroup;
+      });
+    });
+
+    return {
+      store, stats, loading, activeTab, searchQ, groupFilter, groups,
+      radarCanvasA, doughnutCanvasA, barCanvas, groupBarCanvas,
+      topStudents, leagueInfo
+    };
+  },
+  template: `
+    <div class="page">
+      <div class="admin-badge">🔒 Режим администратора</div>
+      <div class="page-title">Аналитический дашборд КЛТ</div>
+
+      <div v-if="loading" class="loading"><div class="spinner"></div>Вычисление статистики…</div>
+
+      <template v-else-if="stats">
+        <div class="tabs">
+          <button class="tab" :class="{active:activeTab==='overview'}" @click="activeTab='overview'">📊 Обзор</button>
+          <button class="tab" :class="{active:activeTab==='charts'}" @click="activeTab='charts'">📈 Графики</button>
+          <button class="tab" :class="{active:activeTab==='top'}" @click="activeTab='top'">🏆 Топ студентов</button>
+        </div>
+
+        <template v-if="activeTab==='overview'">
+          <div class="astats">
+            <div class="astat">
+              <span class="astat-icon">🎓</span>
+              <div class="astat-lbl">Студентов</div>
+              <div class="astat-val">{{ stats.total }}</div>
+              <div class="astat-sub">Всего в системе</div>
+            </div>
+            <div class="astat">
+              <span class="astat-icon">✅</span>
+              <div class="astat-lbl">Средн. посещаемость</div>
+              <div class="astat-val">{{ stats.avgAtt }}%</div>
+              <div class="astat-bar"><div class="astat-fill" :style="{width:stats.avgAtt+'%'}"></div></div>
+            </div>
+            <div class="astat">
+              <span class="astat-icon">🎮</span>
+              <div class="astat-lbl">Всего сессий</div>
+              <div class="astat-val">{{ store.sessions.length.toLocaleString() }}</div>
+              <div class="astat-sub">По всем дисциплинам</div>
+            </div>
+            <div class="astat">
+              <span class="astat-icon">🏫</span>
+              <div class="astat-lbl">Лидер-группа</div>
+              <div class="astat-val" style="font-size:18px">{{ stats.bestGroup }}</div>
+              <div class="astat-sub">По среднему баллу</div>
+            </div>
+          </div>
+
+          <div class="records">
+            <div class="rec">
+              <div class="rec-icon">🔫</div>
+              <div>
+                <div class="rec-lbl">Рекорд · Пейнтбол</div>
+                <div class="rec-val">{{ stats.paintRecord }}</div>
+                <div class="rec-sub">Лучший результат</div>
+              </div>
+            </div>
+            <div class="rec">
+              <div class="rec-icon">🏛️</div>
+              <div>
+                <div class="rec-lbl">Рекорд · CIV Соло</div>
+                <div class="rec-val">{{ stats.civSoloRecord }}</div>
+                <div class="rec-sub">Лучший результат</div>
+              </div>
+            </div>
+            <div class="rec">
+              <div class="rec-icon">⚔️</div>
+              <div>
+                <div class="rec-lbl">Рекорд · CIV Дуэль</div>
+                <div class="rec-val">{{ stats.civDuelRecord }}</div>
+                <div class="rec-sub">Лучший результат</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dgrid">
+            <div class="card">
+              <div class="card-title">🏅 Распределение по лигам</div>
+              <div class="chart-box-sm"><canvas ref="doughnutCanvasA"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-title">📊 Средний профиль способностей</div>
+              <div class="chart-box-sm"><canvas ref="radarCanvasA"></canvas></div>
+            </div>
+          </div>
+        </template>
+
+        <template v-if="activeTab==='charts'">
+          <div class="card">
+            <div class="card-title">📅 Динамика посещаемости (последние 12 недель)</div>
+            <div class="chart-box"><canvas ref="barCanvas"></canvas></div>
+          </div>
+          <div class="card" style="margin-top:18px">
+            <div class="card-title">🏫 Сравнение групп (средний балл)</div>
+            <div class="chart-box"><canvas ref="groupBarCanvas"></canvas></div>
+          </div>
+        </template>
+
+        <template v-if="activeTab==='top'">
+          <div class="lb-search-row">
+            <input class="lb-search" v-model="searchQ" placeholder="🔍 Поиск по имени или ID…" />
+            <select class="lb-select" v-model="groupFilter">
+              <option value="">Все группы ({{ topStudents.length }})</option>
+              <option v-for="g in groups" :key="g" :value="g">{{ g }}</option>
+            </select>
+          </div>
+          <table class="tbl" v-if="topStudents.length">
+            <thead>
+              <tr>
+                <th style="width:60px">Место</th>
+                <th>Имя</th>
+                <th style="width:100px">Группа</th>
+                <th style="width:50px">Лига</th>
+                <th style="width:80px">Баллы</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in topStudents" :key="s.id">
+                <td><span style="font-family:'Exo 2',sans-serif;font-weight:900;color:var(--ac)">#{{ s.rank }}</span></td>
+                <td style="font-weight:700">{{ s.name_short || '—' }}<br><span style="font-size:11px;color:var(--t2)">ID: {{ s.id }}</span></td>
+                <td style="color:var(--t2)">{{ s.group || '—' }}</td>
+                <td style="font-size:16px">{{ leagueInfo(s.rank, store.students.length).emoji }}</td>
+                <td style="font-family:'Exo 2',sans-serif;font-weight:900;color:var(--ac2)">{{ s.pts }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty" v-else>
+            <span class="empty-icon">🔍</span>
+            <p>Студенты не найдены</p>
+          </div>
+        </template>
+      </template>
+    </div>
+  `
+};
+
+/* ── Not Found ── */
+const NotFound = {
+  template: `
+    <div class="page">
+      <div class="empty">
+        <span class="empty-icon">404</span>
+        <p>Страница не найдена</p>
+        <a class="nbtn cta" href="#/rating" style="display:inline-flex;margin-top:16px">← Главная</a>
+      </div>
+    </div>
+  `
+};
+
+/* ══════════════════════════════════════
+   ROUTER
+══════════════════════════════════════ */
+const routes = [
+  { path: '/',           redirect: '/rating' },
+  { path: '/rating',    component: RatingPage },
+  { path: '/leaderboard', component: LeaderboardPage },
+  { path: '/student/:id', component: StudentPage, props: true },
+  { path: '/admin-login', component: AdminLogin },
+  { path: '/admin',      component: AdminDashboard },
+  { path: '/:pathMatch(.*)*', component: NotFound },
+];
+
+const router = createRouter({
+  history: VueRouter.createMemoryHistory(),
+  routes,
+  scrollBehavior() { return { top: 0 }; }
+});
+
+/* Sync URL hash ↔ memory router (works inside iframes/srcdoc) */
+const _syncHash = () => {
+  const path = window.location.hash.slice(1) || '/rating';
+  router.push(path).catch(() => {});
+};
+window.addEventListener('hashchange', _syncHash);
+router.isReady().then(() => {
+  const init = window.location.hash.slice(1) || '/rating';
+  if (init !== '/') router.push(init).catch(() => {});
+});
+
+/* ══════════════════════════════════════
+   ROOT APP
+══════════════════════════════════════ */
+const App = {
+  components: { Topbar },
+  setup() {
+    onMounted(() => loadData());
+    return { store };
+  },
+  template: `
+    <Topbar />
+    <router-view />
+    <footer class="footer">
+      <span>© 2026 · КЛТ Рейтинг · Алабуга Политех</span>
+      <a href="https://clck.ru/3RdkWv" target="_blank" rel="noopener">Поддержка</a>
+    </footer>
+  `
+};
+
+createApp(App).use(router).mount('#app');
+</script>
 </body>
 </html>
