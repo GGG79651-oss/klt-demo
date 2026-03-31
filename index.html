@@ -274,7 +274,7 @@ color: var(--text);
     .heroSlide img{
       width:100%;
       height:100%;
-      object-fit:cover;
+      object-fit:contain;
       display:block;
       filter:saturate(1.05);
       opacity:.92;
@@ -353,6 +353,136 @@ color: var(--text);
     /* prevents “vertical letters”/overlap */
     .card, .chartCard, .kpi, .notice { min-width: 0; }
     .dash, .chartRow, .kpiGrid { min-width: 0; }
+
+    /* ── LIGHT THEME ─────────────────────────────────── */
+    body.light{
+      --bg:#eef2ff;
+      --text:#1a1f3e;
+      --muted:#5a6485;
+      --accent:#5b3fff;
+      --accent2:#00b4d8;
+      --ok:#1aaa5e;
+      --warn:#c89200;
+      --bad:#d40039;
+      --border:rgba(0,0,0,.10);
+      --shadow:0 8px 30px rgba(0,0,0,.09);
+    }
+    body.light{
+      background:
+        radial-gradient(1200px 600px at 25% -10%,rgba(91,63,255,.10),transparent 55%),
+        radial-gradient(900px 500px at 85% 0%,rgba(0,180,216,.08),transparent 55%),
+        linear-gradient(180deg,#dce5ff 0%,#eef2ff 40%,#dce5ff 100%);
+    }
+    body.light .topbar{background:rgba(220,229,255,.90);}
+    body.light input[type=”text”]{background:rgba(255,255,255,.85);border-color:rgba(0,0,0,.15);color:#1a1f3e;}
+    body.light .card,body.light .chartCard,body.light .kpi,
+    body.light .notice,body.light .supportBox{
+      background:rgba(255,255,255,.72); border-color:rgba(0,0,0,.09);
+    }
+    body.light .heroSlider{background:rgba(255,255,255,.5);border-color:rgba(0,0,0,.10);}
+    body.light .heroSlider::after{
+      background:
+        radial-gradient(900px 260px at 20% 0%,rgba(91,63,255,.08),transparent 55%),
+        linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.18));
+    }
+    body.light .table{border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.5);}
+    body.light .table th,body.light .table td{border-bottom-color:rgba(0,0,0,.06);}
+    body.light .badge{border-color:rgba(0,0,0,.09); background:rgba(0,0,0,.04);}
+    body.light .btn{border-color:rgba(0,0,0,.15); background:rgba(0,0,0,.07); color:#1a1f3e; box-shadow:none;}
+    body.light .btn:hover{background:rgba(0,0,0,.12);}
+    body.light .crumbs{color:#5a6485;}
+    body.light .heroCaption{background:rgba(230,237,255,.80); color:#1a1f3e;}
+    body.light .heroDot{border-color:rgba(0,0,0,.25); background:rgba(0,0,0,.08);}
+    body.light .heroDot.active{background:rgba(91,63,255,.75); border-color:rgba(91,63,255,.75);}
+
+    /* ── ADMIN MODAL ─────────────────────────────────── */
+    .modal-overlay{
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.62);
+      backdrop-filter:blur(8px);
+      z-index:200;
+      align-items:center; justify-content:center;
+    }
+    .modal-overlay.show{display:flex;}
+    .modal-box{
+      background:rgba(11,16,32,.98);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:24px; padding:32px;
+      width:360px; max-width:94vw;
+      box-shadow:0 24px 64px rgba(0,0,0,.55);
+    }
+    body.light .modal-box{background:rgba(240,244,255,.98);border-color:rgba(0,0,0,.12);}
+    .modal-box h3{margin:0 0 20px; font-size:20px; letter-spacing:-.3px; font-weight:1000;}
+    .modal-input{
+      width:100%; padding:12px 14px; display:block;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.07);
+      color:var(--text); font-size:15px; font-weight:800;
+      font-family:inherit;
+      outline:none; margin-bottom:10px; box-sizing:border-box;
+    }
+    body.light .modal-input{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.15);}
+    .modal-input:focus{border-color:rgba(124,92,255,.55);}
+    .modal-err{color:var(--bad);font-size:13px;font-weight:900;margin-bottom:10px;display:none;}
+    .modal-err.show{display:block;}
+    .modal-actions{display:flex;gap:8px;margin-top:4px;}
+
+    /* ── ADMIN PANEL ─────────────────────────────────── */
+    .adminCard{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:var(--r2);
+      box-shadow:var(--shadow);
+    }
+    body.light .adminCard{background:rgba(255,255,255,.72);}
+    .adminTabs{
+      display:flex; gap:6px; flex-wrap:wrap;
+      padding:12px 16px 10px;
+      border-bottom:1px solid var(--border);
+    }
+    .adminTab{
+      display:flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:10px;
+      border:1px solid transparent;
+      font-weight:900; font-size:13px; cursor:pointer;
+      color:var(--muted); transition:.15s; user-select:none;
+    }
+    .adminTab.active,.adminTab:hover{
+      background:rgba(124,92,255,.15);
+      border-color:rgba(124,92,255,.30);
+      color:var(--text);
+    }
+    .adminContent{padding:16px;}
+    .adminRow{display:grid;gap:10px;margin-bottom:10px;}
+    .adminRow4{grid-template-columns:repeat(4,1fr);}
+    .adminRow3{grid-template-columns:repeat(3,1fr);}
+    .adminRow2{grid-template-columns:1.45fr 1fr;}
+    .adminKpi{
+      padding:14px 16px; border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      min-width:0;
+    }
+    body.light .adminKpi{background:rgba(255,255,255,.65);}
+    .adminKpi .ak{
+      font-size:11px;font-weight:900;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.2px;
+      margin-bottom:8px;line-height:1.4;
+    }
+    .adminKpi .av{font-size:22px;font-weight:1100;letter-spacing:-.4px;line-height:1.2;margin-top:2px;}
+    .adminKpi .ac{font-size:12px;color:var(--muted);font-weight:800;margin-top:6px;}
+    .adminKpi .abar{height:7px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden;}
+    body.light .adminKpi .abar{background:rgba(0,0,0,.07);}
+    .adminKpi .abar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    @media(max-width:980px){
+      .adminRow4{grid-template-columns:1fr 1fr;}
+      .adminRow3{grid-template-columns:1fr 1fr;}
+      .adminRow2{grid-template-columns:1fr;}
+    }
+    @media(max-width:520px){
+      .adminRow4,.adminRow3{grid-template-columns:1fr;}
+    }
   </style>
 </head>
 <body>
@@ -362,7 +492,25 @@ color: var(--text);
         <img class="logoImg" src="./img/logo.svg" alt="КЛТ" />
         <div>КЛТ <span class="muted">Рейтинг</span></div>
       </a>
-      <a class="btn" href="#/rating" aria-label="Показать результаты">Показать результаты</a>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn secondary" id="themeToggle">☀ Светлая</button>
+        <button class="btn secondary" id="adminBtn">⚙ Администратор</button>
+        <a class="btn" href="#/rating" aria-label="Показать результаты">Результаты</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Admin Login Modal ─────────────────────── -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-box">
+      <h3>🔐 Панель администратора</h3>
+      <input class="modal-input" type="text" id="adminLogin" placeholder="Логин" autocomplete="off" />
+      <input class="modal-input" type="password" id="adminPass" placeholder="Пароль" />
+      <div class="modal-err" id="adminErr">Неверный логин или пароль</div>
+      <div class="modal-actions">
+        <button class="btn" id="adminLoginBtn">Войти</button>
+        <button class="btn secondary" id="adminCancelBtn">Отмена</button>
+      </div>
     </div>
   </div>
 
@@ -400,6 +548,21 @@ color: var(--text);
     ];
 
     const app = document.getElementById("app");
+
+    /* ── Theme ──────────────────────────────────────── */
+    const THEME_KEY = "kltTheme";
+    function applyTheme(t){
+      document.body.classList.toggle("light", t === "light");
+      const btn = document.getElementById("themeToggle");
+      if (btn) btn.textContent = t === "light" ? "🌙 Тёмная" : "☀ Светлая";
+    }
+    function toggleTheme(){
+      const next = document.body.classList.contains("light") ? "dark" : "light";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    }
+    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+
     const esc = (s)=> String(s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
     const html = (strings, ...vals)=> strings.map((s,i)=> s + (vals[i] ?? "")).join("");
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -1456,13 +1619,388 @@ color: var(--text);
     }
 
     async function route(){
-      // одна страница
+      const { parts, params } = parseHash();
+      const page = parts[0] || "rating";
+
+      if (page === "admin"){
+        if (sessionStorage.getItem("kltAdminAuth") === "1"){
+          renderAdminSkeleton();
+          await ensureDBLoaded(false);
+          renderAdmin();
+        } else {
+          showAdminLogin();
+          location.hash = "#/rating";
+        }
+        return;
+      }
+
       renderRatingSkeleton();
       await ensureDBLoaded(false);
-      renderRating(parseHash().params);
+      renderRating(params);
     }
 
     window.addEventListener("hashchange", ()=>{ route(); });
+
+    /* ── Admin modal helpers ──────────────────────────── */
+    function showAdminLogin(){
+      const modal = document.getElementById("adminModal");
+      if (!modal) return;
+      modal.classList.add("show");
+      setTimeout(()=> document.getElementById("adminLogin")?.focus(), 60);
+    }
+    function hideAdminLogin(){
+      const modal = document.getElementById("adminModal");
+      if (modal) modal.classList.remove("show");
+      const err = document.getElementById("adminErr");
+      if (err) err.classList.remove("show");
+      const li = document.getElementById("adminLogin");
+      const lp = document.getElementById("adminPass");
+      if (li) li.value = "";
+      if (lp) lp.value = "";
+    }
+
+    /* ── Global click handler for topbar buttons & modal ── */
+    document.addEventListener("click", (e)=>{
+      if (e.target.closest("#themeToggle")){ toggleTheme(); return; }
+      if (e.target.closest("#adminBtn")){ showAdminLogin(); return; }
+      if (e.target.closest("#adminLoginBtn")){
+        const login = (document.getElementById("adminLogin")?.value || "").trim();
+        const pass  = (document.getElementById("adminPass")?.value  || "").trim();
+        if (login === "Admin" && pass === "2121"){
+          sessionStorage.setItem("kltAdminAuth","1");
+          hideAdminLogin();
+          location.hash = "#/admin";
+        } else {
+          const err = document.getElementById("adminErr");
+          if (err) err.classList.add("show");
+        }
+        return;
+      }
+      if (e.target.closest("#adminCancelBtn")){ hideAdminLogin(); return; }
+      if (e.target.id === "adminModal"){ hideAdminLogin(); return; }
+    });
+
+    document.addEventListener("keydown", (e)=>{
+      const modal = document.getElementById("adminModal");
+      if (!modal?.classList.contains("show")) return;
+      if (e.key === "Escape"){ hideAdminLogin(); return; }
+      if (e.key === "Enter"){ document.getElementById("adminLoginBtn")?.click(); }
+    });
+
+    /* ── Admin canvas charts ──────────────────────────── */
+    function drawAdminLeagueDonut(id, gold, silver, bronze){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      const cx = w/2, cy = h/2;
+      const r = Math.min(w,h)*0.36;
+      const thick = Math.max(10, r*0.38);
+      const total = Math.max(1, gold + silver + bronze);
+      const segs = [
+        { n:gold,   color:"#f6c343" },
+        { n:silver, color:"#a9b4d6" },
+        { n:bronze, color:"#cd7f32" },
+      ];
+      ctx.lineCap = "butt";
+      ctx.lineWidth = thick;
+      ctx.strokeStyle = "rgba(255,255,255,.08)";
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+      let angle = -Math.PI/2;
+      for (const seg of segs){
+        if (!seg.n) continue;
+        const sweep = (seg.n/total)*Math.PI*2;
+        ctx.strokeStyle = seg.color;
+        ctx.beginPath();
+        ctx.arc(cx,cy,r,angle,angle+sweep-0.05);
+        ctx.stroke();
+        angle += sweep;
+      }
+      ctx.fillStyle = "var(--text)";
+      ctx.font = `bold ${Math.round(r*0.4)}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(total, cx, cy);
+    }
+
+    function drawAdminRadar(id){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      const labels = ["Цива одиночная","Феодалы","Посещение","Пейнтбол","Бизнес коты","Бенди"];
+      const n = labels.length;
+      const cx = w/2, cy = h/2 + 8;
+      const maxR = Math.min(w,h)*0.30;
+      const rings = [0.25,0.5,0.75,1.0];
+      const ringLabels = ["25%","50%","75%",""];
+      ctx.lineWidth = 1;
+      for (let ri=0; ri<rings.length; ri++){
+        const f = rings[ri];
+        ctx.beginPath();
+        for (let i=0;i<n;i++){
+          const a = (i/n)*Math.PI*2 - Math.PI/2;
+          const x = cx+Math.cos(a)*maxR*f, y = cy+Math.sin(a)*maxR*f;
+          i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = "rgba(255,255,255,.10)";
+        ctx.stroke();
+        if (ringLabels[ri]){
+          ctx.fillStyle = "rgba(169,180,214,.55)";
+          ctx.font = "9px sans-serif"; ctx.textAlign = "center";
+          ctx.fillText(ringLabels[ri], cx, cy - maxR*f - 3);
+        }
+      }
+      for (let i=0;i<n;i++){
+        const a = (i/n)*Math.PI*2 - Math.PI/2;
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
+        ctx.strokeStyle = "rgba(255,255,255,.12)";
+        ctx.stroke();
+        const lx = cx+Math.cos(a)*(maxR+20), ly = cy+Math.sin(a)*(maxR+20);
+        ctx.fillStyle = "rgba(33,212,255,.9)";
+        ctx.font = "bold 10px sans-serif";
+        ctx.textAlign = Math.abs(Math.cos(a))<0.15 ? "center" : Math.cos(a)<0 ? "right" : "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(labels[i], lx, ly);
+      }
+      ctx.beginPath();
+      for (let i=0;i<n;i++){
+        const a = (i/n)*Math.PI*2 - Math.PI/2;
+        const rv = maxR*0.04;
+        i===0 ? ctx.moveTo(cx+Math.cos(a)*rv, cy+Math.sin(a)*rv)
+              : ctx.lineTo(cx+Math.cos(a)*rv, cy+Math.sin(a)*rv);
+      }
+      ctx.closePath();
+      ctx.fillStyle = "rgba(124,92,255,.30)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(124,92,255,.70)";
+      ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    function drawAdminAttendance(id){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      const weeks = 12;
+      const pad = {l:32,r:10,t:10,b:32};
+      const cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
+      const gap = cw/weeks;
+      const bw = gap*0.55;
+      ctx.lineWidth = 1;
+      for (let i=0;i<=4;i++){
+        const y = pad.t + ch - (i/4)*ch;
+        ctx.beginPath(); ctx.moveTo(pad.l-4,y); ctx.lineTo(w-pad.r,y);
+        ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.stroke();
+        ctx.fillStyle = "rgba(169,180,214,.55)";
+        ctx.font = "9px sans-serif"; ctx.textAlign = "right";
+        ctx.fillText((i*25)+"", pad.l-6, y+3);
+      }
+      for (let wk=0;wk<weeks;wk++){
+        const x = pad.l + wk*gap + gap/2 - bw/2;
+        ctx.fillStyle = "rgba(255,255,255,.05)";
+        roundRect(ctx, x, pad.t, bw, ch, 4);
+        ctx.fill();
+        ctx.fillStyle = "rgba(169,180,214,.55)";
+        ctx.font = "9px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText((wk+1)+" н.", pad.l+wk*gap+gap/2, h-pad.b+12);
+      }
+    }
+
+    function drawAdminTournament(id){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      const counts = new Map();
+      DB.sessionsById.forEach(sessions => {
+        sessions.forEach(s => {
+          const k = normTournamentKey(s.tournament);
+          counts.set(k, (counts.get(k)||0)+1);
+        });
+      });
+      const entries = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      if (!entries.length){
+        ctx.fillStyle = "rgba(169,180,214,.5)";
+        ctx.font = "13px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText("Нет данных", w/2, h/2);
+        return;
+      }
+      const maxV = Math.max(...entries.map(e=>e[1]));
+      const pad = {l:8,r:8,t:12,b:52};
+      const cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
+      const gap = cw/entries.length;
+      const bw = gap*0.58;
+      const colors2 = ["#7c5cff","#21d4ff","#25c26e","#f6c343","#ff4d6d"];
+      for (let i=0;i<entries.length;i++){
+        const [label, val] = entries[i];
+        const barH = maxV ? (val/maxV)*ch : 0;
+        const x = pad.l+i*gap+gap/2-bw/2;
+        const y = pad.t+ch-barH;
+        const g = ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+        g.addColorStop(0, colors2[i%colors2.length]);
+        g.addColorStop(1, colors2[i%colors2.length]+"55");
+        ctx.fillStyle = g;
+        roundRect(ctx,x,y,bw,Math.max(barH,2),5);
+        ctx.fill();
+        ctx.fillStyle = "rgba(234,240,255,.75)";
+        ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center";
+        const lbl = label.length>10 ? label.slice(0,10)+"…" : label;
+        ctx.fillText(lbl, pad.l+i*gap+gap/2, h-pad.b+12);
+        ctx.fillText(val.toLocaleString(), pad.l+i*gap+gap/2, h-pad.b+24);
+      }
+    }
+
+    /* ── Admin skeleton & panel ───────────────────────── */
+    function renderAdminSkeleton(){
+      app.innerHTML = html`
+        <div class="crumbs">КЛТ / Администратор</div>
+        <h2 class="pageTitle">Панель администратора</h2>
+        <div class="adminCard" style="padding:18px">
+          <div class="notice">Загружаю данные…</div>
+        </div>
+      `;
+    }
+
+    function renderAdmin(){
+      const totalStudents = DB.studentsById.size;
+      const activeCount = Array.from(DB.studentsById.values())
+        .filter(s => !isExpelledStatus(s.status)).length;
+      let goldCount=0, silverCount=0, bronzeCount=0;
+      DB.leagueById.forEach(l => {
+        if (l==="Золотая") goldCount++;
+        else if (l==="Серебряная") silverCount++;
+        else bronzeCount++;
+      });
+
+      app.innerHTML = html`
+        <div class="crumbs">КЛТ / Администратор</div>
+        <h2 class="pageTitle">Панель администратора</h2>
+
+        <div class="adminCard">
+          <div class="adminTabs">
+            <div class="adminTab active">🏠 Общее</div>
+            <div class="adminTab">🐱 Бизнес коты</div>
+            <div class="adminTab">🔫 Пейнтбол</div>
+            <div class="adminTab">⚔ CIV (соло)</div>
+            <div class="adminTab">⚔ CIV (дуэль)</div>
+            <div class="adminTab" id="adminLogoutTab" style="margin-left:auto;color:var(--bad)">Выйти</div>
+          </div>
+
+          <div class="adminContent">
+
+            <!-- Ряд 1: Ключевые метрики -->
+            <div class="adminRow adminRow4">
+              <div class="adminKpi">
+                <div class="ak">Общее число студентов</div>
+                <div class="av">${esc(totalStudents)}</div>
+                <div class="ac">Активных: ${esc(activeCount)}</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Средняя посещаемость</div>
+                <div class="av">—</div>
+                <div class="ac">— / —</div>
+                <div class="abar"><div class="abar-fill" style="width:0%"></div></div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Игр сыграно из запланированных</div>
+                <div class="av">—</div>
+                <div class="ac">— / —</div>
+                <div class="abar"><div class="abar-fill" style="width:0%"></div></div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Распределение по лигам</div>
+                <canvas id="adminLeagueChart" style="height:110px;width:100%;display:block;margin-top:6px"></canvas>
+                <div class="ac" style="font-size:11px;line-height:1.8;margin-top:4px">
+                  <span style="color:#f6c343">● Золотая ${esc(goldCount)}</span> &nbsp;
+                  <span style="color:#a9b4d6">● Серебряная ${esc(silverCount)}</span><br>
+                  <span style="color:#cd7f32">● Бронзовая ${esc(bronzeCount)}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ряд 2: Рекорды + Радар -->
+            <div class="adminRow" style="grid-template-columns:1fr 1fr 1fr 1.6fr">
+              <div class="adminKpi">
+                <div class="ak">Лидирующая группа</div>
+                <div class="av" style="color:var(--accent);font-size:18px">—</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Пейнтбол (сюжет)</div>
+                <div class="av">—</div>
+                <div class="ac">Лучшее время</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Рекорд по CIV (соло)</div>
+                <div class="av">—</div>
+                <div class="ac">Год революции</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Диаграмма способностей колледжистов</div>
+                <canvas id="adminRadarChart" style="height:200px;width:100%;display:block;margin-top:4px"></canvas>
+              </div>
+            </div>
+
+            <!-- Ряд 3: Монеты и командный рекорд -->
+            <div class="adminRow adminRow3">
+              <div class="adminKpi">
+                <div class="ak">Максимальное кол-во монет в грузовиках</div>
+                <div class="av">—</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Максимальное кол-во монет в котах</div>
+                <div class="av">—</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Рекорд по CIV (команда)</div>
+                <div class="av">—</div>
+                <div class="ac">Год революции</div>
+              </div>
+            </div>
+
+            <!-- Ряд 4: Графики -->
+            <div class="adminRow adminRow2">
+              <div class="adminKpi">
+                <div class="ak">Динамика посещаемости (12 недель)</div>
+                <canvas id="adminAttChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
+                <div class="ac" style="font-size:11px;margin-top:8px;line-height:2">
+                  <span style="color:#ff4d6d">● Бизнес коты</span> &nbsp;
+                  <span style="color:#25c26e">● Пейнтбол</span> &nbsp;
+                  <span style="color:#21d4ff">● Цива дуэль</span> &nbsp;
+                  <span style="color:#7c5cff">● Цива одиночная</span>
+                </div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Сессии по турнирам</div>
+                <canvas id="adminTournamentChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;margin-top:8px">
+              <button class="btn secondary" id="adminLogoutBtn" style="color:var(--bad);border-color:rgba(212,0,57,.25)">Выйти из администратора</button>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      requestAnimationFrame(()=>{
+        drawAdminLeagueDonut("adminLeagueChart", goldCount, silverCount, bronzeCount);
+        drawAdminRadar("adminRadarChart");
+        drawAdminAttendance("adminAttChart");
+        drawAdminTournament("adminTournamentChart");
+      });
+
+      function doLogout(){
+        sessionStorage.removeItem("kltAdminAuth");
+        location.hash = "#/rating";
+      }
+      document.getElementById("adminLogoutBtn")?.addEventListener("click", doLogout);
+      document.getElementById("adminLogoutTab")?.addEventListener("click", doLogout);
+    }
 
     function renderRatingSkeleton(){
       app.innerHTML = html`
