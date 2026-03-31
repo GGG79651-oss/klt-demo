@@ -354,6 +354,29 @@ color: var(--text);
     .card, .chartCard, .kpi, .notice { min-width: 0; }
     .dash, .chartRow, .kpiGrid { min-width: 0; }
 
+    /* ── THEME TOGGLE SWITCH ─────────────────────────── */
+    .themeSwitch{
+      width:50px; height:28px; border-radius:99px;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(255,255,255,.09);
+      position:relative; cursor:pointer; padding:0;
+      transition:.25s ease; flex-shrink:0;
+      display:inline-flex; align-items:center;
+    }
+    .themeSwitch:hover{ border-color:rgba(255,255,255,.35); }
+    body.light .themeSwitch{ background:rgba(91,63,255,.15); border-color:rgba(91,63,255,.35); }
+    .tsBall{
+      position:absolute; left:3px;
+      width:22px; height:22px; border-radius:50%;
+      background:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; line-height:1;
+      transition:.25s ease;
+      box-shadow:0 2px 8px rgba(0,0,0,.30);
+      pointer-events:none; user-select:none;
+    }
+    body.light .tsBall{ transform:translateX(22px); }
+
     /* ── LIGHT THEME ─────────────────────────────────── */
     body.light{
       --bg:#eef2ff;
@@ -379,6 +402,12 @@ color: var(--text);
     body.light .notice,body.light .supportBox{
       background:rgba(255,255,255,.72); border-color:rgba(0,0,0,.09);
     }
+    body.light .notice.expelled{
+      background:rgba(212,0,57,.10);
+      color:#7a001e;
+      border-color:rgba(212,0,57,.45);
+    }
+    body.light .notice.ok{ border-color:rgba(26,170,94,.45); }
     body.light .heroSlider{background:rgba(255,255,255,.5);border-color:rgba(0,0,0,.10);}
     body.light .heroSlider::after{
       background:
@@ -388,12 +417,17 @@ color: var(--text);
     body.light .table{border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.5);}
     body.light .table th,body.light .table td{border-bottom-color:rgba(0,0,0,.06);}
     body.light .badge{border-color:rgba(0,0,0,.09); background:rgba(0,0,0,.04);}
+    body.light .b-ok{border-color:rgba(26,170,94,.50); background:rgba(26,170,94,.08); color:#0d7a3e;}
+    body.light .b-warn{border-color:rgba(200,146,0,.50); background:rgba(200,146,0,.08); color:#7a5800;}
+    body.light .b-bad{border-color:rgba(212,0,57,.50); background:rgba(212,0,57,.08); color:#8a001e;}
     body.light .btn{border-color:rgba(0,0,0,.15); background:rgba(0,0,0,.07); color:#1a1f3e; box-shadow:none;}
     body.light .btn:hover{background:rgba(0,0,0,.12);}
     body.light .crumbs{color:#5a6485;}
     body.light .heroCaption{background:rgba(230,237,255,.80); color:#1a1f3e;}
     body.light .heroDot{border-color:rgba(0,0,0,.25); background:rgba(0,0,0,.08);}
     body.light .heroDot.active{background:rgba(91,63,255,.75); border-color:rgba(91,63,255,.75);}
+    body.light .muted{color:#5a6485;}
+    body.light .small{color:#5a6485;}
 
     /* ── ADMIN MODAL ─────────────────────────────────── */
     .modal-overlay{
@@ -457,24 +491,41 @@ color: var(--text);
     .adminRow{display:grid;gap:10px;margin-bottom:10px;}
     .adminRow4{grid-template-columns:repeat(4,1fr);}
     .adminRow3{grid-template-columns:repeat(3,1fr);}
-    .adminRow2{grid-template-columns:1.45fr 1fr;}
+    .adminRow2{grid-template-columns:1.5fr 1fr;}
     .adminKpi{
-      padding:14px 16px; border-radius:16px;
+      padding:16px; border-radius:16px;
       border:1px solid var(--border);
       background:rgba(255,255,255,.03);
-      min-width:0;
+      min-width:0; position:relative; overflow:hidden;
     }
     body.light .adminKpi{background:rgba(255,255,255,.65);}
+    /* accent left-border variants */
+    .adminKpi.ap{ border-left:3px solid var(--accent); }
+    .adminKpi.ac2{ border-left:3px solid var(--accent2); }
+    .adminKpi.aok{ border-left:3px solid var(--ok); }
+    .adminKpi.awk{ border-left:3px solid var(--warn); }
+    .adminKpi.abd{ border-left:3px solid var(--bad); }
     .adminKpi .ak{
       font-size:11px;font-weight:900;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.2px;
+      text-transform:uppercase;letter-spacing:.3px;
       margin-bottom:8px;line-height:1.4;
     }
-    .adminKpi .av{font-size:22px;font-weight:1100;letter-spacing:-.4px;line-height:1.2;margin-top:2px;}
-    .adminKpi .ac{font-size:12px;color:var(--muted);font-weight:800;margin-top:6px;}
-    .adminKpi .abar{height:7px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden;}
-    body.light .adminKpi .abar{background:rgba(0,0,0,.07);}
-    .adminKpi .abar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+    .adminKpi .av{font-size:24px;font-weight:1100;letter-spacing:-.5px;line-height:1.1;margin-top:2px;}
+    .adminKpi .ac{font-size:12px;color:var(--muted);font-weight:800;margin-top:6px;line-height:1.5;}
+    .adminKpi .abar{height:6px;border-radius:99px;background:rgba(255,255,255,.10);margin-top:10px;overflow:hidden;}
+    body.light .adminKpi .abar{background:rgba(0,0,0,.12);}
+    .adminKpi .abar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:.5s;}
+    .adminEmoji{font-size:28px;display:block;margin-bottom:6px;line-height:1;}
+    /* admin table */
+    .adminTable{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
+    .adminTable th{color:var(--muted);font-weight:900;font-size:11px;text-transform:uppercase;
+      letter-spacing:.2px;padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;}
+    .adminTable td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
+    body.light .adminTable td{border-bottom-color:rgba(0,0,0,.05);}
+    .adminTable tr:last-child td{border-bottom:none;}
+    .adminTbar{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;min-width:60px;}
+    body.light .adminTbar{background:rgba(0,0,0,.08);}
+    .adminTbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
     @media(max-width:980px){
       .adminRow4{grid-template-columns:1fr 1fr;}
       .adminRow3{grid-template-columns:1fr 1fr;}
@@ -493,7 +544,9 @@ color: var(--text);
         <div>КЛТ <span class="muted">Рейтинг</span></div>
       </a>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn secondary" id="themeToggle">☀ Светлая</button>
+        <button class="themeSwitch" id="themeToggle" title="Сменить тему" aria-label="Переключить тему">
+          <span class="tsBall" id="themeBall">🌙</span>
+        </button>
         <button class="btn secondary" id="adminBtn">⚙ Администратор</button>
         <a class="btn" href="#/rating" aria-label="Показать результаты">Результаты</a>
       </div>
@@ -553,8 +606,8 @@ color: var(--text);
     const THEME_KEY = "kltTheme";
     function applyTheme(t){
       document.body.classList.toggle("light", t === "light");
-      const btn = document.getElementById("themeToggle");
-      if (btn) btn.textContent = t === "light" ? "🌙 Тёмная" : "☀ Светлая";
+      const ball = document.getElementById("themeBall");
+      if (ball) ball.textContent = t === "light" ? "☀️" : "🌙";
     }
     function toggleTheme(){
       const next = document.body.classList.contains("light") ? "dark" : "light";
@@ -1688,7 +1741,8 @@ color: var(--text);
     });
 
     /* ── Admin canvas charts ──────────────────────────── */
-    function drawAdminLeagueDonut(id, gold, silver, bronze){
+    function drawAdminLeagueDonut(id, segs){
+      // segs: [{n, color, label}]
       const pack = setupCanvas(id);
       if (!pack) return;
       const {ctx, w, h} = pack;
@@ -1696,14 +1750,8 @@ color: var(--text);
       const cx = w/2, cy = h/2;
       const r = Math.min(w,h)*0.36;
       const thick = Math.max(10, r*0.38);
-      const total = Math.max(1, gold + silver + bronze);
-      const segs = [
-        { n:gold,   color:"#f6c343" },
-        { n:silver, color:"#a9b4d6" },
-        { n:bronze, color:"#cd7f32" },
-      ];
-      ctx.lineCap = "butt";
-      ctx.lineWidth = thick;
+      const total = Math.max(1, segs.reduce((a,s)=>a+s.n,0));
+      ctx.lineCap = "butt"; ctx.lineWidth = thick;
       ctx.strokeStyle = "rgba(255,255,255,.08)";
       ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
       let angle = -Math.PI/2;
@@ -1711,147 +1759,166 @@ color: var(--text);
         if (!seg.n) continue;
         const sweep = (seg.n/total)*Math.PI*2;
         ctx.strokeStyle = seg.color;
-        ctx.beginPath();
-        ctx.arc(cx,cy,r,angle,angle+sweep-0.05);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx,cy,r,angle,angle+sweep-0.04); ctx.stroke();
         angle += sweep;
       }
-      ctx.fillStyle = "var(--text)";
+      const isLight = document.body.classList.contains("light");
+      ctx.fillStyle = isLight ? "#1a1f3e" : "#eaf0ff";
       ctx.font = `bold ${Math.round(r*0.4)}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(total, cx, cy);
     }
 
-    function drawAdminRadar(id){
+    function drawAdminRadar(id, labels, values){
       const pack = setupCanvas(id);
       if (!pack) return;
       const {ctx, w, h} = pack;
       ctx.clearRect(0,0,w,h);
-      const labels = ["Цива одиночная","Феодалы","Посещение","Пейнтбол","Бизнес коты","Бенди"];
       const n = labels.length;
-      const cx = w/2, cy = h/2 + 8;
+      const cx = w/2, cy = h/2 + 10;
       const maxR = Math.min(w,h)*0.30;
-      const rings = [0.25,0.5,0.75,1.0];
-      const ringLabels = ["25%","50%","75%",""];
+      const isLight = document.body.classList.contains("light");
+      const gridColor = isLight ? "rgba(0,0,0,.10)" : "rgba(255,255,255,.10)";
+      const labelColor = isLight ? "rgba(91,63,255,.9)" : "rgba(33,212,255,.9)";
+      const mutedColor = isLight ? "rgba(90,100,133,.6)" : "rgba(169,180,214,.55)";
       ctx.lineWidth = 1;
-      for (let ri=0; ri<rings.length; ri++){
-        const f = rings[ri];
+      for (const f of [0.25,0.5,0.75,1]){
         ctx.beginPath();
         for (let i=0;i<n;i++){
-          const a = (i/n)*Math.PI*2 - Math.PI/2;
-          const x = cx+Math.cos(a)*maxR*f, y = cy+Math.sin(a)*maxR*f;
-          i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+          const a=(i/n)*Math.PI*2-Math.PI/2;
+          const x=cx+Math.cos(a)*maxR*f, y=cy+Math.sin(a)*maxR*f;
+          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
         }
         ctx.closePath();
-        ctx.strokeStyle = "rgba(255,255,255,.10)";
-        ctx.stroke();
-        if (ringLabels[ri]){
-          ctx.fillStyle = "rgba(169,180,214,.55)";
-          ctx.font = "9px sans-serif"; ctx.textAlign = "center";
-          ctx.fillText(ringLabels[ri], cx, cy - maxR*f - 3);
+        ctx.strokeStyle = gridColor; ctx.stroke();
+        if (f<1){
+          ctx.fillStyle=mutedColor; ctx.font="9px sans-serif"; ctx.textAlign="center";
+          ctx.fillText(Math.round(f*100)+"%",cx,cy-maxR*f-3);
         }
       }
       for (let i=0;i<n;i++){
-        const a = (i/n)*Math.PI*2 - Math.PI/2;
-        ctx.beginPath();
-        ctx.moveTo(cx,cy);
-        ctx.lineTo(cx+Math.cos(a)*maxR, cy+Math.sin(a)*maxR);
-        ctx.strokeStyle = "rgba(255,255,255,.12)";
-        ctx.stroke();
-        const lx = cx+Math.cos(a)*(maxR+20), ly = cy+Math.sin(a)*(maxR+20);
-        ctx.fillStyle = "rgba(33,212,255,.9)";
-        ctx.font = "bold 10px sans-serif";
-        ctx.textAlign = Math.abs(Math.cos(a))<0.15 ? "center" : Math.cos(a)<0 ? "right" : "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(labels[i], lx, ly);
+        const a=(i/n)*Math.PI*2-Math.PI/2;
+        ctx.beginPath(); ctx.moveTo(cx,cy);
+        ctx.lineTo(cx+Math.cos(a)*maxR,cy+Math.sin(a)*maxR);
+        ctx.strokeStyle=gridColor; ctx.stroke();
+        const lx=cx+Math.cos(a)*(maxR+20), ly=cy+Math.sin(a)*(maxR+20);
+        ctx.fillStyle=labelColor; ctx.font="bold 10px sans-serif";
+        ctx.textAlign=Math.abs(Math.cos(a))<0.15?"center":Math.cos(a)<0?"right":"left";
+        ctx.textBaseline="middle";
+        ctx.fillText(labels[i],lx,ly);
       }
+      // data shape
       ctx.beginPath();
       for (let i=0;i<n;i++){
-        const a = (i/n)*Math.PI*2 - Math.PI/2;
-        const rv = maxR*0.04;
-        i===0 ? ctx.moveTo(cx+Math.cos(a)*rv, cy+Math.sin(a)*rv)
-              : ctx.lineTo(cx+Math.cos(a)*rv, cy+Math.sin(a)*rv);
+        const a=(i/n)*Math.PI*2-Math.PI/2;
+        const rv=maxR*(values[i]||0)/100;
+        i===0?ctx.moveTo(cx+Math.cos(a)*rv,cy+Math.sin(a)*rv)
+             :ctx.lineTo(cx+Math.cos(a)*rv,cy+Math.sin(a)*rv);
       }
       ctx.closePath();
-      ctx.fillStyle = "rgba(124,92,255,.30)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(124,92,255,.70)";
-      ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle="rgba(124,92,255,.25)"; ctx.fill();
+      ctx.strokeStyle="rgba(124,92,255,.75)"; ctx.lineWidth=2; ctx.stroke();
+      // dots
+      for (let i=0;i<n;i++){
+        const a=(i/n)*Math.PI*2-Math.PI/2;
+        const rv=maxR*(values[i]||0)/100;
+        ctx.beginPath();
+        ctx.arc(cx+Math.cos(a)*rv,cy+Math.sin(a)*rv,3,0,Math.PI*2);
+        ctx.fillStyle="#7c5cff"; ctx.fill();
+      }
     }
 
-    function drawAdminAttendance(id){
+    function drawAdminAttByTournament(id, attData){
+      // attData: [{label, present, total, color}]
       const pack = setupCanvas(id);
       if (!pack) return;
       const {ctx, w, h} = pack;
       ctx.clearRect(0,0,w,h);
-      const weeks = 12;
-      const pad = {l:32,r:10,t:10,b:32};
-      const cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
-      const gap = cw/weeks;
-      const bw = gap*0.55;
-      ctx.lineWidth = 1;
+      if (!attData.length){ return; }
+      const isLight = document.body.classList.contains("light");
+      const textColor = isLight ? "rgba(90,100,133,.7)" : "rgba(169,180,214,.7)";
+      const pad={l:10,r:10,t:14,b:60};
+      const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+      const bw=cw/attData.length*0.55;
+      const gap=cw/attData.length;
+      const maxV=100;
+      // grid
       for (let i=0;i<=4;i++){
-        const y = pad.t + ch - (i/4)*ch;
-        ctx.beginPath(); ctx.moveTo(pad.l-4,y); ctx.lineTo(w-pad.r,y);
-        ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.stroke();
-        ctx.fillStyle = "rgba(169,180,214,.55)";
-        ctx.font = "9px sans-serif"; ctx.textAlign = "right";
-        ctx.fillText((i*25)+"", pad.l-6, y+3);
+        const y=pad.t+ch-(i/4)*ch;
+        ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y);
+        ctx.strokeStyle=isLight?"rgba(0,0,0,.06)":"rgba(255,255,255,.06)"; ctx.lineWidth=1; ctx.stroke();
+        ctx.fillStyle=textColor; ctx.font="9px sans-serif"; ctx.textAlign="right";
+        ctx.fillText((i*25)+"%", pad.l-2, y+3);
       }
-      for (let wk=0;wk<weeks;wk++){
-        const x = pad.l + wk*gap + gap/2 - bw/2;
-        ctx.fillStyle = "rgba(255,255,255,.05)";
-        roundRect(ctx, x, pad.t, bw, ch, 4);
-        ctx.fill();
-        ctx.fillStyle = "rgba(169,180,214,.55)";
-        ctx.font = "9px sans-serif"; ctx.textAlign = "center";
-        ctx.fillText((wk+1)+" н.", pad.l+wk*gap+gap/2, h-pad.b+12);
+      for (let i=0;i<attData.length;i++){
+        const d=attData[i];
+        const pct=d.total?Math.round(d.present/d.total*100):0;
+        const barH=(pct/maxV)*ch;
+        const x=pad.l+i*gap+gap/2-bw/2;
+        const y=pad.t+ch-barH;
+        // bg bar
+        ctx.fillStyle=isLight?"rgba(0,0,0,.05)":"rgba(255,255,255,.05)";
+        roundRect(ctx,x,pad.t,bw,ch,4); ctx.fill();
+        // fill bar
+        const g=ctx.createLinearGradient(0,y,0,pad.t+ch);
+        g.addColorStop(0,d.color); g.addColorStop(1,d.color+"66");
+        ctx.fillStyle=g;
+        roundRect(ctx,x,y,bw,Math.max(barH,2),4); ctx.fill();
+        // pct label on bar
+        if (pct>8){
+          ctx.fillStyle="#fff"; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
+          ctx.fillText(pct+"%", x+bw/2, y+12);
+        }
+        // bottom label
+        ctx.fillStyle=textColor; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
+        const lbl=d.label.length>8?d.label.slice(0,8)+"…":d.label;
+        ctx.fillText(lbl, pad.l+i*gap+gap/2, h-pad.b+13);
+        ctx.fillStyle=textColor; ctx.font="9px sans-serif";
+        ctx.fillText(d.present+"/"+d.total, pad.l+i*gap+gap/2, h-pad.b+25);
       }
     }
 
-    function drawAdminTournament(id){
+    function drawAdminScoresBars(id, entries){
+      // entries: [{label, avg, max, color}]
       const pack = setupCanvas(id);
       if (!pack) return;
       const {ctx, w, h} = pack;
       ctx.clearRect(0,0,w,h);
-      const counts = new Map();
-      DB.sessionsById.forEach(sessions => {
-        sessions.forEach(s => {
-          const k = normTournamentKey(s.tournament);
-          counts.set(k, (counts.get(k)||0)+1);
-        });
-      });
-      const entries = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      if (!entries.length){
-        ctx.fillStyle = "rgba(169,180,214,.5)";
-        ctx.font = "13px sans-serif"; ctx.textAlign = "center";
-        ctx.fillText("Нет данных", w/2, h/2);
-        return;
-      }
-      const maxV = Math.max(...entries.map(e=>e[1]));
-      const pad = {l:8,r:8,t:12,b:52};
-      const cw = w-pad.l-pad.r, ch = h-pad.t-pad.b;
-      const gap = cw/entries.length;
-      const bw = gap*0.58;
-      const colors2 = ["#7c5cff","#21d4ff","#25c26e","#f6c343","#ff4d6d"];
+      if (!entries.length) return;
+      const isLight = document.body.classList.contains("light");
+      const textColor = isLight ? "rgba(90,100,133,.7)" : "rgba(169,180,214,.7)";
+      const maxV = Math.max(...entries.map(e=>e.max), 1);
+      const pad={l:10,r:10,t:14,b:60};
+      const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+      const gap=cw/entries.length;
+      const bw=gap*0.45;
       for (let i=0;i<entries.length;i++){
-        const [label, val] = entries[i];
-        const barH = maxV ? (val/maxV)*ch : 0;
-        const x = pad.l+i*gap+gap/2-bw/2;
-        const y = pad.t+ch-barH;
-        const g = ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
-        g.addColorStop(0, colors2[i%colors2.length]);
-        g.addColorStop(1, colors2[i%colors2.length]+"55");
-        ctx.fillStyle = g;
-        roundRect(ctx,x,y,bw,Math.max(barH,2),5);
-        ctx.fill();
-        ctx.fillStyle = "rgba(234,240,255,.75)";
-        ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center";
-        const lbl = label.length>10 ? label.slice(0,10)+"…" : label;
-        ctx.fillText(lbl, pad.l+i*gap+gap/2, h-pad.b+12);
-        ctx.fillText(val.toLocaleString(), pad.l+i*gap+gap/2, h-pad.b+24);
+        const d=entries[i];
+        const avgH=(d.avg/maxV)*ch;
+        const maxH=(d.max/maxV)*ch;
+        const x=pad.l+i*gap+gap/2;
+        // max bar (lighter)
+        const g2=ctx.createLinearGradient(0,pad.t+ch-maxH,0,pad.t+ch);
+        g2.addColorStop(0,d.color+"44"); g2.addColorStop(1,d.color+"11");
+        ctx.fillStyle=g2;
+        roundRect(ctx,x-bw/2,pad.t+ch-maxH,bw,Math.max(maxH,2),4); ctx.fill();
+        // avg bar (solid)
+        const g=ctx.createLinearGradient(0,pad.t+ch-avgH,0,pad.t+ch);
+        g.addColorStop(0,d.color); g.addColorStop(1,d.color+"88");
+        ctx.fillStyle=g;
+        roundRect(ctx,x-bw/2+4,pad.t+ch-avgH,bw-8,Math.max(avgH,2),4); ctx.fill();
+        // avg label
+        if (avgH>12){
+          ctx.fillStyle="#fff"; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
+          ctx.fillText(Math.round(d.avg), x, pad.t+ch-avgH+12);
+        }
+        ctx.fillStyle=textColor; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
+        const lbl=d.label.length>8?d.label.slice(0,8)+"…":d.label;
+        ctx.fillText(lbl, x, h-pad.b+13);
       }
+      // legend
+      ctx.fillStyle=textColor; ctx.font="9px sans-serif"; ctx.textAlign="left";
+      ctx.fillText("▪ ср. баллы  ▫ макс", pad.l, h-pad.b+26);
     }
 
     /* ── Admin skeleton & panel ───────────────────────── */
@@ -1866,140 +1933,286 @@ color: var(--text);
     }
 
     function renderAdmin(){
+      /* ── Вычисляем всю статистику из CSV ── */
       const totalStudents = DB.studentsById.size;
-      const activeCount = Array.from(DB.studentsById.values())
-        .filter(s => !isExpelledStatus(s.status)).length;
+      const activeCount   = Array.from(DB.studentsById.values()).filter(s=>!isExpelledStatus(s.status)).length;
+      const expelledCount = totalStudents - activeCount;
+
+      // Лиги
       let goldCount=0, silverCount=0, bronzeCount=0;
-      DB.leagueById.forEach(l => {
-        if (l==="Золотая") goldCount++;
-        else if (l==="Серебряная") silverCount++;
+      DB.leagueById.forEach(l=>{
+        if(l==="Золотая") goldCount++;
+        else if(l==="Серебряная") silverCount++;
         else bronzeCount++;
       });
 
+      // Посещаемость и статистика по турнирам
+      let totalAtt=0, totalPresent=0;
+      const attByT   = new Map(); // tk -> {present,total}
+      const scored_all = [];      // все зачётные сессии
+
+      DB.sessionsById.forEach((sessions,id)=>{
+        if(isExpelledStatus(DB.studentsById.get(id)?.status)) return;
+        sessions.forEach(s=>{
+          if(isAttendanceValue(s.score_or_attendance)){
+            totalAtt++;
+            if(attendanceIsPresent(s.score_or_attendance)===true) totalPresent++;
+            const tk=normTournamentKey(s.tournament);
+            if(!attByT.has(tk)) attByT.set(tk,{present:0,total:0});
+            const a=attByT.get(tk); a.total++;
+            if(attendanceIsPresent(s.score_or_attendance)===true) a.present++;
+          }
+        });
+        computeScoredSessions(id).forEach(s=>scored_all.push(s));
+      });
+
+      const avgAttPct = totalAtt ? Math.round(totalPresent/totalAtt*100) : 0;
+      const totalScoredCount = scored_all.length;
+
+      // По турнирам: средние и макс баллы
+      const scoredByT = new Map(); // tk -> [points]
+      scored_all.forEach(s=>{
+        const tk=s.tournamentKey;
+        if(!scoredByT.has(tk)) scoredByT.set(tk,[]);
+        scoredByT.get(tk).push(s.points);
+      });
+
+      // Лидирующая группа
+      const groupStats = new Map();
+      DB.studentsById.forEach((student,id)=>{
+        if(isExpelledStatus(student.status)) return;
+        const grp=(student.group||"").trim();
+        if(!grp||grp==="-") return;
+        const pts=DB.totalsById.get(id)||0;
+        if(!groupStats.has(grp)) groupStats.set(grp,{pts:[],n:0});
+        groupStats.get(grp).pts.push(pts);
+        groupStats.get(grp).n++;
+      });
+      let leadingGroup="—", leadingGroupAvg=0;
+      groupStats.forEach((s,grp)=>{
+        const avg=s.pts.reduce((a,b)=>a+b,0)/s.pts.length;
+        if(avg>leadingGroupAvg){leadingGroupAvg=avg; leadingGroup=grp;}
+      });
+
+      // Топ-5 студентов
+      const topStudents = Array.from(DB.studentsById.keys())
+        .filter(id=>!isExpelledStatus(DB.studentsById.get(id)?.status))
+        .map(id=>({id, total:DB.totalsById.get(id)||0, s:DB.studentsById.get(id)}))
+        .sort((a,b)=>b.total-a.total).slice(0,5);
+
+      // Таблица по турнирам
+      const tColors={"Business Cats":"#ff4d6d","Пейнтбол":"#25c26e","Civilization: Solo":"#7c5cff","Civilization: DUEL":"#21d4ff","Бенди":"#f6c343","Life is Feudal":"#cd7f32"};
+      const tIcons ={"Business Cats":"🐱","Пейнтбол":"🔫","Civilization: Solo":"⚔","Civilization: DUEL":"⚔","Бенди":"🏒","Life is Feudal":"🏰"};
+      const tournamentRows=[];
+      attByT.forEach((att,tk)=>{
+        const sc=scoredByT.get(tk)||[];
+        const avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):0;
+        const max=sc.length?Math.max(...sc):0;
+        const attPct=att.total?Math.round(att.present/att.total*100):0;
+        tournamentRows.push({tk,attPct,attPresent:att.present,attTotal:att.total,scoredN:sc.length,avg,max,color:tColors[tk]||"#a9b4d6",icon:tIcons[tk]||"🎮"});
+      });
+      tournamentRows.sort((a,b)=>b.attTotal-a.attTotal);
+
+      // Данные для radar (посещаемость по турнирам как %)
+      const radarLabels = ["Business Cats","Пейнтбол","Civ Solo","Civ Duel","Бенди","Феодалы"];
+      const radarKeys   = ["Business Cats","Пейнтбол","Civilization: Solo","Civilization: DUEL","Бенди","Life is Feudal"];
+      const radarVals   = radarKeys.map(k=>{ const a=attByT.get(k); return a&&a.total?Math.round(a.present/a.total*100):0; });
+
+      /* ── HTML панели ── */
       app.innerHTML = html`
         <div class="crumbs">КЛТ / Администратор</div>
         <h2 class="pageTitle">Панель администратора</h2>
 
         <div class="adminCard">
           <div class="adminTabs">
-            <div class="adminTab active">🏠 Общее</div>
+            <div class="adminTab active">🏠 Сводка</div>
             <div class="adminTab">🐱 Бизнес коты</div>
             <div class="adminTab">🔫 Пейнтбол</div>
-            <div class="adminTab">⚔ CIV (соло)</div>
-            <div class="adminTab">⚔ CIV (дуэль)</div>
-            <div class="adminTab" id="adminLogoutTab" style="margin-left:auto;color:var(--bad)">Выйти</div>
+            <div class="adminTab">⚔ CIV</div>
+            <button class="btn secondary" id="adminLogoutTab"
+              style="margin-left:auto;color:var(--bad);border-color:rgba(212,0,57,.25);padding:6px 12px;font-size:12px">
+              Выйти
+            </button>
           </div>
 
           <div class="adminContent">
 
-            <!-- Ряд 1: Ключевые метрики -->
+            <!-- Ряд 1: 4 главных KPI -->
             <div class="adminRow adminRow4">
-              <div class="adminKpi">
-                <div class="ak">Общее число студентов</div>
+              <div class="adminKpi ap">
+                <span class="adminEmoji">👥</span>
+                <div class="ak">Студентов</div>
                 <div class="av">${esc(totalStudents)}</div>
-                <div class="ac">Активных: ${esc(activeCount)}</div>
+                <div class="ac">Активных: <b>${esc(activeCount)}</b> · Отчисл.: ${esc(expelledCount)}</div>
               </div>
-              <div class="adminKpi">
+              <div class="adminKpi ac2">
+                <span class="adminEmoji">📊</span>
                 <div class="ak">Средняя посещаемость</div>
-                <div class="av">—</div>
-                <div class="ac">— / —</div>
-                <div class="abar"><div class="abar-fill" style="width:0%"></div></div>
+                <div class="av">${esc(avgAttPct)}%</div>
+                <div class="ac">${esc(totalPresent)} / ${esc(totalAtt)} сессий</div>
+                <div class="abar"><div class="abar-fill" style="width:${esc(avgAttPct)}%"></div></div>
               </div>
-              <div class="adminKpi">
-                <div class="ak">Игр сыграно из запланированных</div>
-                <div class="av">—</div>
-                <div class="ac">— / —</div>
-                <div class="abar"><div class="abar-fill" style="width:0%"></div></div>
+              <div class="adminKpi aok">
+                <span class="adminEmoji">🏆</span>
+                <div class="ak">Зачётных результатов</div>
+                <div class="av">${esc(totalScoredCount)}</div>
+                <div class="ac">по всем турнирам</div>
               </div>
-              <div class="adminKpi">
-                <div class="ak">Распределение по лигам</div>
-                <canvas id="adminLeagueChart" style="height:110px;width:100%;display:block;margin-top:6px"></canvas>
-                <div class="ac" style="font-size:11px;line-height:1.8;margin-top:4px">
-                  <span style="color:#f6c343">● Золотая ${esc(goldCount)}</span> &nbsp;
-                  <span style="color:#a9b4d6">● Серебряная ${esc(silverCount)}</span><br>
-                  <span style="color:#cd7f32">● Бронзовая ${esc(bronzeCount)}</span>
-                </div>
+              <div class="adminKpi awk">
+                <span class="adminEmoji">🥇</span>
+                <div class="ak">Лидирующая группа</div>
+                <div class="av" style="font-size:18px;color:var(--accent)">${esc(leadingGroup)}</div>
+                <div class="ac">ср. баллов: ${esc(Math.round(leadingGroupAvg))}</div>
               </div>
             </div>
 
-            <!-- Ряд 2: Рекорды + Радар -->
-            <div class="adminRow" style="grid-template-columns:1fr 1fr 1fr 1.6fr">
+            <!-- Ряд 2: Лиги + Топ-5 -->
+            <div class="adminRow adminRow2">
               <div class="adminKpi">
-                <div class="ak">Лидирующая группа</div>
-                <div class="av" style="color:var(--accent);font-size:18px">—</div>
+                <div class="ak">Распределение по лигам</div>
+                <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+                  <canvas id="adminLeagueChart" style="height:130px;width:130px;flex-shrink:0"></canvas>
+                  <div style="font-size:13px;font-weight:900;line-height:2.2">
+                    <div><span style="color:#f6c343;font-size:16px">●</span> &nbsp;Золотая &nbsp;<b>${esc(goldCount)}</b></div>
+                    <div><span style="color:#a9b4d6;font-size:16px">●</span> &nbsp;Серебряная &nbsp;<b>${esc(silverCount)}</b></div>
+                    <div><span style="color:#cd7f32;font-size:16px">●</span> &nbsp;Бронзовая &nbsp;<b>${esc(bronzeCount)}</b></div>
+                    <div style="margin-top:6px;font-size:11px;color:var(--muted)">Всего: ${esc(goldCount+silverCount+bronzeCount)}</div>
+                  </div>
+                </div>
               </div>
               <div class="adminKpi">
-                <div class="ak">Пейнтбол (сюжет)</div>
-                <div class="av">—</div>
-                <div class="ac">Лучшее время</div>
+                <div class="ak">Топ-5 студентов</div>
+                <table class="adminTable">
+                  <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Баллы</th></tr></thead>
+                  <tbody>
+                    ${topStudents.map((x,i)=>{
+                      const lb=leagueBadge(DB.leagueById.get(x.id)||"Бронзовая");
+                      return html`<tr>
+                        <td><b>${esc(i+1)}</b></td>
+                        <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.s?.name_short||"—").trim())}</td>
+                        <td class="muted">${esc((x.s?.group||"—").trim())}</td>
+                        <td><b>${esc(x.total)}</b> <span class="badge ${esc(lb.cls)}" style="font-size:10px">${esc(lb.label)}</span></td>
+                      </tr>`;
+                    }).join("")}
+                  </tbody>
+                </table>
               </div>
-              <div class="adminKpi">
+            </div>
+
+            <!-- Ряд 3: Таблица по турнирам -->
+            <div class="adminKpi" style="margin-bottom:10px">
+              <div class="ak">Статистика по турнирам</div>
+              <table class="adminTable">
+                <thead>
+                  <tr>
+                    <th>Турнир</th>
+                    <th>Посещ.&nbsp;%</th>
+                    <th>Присутств.</th>
+                    <th>Зачётных</th>
+                    <th>Ср. баллы</th>
+                    <th>Макс.</th>
+                    <th style="width:90px">Явка</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tournamentRows.map(r=>html`
+                    <tr>
+                      <td><b>${esc(r.icon)} ${esc(r.tk)}</b></td>
+                      <td><b style="color:${esc(r.color)}">${esc(r.attPct)}%</b></td>
+                      <td class="muted">${esc(r.attPresent)} / ${esc(r.attTotal)}</td>
+                      <td>${esc(r.scoredN)}</td>
+                      <td><b>${esc(r.avg)}</b></td>
+                      <td>${esc(r.max)}</td>
+                      <td>
+                        <div class="adminTbar">
+                          <div class="adminTbar-fill" style="width:${esc(r.attPct)}%;background:${esc(r.color)}"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Ряд 4: Ручные рекорды -->
+            <div class="adminRow adminRow3" style="margin-bottom:10px">
+              <div class="adminKpi abd">
                 <div class="ak">Рекорд по CIV (соло)</div>
                 <div class="av">—</div>
                 <div class="ac">Год революции</div>
               </div>
-              <div class="adminKpi">
-                <div class="ak">Диаграмма способностей колледжистов</div>
-                <canvas id="adminRadarChart" style="height:200px;width:100%;display:block;margin-top:4px"></canvas>
-              </div>
-            </div>
-
-            <!-- Ряд 3: Монеты и командный рекорд -->
-            <div class="adminRow adminRow3">
-              <div class="adminKpi">
-                <div class="ak">Максимальное кол-во монет в грузовиках</div>
-                <div class="av">—</div>
-              </div>
-              <div class="adminKpi">
-                <div class="ak">Максимальное кол-во монет в котах</div>
-                <div class="av">—</div>
-              </div>
-              <div class="adminKpi">
+              <div class="adminKpi abd">
                 <div class="ak">Рекорд по CIV (команда)</div>
                 <div class="av">—</div>
                 <div class="ac">Год революции</div>
               </div>
+              <div class="adminKpi abd">
+                <div class="ak">Пейнтбол — лучшее время сюжета</div>
+                <div class="av">—</div>
+                <div class="ac">мин</div>
+              </div>
+            </div>
+            <div class="adminRow adminRow2" style="margin-bottom:10px">
+              <div class="adminKpi">
+                <div class="ak">Монеты в котах — максимум</div>
+                <div class="av">—</div>
+              </div>
+              <div class="adminKpi">
+                <div class="ak">Монеты в грузовиках — максимум</div>
+                <div class="av">—</div>
+              </div>
             </div>
 
-            <!-- Ряд 4: Графики -->
+            <!-- Ряд 5: Графики -->
             <div class="adminRow adminRow2">
               <div class="adminKpi">
-                <div class="ak">Динамика посещаемости (12 недель)</div>
-                <canvas id="adminAttChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
-                <div class="ac" style="font-size:11px;margin-top:8px;line-height:2">
-                  <span style="color:#ff4d6d">● Бизнес коты</span> &nbsp;
-                  <span style="color:#25c26e">● Пейнтбол</span> &nbsp;
-                  <span style="color:#21d4ff">● Цива дуэль</span> &nbsp;
-                  <span style="color:#7c5cff">● Цива одиночная</span>
-                </div>
+                <div class="ak">Посещаемость по турнирам</div>
+                <canvas id="adminAttChart" style="height:200px;width:100%;display:block;margin-top:8px"></canvas>
               </div>
               <div class="adminKpi">
-                <div class="ak">Сессии по турнирам</div>
-                <canvas id="adminTournamentChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
+                <div class="ak">Диаграмма способностей</div>
+                <canvas id="adminRadarChart" style="height:200px;width:100%;display:block;margin-top:4px"></canvas>
               </div>
             </div>
 
-            <div style="display:flex;justify-content:flex-end;margin-top:8px">
-              <button class="btn secondary" id="adminLogoutBtn" style="color:var(--bad);border-color:rgba(212,0,57,.25)">Выйти из администратора</button>
+            <!-- Ряд 6: Баллы по турнирам -->
+            <div class="adminKpi" style="margin-top:10px">
+              <div class="ak">Средние и максимальные баллы по турнирам</div>
+              <canvas id="adminScoresChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
             </div>
 
           </div>
         </div>
       `;
 
+      // Данные для диаграмм
+      const attChartData = tournamentRows.map(r=>({
+        label:r.tk, present:r.attPresent, total:r.attTotal, color:r.color
+      }));
+      const scoresChartData = tournamentRows
+        .filter(r=>r.scoredN>0)
+        .map(r=>({label:r.tk, avg:r.avg, max:r.max, color:r.color}));
+      const leagueSegs=[
+        {n:goldCount,   color:"#f6c343", label:"Золотая"},
+        {n:silverCount, color:"#a9b4d6", label:"Серебряная"},
+        {n:bronzeCount, color:"#cd7f32", label:"Бронзовая"},
+      ];
+
       requestAnimationFrame(()=>{
-        drawAdminLeagueDonut("adminLeagueChart", goldCount, silverCount, bronzeCount);
-        drawAdminRadar("adminRadarChart");
-        drawAdminAttendance("adminAttChart");
-        drawAdminTournament("adminTournamentChart");
+        drawAdminLeagueDonut("adminLeagueChart", leagueSegs);
+        drawAdminRadar("adminRadarChart", radarLabels, radarVals);
+        drawAdminAttByTournament("adminAttChart", attChartData);
+        drawAdminScoresBars("adminScoresChart", scoresChartData);
       });
 
-      function doLogout(){
-        sessionStorage.removeItem("kltAdminAuth");
-        location.hash = "#/rating";
-      }
-      document.getElementById("adminLogoutBtn")?.addEventListener("click", doLogout);
-      document.getElementById("adminLogoutTab")?.addEventListener("click", doLogout);
+      // Logout
+      document.getElementById("adminLogoutTab")?.addEventListener("click", ()=>{
+        sessionStorage.removeItem("kltAdminAuth"); location.hash="#/rating";
+      });
+      // Клик по топ-студенту → перейти на его дашборд
+      document.querySelectorAll("[data-topid]").forEach(td=>{
+        td.addEventListener("click",()=>{ location.hash=`#/rating?id=${td.dataset.topid}`; });
+      });
     }
 
     function renderRatingSkeleton(){
