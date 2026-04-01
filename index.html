@@ -1878,8 +1878,8 @@ color: var(--text);
       }
     }
 
+    // entries: [{label, sum, avg, n, color}] — показывает сумму баллов по турнирам
     function drawAdminScoresBars(id, entries){
-      // entries: [{label, avg, max, color}]
       const pack = setupCanvas(id);
       if (!pack) return;
       const {ctx, w, h} = pack;
@@ -1887,38 +1887,162 @@ color: var(--text);
       if (!entries.length) return;
       const isLight = document.body.classList.contains("light");
       const textColor = isLight ? "rgba(90,100,133,.7)" : "rgba(169,180,214,.7)";
-      const maxV = Math.max(...entries.map(e=>e.max), 1);
-      const pad={l:10,r:10,t:14,b:60};
+      const maxV = Math.max(...entries.map(e=>e.sum), 1);
+      const pad={l:10,r:10,t:20,b:56};
       const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
       const gap=cw/entries.length;
-      const bw=gap*0.45;
+      const bw=gap*0.60;
+      // grid
+      for (let i=0;i<=4;i++){
+        const y=pad.t+ch-(i/4)*ch;
+        ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y);
+        ctx.strokeStyle=isLight?"rgba(0,0,0,.06)":"rgba(255,255,255,.06)";
+        ctx.lineWidth=1; ctx.stroke();
+      }
       for (let i=0;i<entries.length;i++){
         const d=entries[i];
-        const avgH=(d.avg/maxV)*ch;
-        const maxH=(d.max/maxV)*ch;
-        const x=pad.l+i*gap+gap/2;
-        // max bar (lighter)
-        const g2=ctx.createLinearGradient(0,pad.t+ch-maxH,0,pad.t+ch);
-        g2.addColorStop(0,d.color+"44"); g2.addColorStop(1,d.color+"11");
-        ctx.fillStyle=g2;
-        roundRect(ctx,x-bw/2,pad.t+ch-maxH,bw,Math.max(maxH,2),4); ctx.fill();
-        // avg bar (solid)
-        const g=ctx.createLinearGradient(0,pad.t+ch-avgH,0,pad.t+ch);
-        g.addColorStop(0,d.color); g.addColorStop(1,d.color+"88");
+        const barH=(d.sum/maxV)*ch;
+        const x=pad.l+i*gap+gap/2-bw/2;
+        const y=pad.t+ch-barH;
+        const g=ctx.createLinearGradient(0,y,0,pad.t+ch);
+        g.addColorStop(0,d.color); g.addColorStop(1,d.color+"55");
         ctx.fillStyle=g;
-        roundRect(ctx,x-bw/2+4,pad.t+ch-avgH,bw-8,Math.max(avgH,2),4); ctx.fill();
-        // avg label
-        if (avgH>12){
-          ctx.fillStyle="#fff"; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
-          ctx.fillText(Math.round(d.avg), x, pad.t+ch-avgH+12);
+        roundRect(ctx,x,y,bw,Math.max(barH,2),5); ctx.fill();
+        // sum inside bar
+        if(barH>20){
+          ctx.fillStyle="#fff"; ctx.font="bold 10px sans-serif"; ctx.textAlign="center";
+          ctx.fillText(d.sum.toLocaleString(), x+bw/2, y+14);
         }
+        // label below
         ctx.fillStyle=textColor; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
-        const lbl=d.label.length>8?d.label.slice(0,8)+"…":d.label;
-        ctx.fillText(lbl, x, h-pad.b+13);
+        const lbl=d.label.length>10?d.label.slice(0,10)+"…":d.label;
+        ctx.fillText(lbl, x+bw/2, h-pad.b+13);
+        ctx.fillStyle=textColor; ctx.font="9px sans-serif";
+        ctx.fillText("ср. "+d.avg, x+bw/2, h-pad.b+25);
       }
+    }
+
+    // entries: [{label, value, color}] — горизонтальный бар-чарт
+    function drawHorizBars(id, entries){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      if (!entries.length) return;
+      const isLight = document.body.classList.contains("light");
+      const textColor  = isLight ? "#1a1f3e" : "#eaf0ff";
+      const mutedColor = isLight ? "rgba(90,100,133,.8)" : "rgba(169,180,214,.8)";
+      const maxV = Math.max(...entries.map(e=>e.value), 1);
+      const rowH = h / entries.length;
+      const pad  = {l:100, r:44, t:4, b:4};
+      const cw   = w - pad.l - pad.r;
+      for (let i=0;i<entries.length;i++){
+        const d=entries[i];
+        const y=pad.t+i*rowH;
+        const bh=Math.max(6, rowH*0.52);
+        const by=y+(rowH-bh)/2;
+        const barW=(d.value/maxV)*cw;
+        // track
+        ctx.fillStyle=isLight?"rgba(0,0,0,.05)":"rgba(255,255,255,.05)";
+        roundRect(ctx,pad.l,by,cw,bh,3); ctx.fill();
+        // bar
+        if(barW>0){
+          const g=ctx.createLinearGradient(pad.l,0,pad.l+cw,0);
+          g.addColorStop(0,d.color); g.addColorStop(1,d.color+"77");
+          ctx.fillStyle=g;
+          roundRect(ctx,pad.l,by,Math.max(barW,3),bh,3); ctx.fill();
+        }
+        // label left
+        ctx.fillStyle=mutedColor; ctx.font="bold 10px sans-serif"; ctx.textAlign="right";
+        ctx.textBaseline="middle";
+        ctx.fillText(d.label, pad.l-6, by+bh/2);
+        // value right
+        ctx.fillStyle=textColor; ctx.font="bold 10px sans-serif"; ctx.textAlign="left";
+        ctx.fillText(d.value, pad.l+barW+6, by+bh/2);
+        ctx.textBaseline="alphabetic";
+      }
+    }
+
+    // data: [{label, wins, losses}] — сгруппированный бар побед/поражений
+    function drawPBWinLossChart(id, data){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      if (!data.length) return;
+      const isLight = document.body.classList.contains("light");
+      const textColor = isLight ? "rgba(90,100,133,.7)" : "rgba(169,180,214,.7)";
+      const maxV = Math.max(...data.map(d=>d.wins+d.losses), 1);
+      const pad={l:10,r:10,t:20,b:56};
+      const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+      const gap=cw/data.length;
+      const bw=Math.min(gap*0.36, 18);
       // legend
-      ctx.fillStyle=textColor; ctx.font="9px sans-serif"; ctx.textAlign="left";
-      ctx.fillText("▪ ср. баллы  ▫ макс", pad.l, h-pad.b+26);
+      ctx.fillStyle="#25c26e"; ctx.font="bold 10px sans-serif"; ctx.textAlign="left";
+      ctx.fillText("■ Победы", pad.l, 14);
+      ctx.fillStyle="#ff4d6d";
+      ctx.fillText("■ Поражения", pad.l+72, 14);
+      for (let i=0;i<data.length;i++){
+        const d=data[i];
+        const cx=pad.l+i*gap+gap/2;
+        // wins
+        const wH=(d.wins/maxV)*ch;
+        const g1=ctx.createLinearGradient(0,pad.t+ch-wH,0,pad.t+ch);
+        g1.addColorStop(0,"#25c26e"); g1.addColorStop(1,"#25c26e55");
+        ctx.fillStyle=g1;
+        roundRect(ctx,cx-bw-1,pad.t+ch-wH,bw,Math.max(wH,2),3); ctx.fill();
+        // losses
+        const lH=(d.losses/maxV)*ch;
+        const g2=ctx.createLinearGradient(0,pad.t+ch-lH,0,pad.t+ch);
+        g2.addColorStop(0,"#ff4d6d"); g2.addColorStop(1,"#ff4d6d55");
+        ctx.fillStyle=g2;
+        roundRect(ctx,cx+1,pad.t+ch-lH,bw,Math.max(lH,2),3); ctx.fill();
+        // name
+        ctx.fillStyle=textColor; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
+        ctx.fillText(d.label.slice(0,9), cx, h-pad.b+13);
+      }
+    }
+
+    // yearEntries: [[year, count], ...] — гистограмма лет революций CIV
+    function drawCIVYearsChart(id, yearEntries){
+      const pack = setupCanvas(id);
+      if (!pack) return;
+      const {ctx, w, h} = pack;
+      ctx.clearRect(0,0,w,h);
+      if (!yearEntries.length){
+        ctx.fillStyle="rgba(169,180,214,.5)"; ctx.font="13px sans-serif";
+        ctx.textAlign="center"; ctx.fillText("Нет данных", w/2, h/2); return;
+      }
+      const isLight = document.body.classList.contains("light");
+      const textColor = isLight ? "rgba(90,100,133,.7)" : "rgba(169,180,214,.7)";
+      const maxV = Math.max(...yearEntries.map(e=>e[1]), 1);
+      const pad={l:10,r:10,t:20,b:36};
+      const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+      const gap=cw/yearEntries.length;
+      const bw=Math.min(gap*0.85, 28);
+      for (let i=0;i<yearEntries.length;i++){
+        const [year, cnt]=yearEntries[i];
+        const barH=(cnt/maxV)*ch;
+        const x=pad.l+i*gap+gap/2-bw/2;
+        const y=pad.t+ch-barH;
+        // colour: early year (1652)=gold → late (1800)=purple
+        const t=clamp((year-1652)/(1800-1652),0,1);
+        const r=Math.round(246+(124-246)*t);
+        const g=Math.round(195+(92-195)*t);
+        const b=Math.round(67+(255-67)*t);
+        const color=`rgb(${r},${g},${b})`;
+        const colorFade=`rgba(${r},${g},${b},0.33)`;
+        const grad=ctx.createLinearGradient(0,y,0,pad.t+ch);
+        grad.addColorStop(0,color); grad.addColorStop(1,colorFade);
+        ctx.fillStyle=grad;
+        roundRect(ctx,x,y,bw,Math.max(barH,2),3); ctx.fill();
+        if(cnt>0 && barH>14){
+          ctx.fillStyle="#fff"; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
+          ctx.fillText(cnt, x+bw/2, y+12);
+        }
+        ctx.fillStyle=textColor; ctx.font="9px sans-serif"; ctx.textAlign="center";
+        ctx.fillText(year, x+bw/2, h-pad.b+13);
+      }
     }
 
     /* ── Admin skeleton & panel ───────────────────────── */
@@ -1933,23 +2057,18 @@ color: var(--text);
     }
 
     function renderAdmin(){
-      /* ── Вычисляем всю статистику из CSV ── */
+      /* ══ Вычисляем статистику из CSV ══════════════════ */
       const totalStudents = DB.studentsById.size;
       const activeCount   = Array.from(DB.studentsById.values()).filter(s=>!isExpelledStatus(s.status)).length;
       const expelledCount = totalStudents - activeCount;
 
-      // Лиги
       let goldCount=0, silverCount=0, bronzeCount=0;
-      DB.leagueById.forEach(l=>{
-        if(l==="Золотая") goldCount++;
-        else if(l==="Серебряная") silverCount++;
-        else bronzeCount++;
-      });
+      DB.leagueById.forEach(l=>{ if(l==="Золотая") goldCount++; else if(l==="Серебряная") silverCount++; else bronzeCount++; });
 
-      // Посещаемость и статистика по турнирам
+      // Посещаемость и зачётные сессии по всем турнирам
       let totalAtt=0, totalPresent=0;
       const attByT   = new Map(); // tk -> {present,total}
-      const scored_all = [];      // все зачётные сессии
+      const scoredByT = new Map(); // tk -> [{...session, id, student}]
 
       DB.sessionsById.forEach((sessions,id)=>{
         if(isExpelledStatus(DB.studentsById.get(id)?.status)) return;
@@ -1963,256 +2082,388 @@ color: var(--text);
             if(attendanceIsPresent(s.score_or_attendance)===true) a.present++;
           }
         });
-        computeScoredSessions(id).forEach(s=>scored_all.push(s));
+        computeScoredSessions(id).forEach(s=>{
+          const tk=s.tournamentKey;
+          if(!scoredByT.has(tk)) scoredByT.set(tk,[]);
+          scoredByT.get(tk).push({...s, id, student:DB.studentsById.get(id)});
+        });
       });
 
-      const avgAttPct = totalAtt ? Math.round(totalPresent/totalAtt*100) : 0;
-      const totalScoredCount = scored_all.length;
+      const avgAttPct = totalAtt?Math.round(totalPresent/totalAtt*100):0;
+      const totalScoredCount = Array.from(scoredByT.values()).reduce((a,v)=>a+v.length,0);
 
-      // По турнирам: средние и макс баллы
-      const scoredByT = new Map(); // tk -> [points]
-      scored_all.forEach(s=>{
-        const tk=s.tournamentKey;
-        if(!scoredByT.has(tk)) scoredByT.set(tk,[]);
-        scoredByT.get(tk).push(s.points);
-      });
-
-      // Лидирующая группа
-      const groupStats = new Map();
+      // Лидирующая группа (по среднему числу баллов)
+      const groupStats=new Map();
       DB.studentsById.forEach((student,id)=>{
         if(isExpelledStatus(student.status)) return;
-        const grp=(student.group||"").trim();
-        if(!grp||grp==="-") return;
+        const grp=(student.group||"").trim(); if(!grp||grp==="-") return;
         const pts=DB.totalsById.get(id)||0;
         if(!groupStats.has(grp)) groupStats.set(grp,{pts:[],n:0});
-        groupStats.get(grp).pts.push(pts);
-        groupStats.get(grp).n++;
+        groupStats.get(grp).pts.push(pts); groupStats.get(grp).n++;
       });
       let leadingGroup="—", leadingGroupAvg=0;
-      groupStats.forEach((s,grp)=>{
-        const avg=s.pts.reduce((a,b)=>a+b,0)/s.pts.length;
-        if(avg>leadingGroupAvg){leadingGroupAvg=avg; leadingGroup=grp;}
-      });
+      groupStats.forEach((s,grp)=>{ const avg=s.pts.reduce((a,b)=>a+b,0)/s.pts.length; if(avg>leadingGroupAvg){leadingGroupAvg=avg;leadingGroup=grp;} });
 
-      // Топ-5 студентов
-      const topStudents = Array.from(DB.studentsById.keys())
+      // Топ-10 студентов
+      const topStudents=Array.from(DB.studentsById.keys())
         .filter(id=>!isExpelledStatus(DB.studentsById.get(id)?.status))
-        .map(id=>({id, total:DB.totalsById.get(id)||0, s:DB.studentsById.get(id)}))
-        .sort((a,b)=>b.total-a.total).slice(0,5);
+        .map(id=>({id,total:DB.totalsById.get(id)||0,s:DB.studentsById.get(id)}))
+        .sort((a,b)=>b.total-a.total).slice(0,10);
 
-      // Таблица по турнирам
       const tColors={"Business Cats":"#ff4d6d","Пейнтбол":"#25c26e","Civilization: Solo":"#7c5cff","Civilization: DUEL":"#21d4ff","Бенди":"#f6c343","Life is Feudal":"#cd7f32"};
       const tIcons ={"Business Cats":"🐱","Пейнтбол":"🔫","Civilization: Solo":"⚔","Civilization: DUEL":"⚔","Бенди":"🏒","Life is Feudal":"🏰"};
+
       const tournamentRows=[];
       attByT.forEach((att,tk)=>{
         const sc=scoredByT.get(tk)||[];
-        const avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):0;
-        const max=sc.length?Math.max(...sc):0;
+        const pts=sc.map(x=>x.points);
+        const sum=pts.reduce((a,b)=>a+b,0);
+        const avg=sc.length?Math.round(sum/sc.length):0;
+        const max=sc.length?Math.max(...pts):0;
         const attPct=att.total?Math.round(att.present/att.total*100):0;
-        tournamentRows.push({tk,attPct,attPresent:att.present,attTotal:att.total,scoredN:sc.length,avg,max,color:tColors[tk]||"#a9b4d6",icon:tIcons[tk]||"🎮"});
+        tournamentRows.push({tk,attPct,attPresent:att.present,attTotal:att.total,scoredN:sc.length,sum,avg,max,color:tColors[tk]||"#a9b4d6",icon:tIcons[tk]||"🎮"});
       });
       tournamentRows.sort((a,b)=>b.attTotal-a.attTotal);
 
-      // Данные для radar (посещаемость по турнирам как %)
-      const radarLabels = ["Business Cats","Пейнтбол","Civ Solo","Civ Duel","Бенди","Феодалы"];
-      const radarKeys   = ["Business Cats","Пейнтбол","Civilization: Solo","Civilization: DUEL","Бенди","Life is Feudal"];
-      const radarVals   = radarKeys.map(k=>{ const a=attByT.get(k); return a&&a.total?Math.round(a.present/a.total*100):0; });
+      const radarLabels=["BC","Пейнтбол","Civ Solo","Civ Duel","Бенди","Феодалы"];
+      const radarKeys  =["Business Cats","Пейнтбол","Civilization: Solo","Civilization: DUEL","Бенди","Life is Feudal"];
+      const radarVals  =radarKeys.map(k=>{ const a=attByT.get(k); return a&&a.total?Math.round(a.present/a.total*100):0; });
 
-      /* ── HTML панели ── */
-      app.innerHTML = html`
-        <div class="crumbs">КЛТ / Администратор</div>
-        <h2 class="pageTitle">Панель администратора</h2>
+      /* ══ Business Cats ═══════════════════════════════ */
+      const bcScored=scoredByT.get("Business Cats")||[];
+      const bcAtt=attByT.get("Business Cats")||{present:0,total:0};
+      const bcSum=bcScored.reduce((a,s)=>a+s.points,0);
+      const bcAvg=bcScored.length?Math.round(bcSum/bcScored.length):0;
+      const bcMax=bcScored.length?Math.max(...bcScored.map(s=>s.points)):0;
+      const bcByStudent=new Map();
+      bcScored.forEach(s=>{
+        if(!bcByStudent.has(s.id)) bcByStudent.set(s.id,{id:s.id,student:s.student,sessions:[]});
+        bcByStudent.get(s.id).sessions.push(s);
+      });
+      const bcTopStudents=Array.from(bcByStudent.values())
+        .map(x=>({...x,total:x.sessions.reduce((a,s)=>a+s.points,0),avg:Math.round(x.sessions.reduce((a,s)=>a+s.points,0)/x.sessions.length),n:x.sessions.length}))
+        .sort((a,b)=>b.total-a.total).slice(0,10);
+      const bcPlaceDist=[0,0,0,0,0];
+      bcScored.forEach(s=>{
+        const p=parsePlaceNumber(s.place_or_result)||20;
+        if(p<=1) bcPlaceDist[0]++; else if(p<=5) bcPlaceDist[1]++;
+        else if(p<=10) bcPlaceDist[2]++; else if(p<=15) bcPlaceDist[3]++; else bcPlaceDist[4]++;
+      });
 
-        <div class="adminCard">
-          <div class="adminTabs">
-            <div class="adminTab active">🏠 Сводка</div>
-            <div class="adminTab">🐱 Бизнес коты</div>
-            <div class="adminTab">🔫 Пейнтбол</div>
-            <div class="adminTab">⚔ CIV</div>
-            <button class="btn secondary" id="adminLogoutTab"
-              style="margin-left:auto;color:var(--bad);border-color:rgba(212,0,57,.25);padding:6px 12px;font-size:12px">
-              Выйти
-            </button>
+      /* ══ Paintball ═══════════════════════════════════ */
+      const pbScored=scoredByT.get("Пейнтбол")||[];
+      const pbAtt=attByT.get("Пейнтбол")||{present:0,total:0};
+      const pbWins=pbScored.filter(s=>s.points===100).length;
+      const pbWinRate=pbScored.length?Math.round(pbWins/pbScored.length*100):0;
+      const pbByStudent=new Map();
+      pbScored.forEach(s=>{
+        if(!pbByStudent.has(s.id)) pbByStudent.set(s.id,{id:s.id,student:s.student,wins:0,losses:0,pts:[]});
+        const x=pbByStudent.get(s.id); if(s.points===100) x.wins++; else x.losses++; x.pts.push(s.points);
+      });
+      const pbTopStudents=Array.from(pbByStudent.values())
+        .map(x=>({...x,total:x.pts.reduce((a,b)=>a+b,0),wr:x.wins+x.losses?Math.round(x.wins/(x.wins+x.losses)*100):0}))
+        .sort((a,b)=>b.total-a.total).slice(0,10);
+
+      /* ══ CIV ════════════════════════════════════════ */
+      const civSoloScored=scoredByT.get("Civilization: Solo")||[];
+      const civDuelScored=scoredByT.get("Civilization: DUEL")||[];
+      const civAll=[...civSoloScored,...civDuelScored];
+      const civAttS=attByT.get("Civilization: Solo")||{present:0,total:0};
+      const civAttD=attByT.get("Civilization: DUEL")||{present:0,total:0};
+      const civTotalAtt=civAttS.total+civAttD.total, civPresentAtt=civAttS.present+civAttD.present;
+      const civDefended=civAll.filter(s=>s.points>0).length;
+      const civNotDefended=civAll.filter(s=>s.points===0).length;
+      const yearDist=new Map();
+      civAll.filter(s=>s.points>0).forEach(s=>{ const y=parseYearFromRow(s); if(y) yearDist.set(y,(yearDist.get(y)||0)+1); });
+      const yearEntries=Array.from(yearDist.entries()).sort((a,b)=>a[0]-b[0]);
+      const civByStudent=new Map();
+      civAll.filter(s=>s.points>0).forEach(s=>{
+        if(!civByStudent.has(s.id)) civByStudent.set(s.id,{id:s.id,student:s.student,sessions:[]});
+        civByStudent.get(s.id).sessions.push(s);
+      });
+      const civTopStudents=Array.from(civByStudent.values()).map(x=>{
+        const years=x.sessions.map(s=>parseYearFromRow(s)).filter(Boolean);
+        return {...x,minYear:years.length?Math.min(...years):9999,total:x.sessions.reduce((a,s)=>a+s.points,0),n:x.sessions.length};
+      }).sort((a,b)=>a.minYear-b.minYear).slice(0,10);
+      const civYearsWithData=civAll.filter(s=>s.points>0).map(s=>parseYearFromRow(s)).filter(Boolean);
+      const civAvgYear=civYearsWithData.length?Math.round(civYearsWithData.reduce((a,b)=>a+b,0)/civYearsWithData.length):0;
+      const civAttPct=civTotalAtt?Math.round(civPresentAtt/civTotalAtt*100):0;
+
+      /* ══ Вспомогательные HTML-блоки ═══════════════════ */
+      const kpiCard=(cls,emoji,title,value,sub,pct)=>`
+        <div class="adminKpi ${cls}">
+          <span class="adminEmoji">${emoji}</span>
+          <div class="ak">${title}</div>
+          <div class="av">${value}</div>
+          <div class="ac">${sub}</div>
+          ${pct!==undefined?`<div class="abar"><div class="abar-fill" style="width:${pct}%"></div></div>`:""}
+        </div>`;
+
+      /* ══ Tab 0: Сводка ════════════════════════════════ */
+      const tab0=`
+        <div class="adminRow adminRow4">
+          ${kpiCard("ap","👥","Студентов",totalStudents,`Активных: <b>${activeCount}</b> · Отчисл.: ${expelledCount}`)}
+          ${kpiCard("ac2","📊","Средняя посещаемость",avgAttPct+"%",`${totalPresent} / ${totalAtt} сессий`,avgAttPct)}
+          ${kpiCard("aok","🏆","Зачётных результатов",totalScoredCount,"по всем турнирам")}
+          ${kpiCard("awk","🥇","Лидирующая группа",`<span style="color:var(--accent);font-size:18px">${esc(leadingGroup)}</span>`,`ср. баллов: ${Math.round(leadingGroupAvg)}`)}
+        </div>
+        <div class="adminRow" style="grid-template-columns:1fr 1.7fr;margin-bottom:10px">
+          <div class="adminKpi" style="display:flex;flex-direction:column;align-items:center">
+            <div class="ak" style="align-self:flex-start;width:100%">Распределение по лигам</div>
+            <canvas id="adminLeagueChart" style="width:150px;height:150px;display:block;margin:10px auto 0"></canvas>
+            <div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:6px">
+              ${[["#f6c343","Золотая",goldCount],["#a9b4d6","Серебряная",silverCount],["#cd7f32","Бронзовая",bronzeCount]].map(([c,l,n])=>`
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:900">
+                  <span><span style="color:${c}">●</span> ${l}</span><b>${n}</b>
+                </div>`).join("")}
+              <div class="divider" style="margin:4px 0"></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:800">
+                <span>Всего</span><b>${goldCount+silverCount+bronzeCount}</b>
+              </div>
+            </div>
           </div>
-
-          <div class="adminContent">
-
-            <!-- Ряд 1: 4 главных KPI -->
-            <div class="adminRow adminRow4">
-              <div class="adminKpi ap">
-                <span class="adminEmoji">👥</span>
-                <div class="ak">Студентов</div>
-                <div class="av">${esc(totalStudents)}</div>
-                <div class="ac">Активных: <b>${esc(activeCount)}</b> · Отчисл.: ${esc(expelledCount)}</div>
-              </div>
-              <div class="adminKpi ac2">
-                <span class="adminEmoji">📊</span>
-                <div class="ak">Средняя посещаемость</div>
-                <div class="av">${esc(avgAttPct)}%</div>
-                <div class="ac">${esc(totalPresent)} / ${esc(totalAtt)} сессий</div>
-                <div class="abar"><div class="abar-fill" style="width:${esc(avgAttPct)}%"></div></div>
-              </div>
-              <div class="adminKpi aok">
-                <span class="adminEmoji">🏆</span>
-                <div class="ak">Зачётных результатов</div>
-                <div class="av">${esc(totalScoredCount)}</div>
-                <div class="ac">по всем турнирам</div>
-              </div>
-              <div class="adminKpi awk">
-                <span class="adminEmoji">🥇</span>
-                <div class="ak">Лидирующая группа</div>
-                <div class="av" style="font-size:18px;color:var(--accent)">${esc(leadingGroup)}</div>
-                <div class="ac">ср. баллов: ${esc(Math.round(leadingGroupAvg))}</div>
-              </div>
-            </div>
-
-            <!-- Ряд 2: Лиги + Топ-5 -->
-            <div class="adminRow adminRow2">
-              <div class="adminKpi">
-                <div class="ak">Распределение по лигам</div>
-                <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
-                  <canvas id="adminLeagueChart" style="height:130px;width:130px;flex-shrink:0"></canvas>
-                  <div style="font-size:13px;font-weight:900;line-height:2.2">
-                    <div><span style="color:#f6c343;font-size:16px">●</span> &nbsp;Золотая &nbsp;<b>${esc(goldCount)}</b></div>
-                    <div><span style="color:#a9b4d6;font-size:16px">●</span> &nbsp;Серебряная &nbsp;<b>${esc(silverCount)}</b></div>
-                    <div><span style="color:#cd7f32;font-size:16px">●</span> &nbsp;Бронзовая &nbsp;<b>${esc(bronzeCount)}</b></div>
-                    <div style="margin-top:6px;font-size:11px;color:var(--muted)">Всего: ${esc(goldCount+silverCount+bronzeCount)}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="adminKpi">
-                <div class="ak">Топ-5 студентов</div>
-                <table class="adminTable">
-                  <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Баллы</th></tr></thead>
-                  <tbody>
-                    ${topStudents.map((x,i)=>{
-                      const lb=leagueBadge(DB.leagueById.get(x.id)||"Бронзовая");
-                      return html`<tr>
-                        <td><b>${esc(i+1)}</b></td>
-                        <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.s?.name_short||"—").trim())}</td>
-                        <td class="muted">${esc((x.s?.group||"—").trim())}</td>
-                        <td><b>${esc(x.total)}</b> <span class="badge ${esc(lb.cls)}" style="font-size:10px">${esc(lb.label)}</span></td>
-                      </tr>`;
-                    }).join("")}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Ряд 3: Таблица по турнирам -->
-            <div class="adminKpi" style="margin-bottom:10px">
-              <div class="ak">Статистика по турнирам</div>
-              <table class="adminTable">
-                <thead>
-                  <tr>
-                    <th>Турнир</th>
-                    <th>Посещ.&nbsp;%</th>
-                    <th>Присутств.</th>
-                    <th>Зачётных</th>
-                    <th>Ср. баллы</th>
-                    <th>Макс.</th>
-                    <th style="width:90px">Явка</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${tournamentRows.map(r=>html`
-                    <tr>
-                      <td><b>${esc(r.icon)} ${esc(r.tk)}</b></td>
-                      <td><b style="color:${esc(r.color)}">${esc(r.attPct)}%</b></td>
-                      <td class="muted">${esc(r.attPresent)} / ${esc(r.attTotal)}</td>
-                      <td>${esc(r.scoredN)}</td>
-                      <td><b>${esc(r.avg)}</b></td>
-                      <td>${esc(r.max)}</td>
-                      <td>
-                        <div class="adminTbar">
-                          <div class="adminTbar-fill" style="width:${esc(r.attPct)}%;background:${esc(r.color)}"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  `).join("")}
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Ряд 4: Ручные рекорды -->
-            <div class="adminRow adminRow3" style="margin-bottom:10px">
-              <div class="adminKpi abd">
-                <div class="ak">Рекорд по CIV (соло)</div>
-                <div class="av">—</div>
-                <div class="ac">Год революции</div>
-              </div>
-              <div class="adminKpi abd">
-                <div class="ak">Рекорд по CIV (команда)</div>
-                <div class="av">—</div>
-                <div class="ac">Год революции</div>
-              </div>
-              <div class="adminKpi abd">
-                <div class="ak">Пейнтбол — лучшее время сюжета</div>
-                <div class="av">—</div>
-                <div class="ac">мин</div>
-              </div>
-            </div>
-            <div class="adminRow adminRow2" style="margin-bottom:10px">
-              <div class="adminKpi">
-                <div class="ak">Монеты в котах — максимум</div>
-                <div class="av">—</div>
-              </div>
-              <div class="adminKpi">
-                <div class="ak">Монеты в грузовиках — максимум</div>
-                <div class="av">—</div>
-              </div>
-            </div>
-
-            <!-- Ряд 5: Графики -->
-            <div class="adminRow adminRow2">
-              <div class="adminKpi">
-                <div class="ak">Посещаемость по турнирам</div>
-                <canvas id="adminAttChart" style="height:200px;width:100%;display:block;margin-top:8px"></canvas>
-              </div>
-              <div class="adminKpi">
-                <div class="ak">Диаграмма способностей</div>
-                <canvas id="adminRadarChart" style="height:200px;width:100%;display:block;margin-top:4px"></canvas>
-              </div>
-            </div>
-
-            <!-- Ряд 6: Баллы по турнирам -->
-            <div class="adminKpi" style="margin-top:10px">
-              <div class="ak">Средние и максимальные баллы по турнирам</div>
-              <canvas id="adminScoresChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
-            </div>
-
+          <div class="adminKpi">
+            <div class="ak">Топ-10 студентов</div>
+            <table class="adminTable">
+              <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Баллы</th></tr></thead>
+              <tbody>${topStudents.map((x,i)=>{ const lb=leagueBadge(DB.leagueById.get(x.id)||"Бронзовая"); return html`
+                <tr>
+                  <td><b>${esc(i+1)}</b></td>
+                  <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.s?.name_short||"—").trim())}</td>
+                  <td class="muted">${esc((x.s?.group||"—").trim())}</td>
+                  <td><b>${esc(x.total)}</b> <span class="badge ${esc(lb.cls)}" style="font-size:10px">${esc(lb.label)}</span></td>
+                </tr>`; }).join("")}</tbody>
+            </table>
           </div>
         </div>
-      `;
+        <div class="adminKpi" style="margin-bottom:10px">
+          <div class="ak">Статистика по турнирам</div>
+          <table class="adminTable">
+            <thead><tr><th>Турнир</th><th>Посещ.%</th><th>Присут.</th><th>Зачётных</th><th>Сумма</th><th>Ср. балл</th><th>Макс.</th><th style="width:80px">Явка</th></tr></thead>
+            <tbody>${tournamentRows.map(r=>html`
+              <tr>
+                <td><b>${esc(r.icon)} ${esc(r.tk)}</b></td>
+                <td><b style="color:${esc(r.color)}">${esc(r.attPct)}%</b></td>
+                <td class="muted">${esc(r.attPresent)}/${esc(r.attTotal)}</td>
+                <td>${esc(r.scoredN)}</td>
+                <td><b>${esc(r.sum)}</b></td>
+                <td>${esc(r.avg)}</td>
+                <td>${esc(r.max)}</td>
+                <td><div class="adminTbar"><div class="adminTbar-fill" style="width:${esc(r.attPct)}%;background:${esc(r.color)}"></div></div></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>
+        <div class="adminRow adminRow2" style="margin-bottom:10px">
+          <div class="adminKpi">
+            <div class="ak">Посещаемость по турнирам</div>
+            <canvas id="adminAttChart" style="height:190px;width:100%;display:block;margin-top:8px"></canvas>
+          </div>
+          <div class="adminKpi">
+            <div class="ak">Диаграмма активности (посещ. %)</div>
+            <canvas id="adminRadarChart" style="height:190px;width:100%;display:block;margin-top:4px"></canvas>
+          </div>
+        </div>
+        <div class="adminKpi" style="margin-bottom:10px">
+          <div class="ak">Сумма баллов по турнирам (ср. балл за сессию подписан ниже)</div>
+          <canvas id="adminScoresChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
+        </div>
+        <div class="adminRow adminRow3" style="margin-bottom:10px">
+          ${kpiCard("abd","⚔️","Рекорд CIV (соло)","—","Год революции")}
+          ${kpiCard("abd","⚔️","Рекорд CIV (команда)","—","Год революции")}
+          ${kpiCard("abd","🔫","Пейнтбол — лучшее время","—","мин")}
+        </div>
+        <div class="adminRow adminRow2">
+          ${kpiCard("","🐱","Монеты в котах — максимум","—","")}
+          ${kpiCard("","🚛","Монеты в грузовиках — максимум","—","")}
+        </div>`;
 
-      // Данные для диаграмм
-      const attChartData = tournamentRows.map(r=>({
-        label:r.tk, present:r.attPresent, total:r.attTotal, color:r.color
-      }));
-      const scoresChartData = tournamentRows
-        .filter(r=>r.scoredN>0)
-        .map(r=>({label:r.tk, avg:r.avg, max:r.max, color:r.color}));
-      const leagueSegs=[
-        {n:goldCount,   color:"#f6c343", label:"Золотая"},
-        {n:silverCount, color:"#a9b4d6", label:"Серебряная"},
-        {n:bronzeCount, color:"#cd7f32", label:"Бронзовая"},
-      ];
+      /* ══ Tab 1: Business Cats ═════════════════════════ */
+      const tab1=`
+        <div class="adminRow adminRow4" style="margin-bottom:10px">
+          ${kpiCard("","🎮","Зачётных игр",bcScored.length,"результатов учтено")}
+          ${kpiCard("","📈","Средний балл",bcAvg,"из 100 возможных",bcAvg)}
+          ${kpiCard("","🏅","Лучший результат",bcMax,"баллов за сессию")}
+          ${kpiCard("","👥","Участников",bcByStudent.size,`посещ. ${bcAtt.total?Math.round(bcAtt.present/bcAtt.total*100):0}%`)}
+        </div>
+        <div class="adminRow adminRow2" style="margin-bottom:10px">
+          <div class="adminKpi">
+            <div class="ak">Распределение по местам</div>
+            <canvas id="bcPlaceChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
+          </div>
+          <div class="adminKpi">
+            <div class="ak">Топ-10 по сумме баллов</div>
+            <canvas id="bcStudentsChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
+          </div>
+        </div>
+        <div class="adminKpi">
+          <div class="ak">Топ-10 участников Business Cats</div>
+          <table class="adminTable">
+            <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Игр</th><th>Ср. балл</th><th>Сумма</th></tr></thead>
+            <tbody>${bcTopStudents.map((x,i)=>html`
+              <tr>
+                <td><b>${esc(i+1)}</b></td>
+                <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
+                <td class="muted">${esc((x.student?.group||"—").trim())}</td>
+                <td>${esc(x.n)}</td>
+                <td><b style="color:#ff4d6d">${esc(x.avg)}</b></td>
+                <td><b>${esc(x.total)}</b></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>`;
 
-      requestAnimationFrame(()=>{
-        drawAdminLeagueDonut("adminLeagueChart", leagueSegs);
-        drawAdminRadar("adminRadarChart", radarLabels, radarVals);
-        drawAdminAttByTournament("adminAttChart", attChartData);
-        drawAdminScoresBars("adminScoresChart", scoresChartData);
+      /* ══ Tab 2: Paintball ════════════════════════════ */
+      const pbLosses=pbScored.length-pbWins;
+      const tab2=`
+        <div class="adminRow adminRow4" style="margin-bottom:10px">
+          ${kpiCard("","🎯","Матчей сыграно",pbScored.length,"зачётных результатов")}
+          ${kpiCard("","✅","Побед",`<span style="color:#25c26e">${pbWins}</span>`,`поражений: ${pbLosses}`)}
+          ${kpiCard("","📊","Процент побед",pbWinRate+"%","от всех матчей",pbWinRate)}
+          ${kpiCard("","👥","Участников",pbByStudent.size,`посещ. ${pbAtt.total?Math.round(pbAtt.present/pbAtt.total*100):0}%`)}
+        </div>
+        <div class="adminRow adminRow2" style="margin-bottom:10px">
+          <div class="adminKpi">
+            <div class="ak">Победы / Поражения по игрокам (топ-10)</div>
+            <canvas id="pbWinLossChart" style="height:190px;width:100%;display:block;margin-top:8px"></canvas>
+          </div>
+          <div class="adminKpi" style="display:flex;flex-direction:column;align-items:center">
+            <div class="ak" style="align-self:flex-start;width:100%">Соотношение побед и поражений</div>
+            <canvas id="pbDonutChart" style="width:140px;height:140px;display:block;margin:12px auto 0"></canvas>
+            <div style="margin-top:12px;font-size:13px;font-weight:900;line-height:2.2;width:100%;max-width:200px">
+              <div style="display:flex;justify-content:space-between"><span><span style="color:#25c26e">●</span> Победы</span><b>${pbWins}</b></div>
+              <div style="display:flex;justify-content:space-between"><span><span style="color:#ff4d6d">●</span> Поражения</span><b>${pbLosses}</b></div>
+              <div class="divider" style="margin:4px 0"></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Win rate</span><b>${pbWinRate}%</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="adminKpi">
+          <div class="ak">Топ-10 игроков Пейнтбол</div>
+          <table class="adminTable">
+            <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Побед</th><th>Потерь</th><th>Win%</th><th>Баллы</th></tr></thead>
+            <tbody>${pbTopStudents.map((x,i)=>html`
+              <tr>
+                <td><b>${esc(i+1)}</b></td>
+                <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
+                <td class="muted">${esc((x.student?.group||"—").trim())}</td>
+                <td style="color:#25c26e;font-weight:900">${esc(x.wins)}</td>
+                <td style="color:#ff4d6d">${esc(x.losses)}</td>
+                <td><b>${esc(x.wr)}%</b></td>
+                <td><b>${esc(x.total)}</b></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>`;
+
+      /* ══ Tab 3: CIV ══════════════════════════════════ */
+      const tab3=`
+        <div class="adminRow adminRow4" style="margin-bottom:10px">
+          ${kpiCard("","⚔️","Революций защищено",`<span style="color:#7c5cff">${civDefended}</span>`,`не защитили: ${civNotDefended}`)}
+          ${kpiCard("","📅","Средний год революции",civAvgYear||"—","чем раньше — тем лучше")}
+          ${kpiCard("","🎮","Solo / Duel",`${civSoloScored.filter(s=>s.points>0).length} / ${civDuelScored.filter(s=>s.points>0).length}`,"защитивших участников")}
+          ${kpiCard("","👁","Посещаемость CIV",civAttPct+"%",`${civPresentAtt} / ${civTotalAtt} сессий`,civAttPct)}
+        </div>
+        <div class="adminRow adminRow2" style="margin-bottom:10px">
+          <div class="adminKpi">
+            <div class="ak">Распределение годов революций</div>
+            <canvas id="civYearsChart" style="height:190px;width:100%;display:block;margin-top:8px"></canvas>
+          </div>
+          <div class="adminKpi" style="display:flex;flex-direction:column;align-items:center">
+            <div class="ak" style="align-self:flex-start;width:100%">Защитил / Не защитил</div>
+            <canvas id="civDonutChart" style="width:140px;height:140px;display:block;margin:12px auto 0"></canvas>
+            <div style="margin-top:12px;font-size:13px;font-weight:900;line-height:2.2;width:100%;max-width:220px">
+              <div style="display:flex;justify-content:space-between"><span><span style="color:#7c5cff">●</span> Защитили</span><b>${civDefended}</b></div>
+              <div style="display:flex;justify-content:space-between"><span><span style="color:#ff4d6d">●</span> Не защитили</span><b>${civNotDefended}</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="adminKpi">
+          <div class="ak">Топ-10 участников CIV (по году революции — чем раньше, тем лучше)</div>
+          <table class="adminTable">
+            <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Игр</th><th>Лучший год</th><th>Сумма баллов</th></tr></thead>
+            <tbody>${civTopStudents.map((x,i)=>html`
+              <tr>
+                <td><b>${esc(i+1)}</b></td>
+                <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
+                <td class="muted">${esc((x.student?.group||"—").trim())}</td>
+                <td>${esc(x.n)}</td>
+                <td><b style="color:#7c5cff">${esc(x.minYear===9999?"—":x.minYear)}</b></td>
+                <td><b>${esc(x.total)}</b></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>`;
+
+      /* ══ Рендер HTML ══════════════════════════════════ */
+      app.innerHTML = `
+        <div class="crumbs">КЛТ / Администратор</div>
+        <h2 class="pageTitle">Панель администратора</h2>
+        <div class="adminCard">
+          <div class="adminTabs">
+            <div class="adminTab active" data-tab="0">🏠 Сводка</div>
+            <div class="adminTab" data-tab="1">🐱 Бизнес коты</div>
+            <div class="adminTab" data-tab="2">🔫 Пейнтбол</div>
+            <div class="adminTab" data-tab="3">⚔ CIV</div>
+            <button class="btn secondary" id="adminLogoutTab"
+              style="margin-left:auto;color:var(--bad);border-color:rgba(212,0,57,.25);padding:6px 12px;font-size:12px">Выйти</button>
+          </div>
+          <div class="adminContent">
+            <div class="adminTabPanel" id="adminPanel0">${tab0}</div>
+            <div class="adminTabPanel" id="adminPanel1" style="display:none">${tab1}</div>
+            <div class="adminTabPanel" id="adminPanel2" style="display:none">${tab2}</div>
+            <div class="adminTabPanel" id="adminPanel3" style="display:none">${tab3}</div>
+          </div>
+        </div>`;
+
+      /* ══ Данные для графиков ══════════════════════════ */
+      const leagueSegs=[{n:goldCount,color:"#f6c343"},{n:silverCount,color:"#a9b4d6"},{n:bronzeCount,color:"#cd7f32"}];
+      const attChartData=tournamentRows.map(r=>({label:r.tk,present:r.attPresent,total:r.attTotal,color:r.color}));
+      const scoresChartData=tournamentRows.filter(r=>r.scoredN>0).map(r=>({label:r.tk,sum:r.sum,avg:r.avg,n:r.scoredN,color:r.color}));
+
+      function drawTab0Charts(){
+        requestAnimationFrame(()=>{
+          drawAdminLeagueDonut("adminLeagueChart", leagueSegs);
+          drawAdminRadar("adminRadarChart", radarLabels, radarVals);
+          drawAdminAttByTournament("adminAttChart", attChartData);
+          drawAdminScoresBars("adminScoresChart", scoresChartData);
+        });
+      }
+      function drawTab1Charts(){
+        requestAnimationFrame(()=>{
+          const placeLbls=["1-е место","2–5","6–10","11–15","16–20"];
+          const placeColors=["#f6c343","#7c5cff","#21d4ff","#a9b4d6","#ff4d6d"];
+          drawHorizBars("bcPlaceChart", placeLbls.map((l,i)=>({label:l,value:bcPlaceDist[i],color:placeColors[i]})));
+          drawHorizBars("bcStudentsChart", bcTopStudents.map(x=>({label:(x.student?.name_short||x.id).trim().slice(0,14),value:x.total,color:"#ff4d6d"})));
+        });
+      }
+      function drawTab2Charts(){
+        requestAnimationFrame(()=>{
+          drawPBWinLossChart("pbWinLossChart", pbTopStudents.map(x=>({label:(x.student?.name_short||x.id).trim().slice(0,10),wins:x.wins,losses:x.losses})));
+          drawAdminLeagueDonut("pbDonutChart",[{n:pbWins,color:"#25c26e"},{n:pbLosses,color:"#ff4d6d"}]);
+        });
+      }
+      function drawTab3Charts(){
+        requestAnimationFrame(()=>{
+          drawCIVYearsChart("civYearsChart", yearEntries);
+          drawAdminLeagueDonut("civDonutChart",[{n:civDefended,color:"#7c5cff"},{n:civNotDefended,color:"#ff4d6d"}]);
+        });
+      }
+
+      /* ══ Переключение вкладок ════════════════════════ */
+      const drawFns=[drawTab0Charts,drawTab1Charts,drawTab2Charts,drawTab3Charts];
+      function switchAdminTab(idx){
+        document.querySelectorAll(".adminTab[data-tab]").forEach(t=>t.classList.toggle("active",t.dataset.tab==idx));
+        document.querySelectorAll(".adminTabPanel").forEach((p,i)=>{ p.style.display=i===idx?"block":"none"; });
+        drawFns[idx]?.();
+      }
+      document.querySelectorAll(".adminTab[data-tab]").forEach(t=>{
+        t.addEventListener("click",()=>switchAdminTab(Number(t.dataset.tab)));
       });
-
-      // Logout
-      document.getElementById("adminLogoutTab")?.addEventListener("click", ()=>{
+      document.getElementById("adminLogoutTab")?.addEventListener("click",()=>{
         sessionStorage.removeItem("kltAdminAuth"); location.hash="#/rating";
       });
-      // Клик по топ-студенту → перейти на его дашборд
       document.querySelectorAll("[data-topid]").forEach(td=>{
         td.addEventListener("click",()=>{ location.hash=`#/rating?id=${td.dataset.topid}`; });
       });
+
+      switchAdminTab(0);
     }
 
     function renderRatingSkeleton(){
