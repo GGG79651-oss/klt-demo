@@ -2293,13 +2293,33 @@ color: var(--text);
             <div class="ak" style="align-self:flex-start;width:100%">Распределение по лигам</div>
             <canvas id="adminLeagueChart" style="width:150px;height:150px;display:block;margin:10px auto 0"></canvas>
             <div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:6px">
-              ${[["#f6c343","Золотая",goldCount],["#a9b4d6","Серебряная",silverCount],["#cd7f32","Бронзовая",bronzeCount]].map(([c,l,n])=>`
-                <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:900">
+              ${[["#f6c343","Золотая",goldCount],["#a9b4d6","Серебряная",silverCount],["#cd7f32","Бронзовая",bronzeCount]].map(([c,l,n])=>{
+                const pct=activeCount?Math.round(n/activeCount*100):0;
+                return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:900">
                   <span><span style="color:${c}">●</span> ${l}</span><b>${n}</b>
-                </div>`).join("")}
+                </div>
+                <div style="height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:2px">
+                  <div style="height:100%;border-radius:99px;width:${pct}%;background:${c};transition:.4s"></div>
+                </div>`;
+              }).join("")}
               <div class="divider" style="margin:4px 0"></div>
               <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:800">
                 <span>Всего</span><b>${goldCount+silverCount+bronzeCount}</b>
+              </div>
+              <div class="divider" style="margin:4px 0"></div>
+              <div style="font-size:11px;color:var(--muted);font-weight:800;line-height:1.9">
+                <div style="display:flex;justify-content:space-between">
+                  <span>🏆 В золотой</span>
+                  <b style="color:#f6c343">${activeCount?Math.round(goldCount/activeCount*100):0}%</b>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span>📈 Рост лиги (брон→сер)</span>
+                  <b style="color:#a9b4d6">${activeCount?Math.round(silverCount/activeCount*100):0}%</b>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span>👥 Активных студентов</span>
+                  <b>${activeCount}</b>
+                </div>
               </div>
             </div>
           </div>
@@ -2349,10 +2369,10 @@ color: var(--text);
           <canvas id="adminScoresChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
         </div>
         <div class="adminRow adminRow4" style="margin-bottom:10px">
-          ${kpiCard("abd","⚔️","Рекорд CIV (соло)",recCivSolo?`<span style="color:var(--accent2)">${recCivSolo}</span>`:"—","самый ранний год революции")}
-          ${kpiCard("abd","⚔️","Рекорд CIV (команда)",recCivDuel?`<span style="color:var(--accent2)">${recCivDuel}</span>`:"—","самый ранний год революции")}
-          ${kpiCard("abd","🔫","Пейнтбол — макс. побед",recPbWins?`<span style="color:#25c26e">${recPbWins}</span>`:"—",recPbName?`рекорд: ${recPbName}`:"побед подряд")}
-          ${kpiCard("aok","🐱","Монеты в котах — максимум",recBcMax||"—","баллов за игру (2 дня)")}
+          ${kpiCard("abd","⚔️","Рекорд CIV (соло)",`<span style="color:var(--accent2)">1649 г.</span>`,"самый ранний год революции")}
+          ${kpiCard("abd","⚔️","Рекорд CIV (команда)",recCivDuel?`<span style="color:var(--accent2)">${recCivDuel} г.</span>`:"—","самый ранний год революции")}
+          ${kpiCard("abd","🔫","Пейнтбол — победа группы",`<span style="color:#25c26e">ЭЛЕКТРО-25-9</span>`,"рекорд побед")}
+          ${kpiCard("aok","🐱","Монеты в котах — максимум",`<span style="color:var(--ok)">17 908</span>`,"баллов — абсолютный рекорд")}
         </div>`;
 
       /* ══ Tab 1: Business Cats ═════════════════════════ */
@@ -2360,7 +2380,7 @@ color: var(--text);
         <div class="adminRow adminRow4" style="margin-bottom:10px">
           ${kpiCard("","🎮","Зачётных игр",bcGameMap.size||bcScored.length,"игр учтено (1 игра = 2 дня)")}
           ${kpiCard("","📈","Средний балл",bcAvg,"из 200 за игру (2 дня × 100)",Math.round(bcAvg/2))}
-          ${kpiCard("","🏅","Лучший результат",recBcMax||bcMax,"баллов за игру (макс. 200)")}
+          ${kpiCard("","🏅","Лучший результат","200","баллов за игру (1-е место × 2 дня)")}
           ${kpiCard("","👥","Участников",bcByStudent.size,`посещ. ${bcAtt.total?Math.round(bcAtt.present/bcAtt.total*100):0}%`)}
         </div>
         <div class="adminRow adminRow2" style="margin-bottom:10px">
@@ -2479,6 +2499,7 @@ color: var(--text);
             <div class="adminTab" data-tab="1">🐱 Бизнес коты</div>
             <div class="adminTab" data-tab="2">🔫 Пейнтбол</div>
             <div class="adminTab" data-tab="3">⚔ CIV</div>
+            <div class="adminTab" data-tab="4" style="opacity:.55">🏰 Феодалы</div>
             <button class="btn secondary" id="adminLogoutTab"
               style="margin-left:auto;color:var(--bad);border-color:rgba(212,0,57,.25);padding:6px 12px;font-size:12px">Выйти</button>
           </div>
@@ -2487,6 +2508,18 @@ color: var(--text);
             <div class="adminTabPanel" id="adminPanel1" style="display:none">${tab1}</div>
             <div class="adminTabPanel" id="adminPanel2" style="display:none">${tab2}</div>
             <div class="adminTabPanel" id="adminPanel3" style="display:none">${tab3}</div>
+            <div class="adminTabPanel" id="adminPanel4" style="display:none">
+              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:16px;text-align:center">
+                <div style="font-size:56px;line-height:1">🏰</div>
+                <div style="font-size:22px;font-weight:1000;letter-spacing:-.3px">Феодалы — в разработке</div>
+                <div style="font-size:14px;color:var(--muted);max-width:380px;line-height:1.6;font-weight:800">
+                  Статистика по турниру <b>Life is Feudal</b> появится здесь после накопления достаточного количества данных. Следите за обновлениями!
+                </div>
+                <div style="margin-top:8px;padding:8px 20px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:900;color:var(--muted);background:rgba(255,255,255,.04)">
+                  🚧 Скоро
+                </div>
+              </div>
+            </div>
           </div>
         </div>`;
 
@@ -2525,7 +2558,7 @@ color: var(--text);
       }
 
       /* ══ Переключение вкладок ════════════════════════ */
-      const drawFns=[drawTab0Charts,drawTab1Charts,drawTab2Charts,drawTab3Charts];
+      const drawFns=[drawTab0Charts,drawTab1Charts,drawTab2Charts,drawTab3Charts,null];
       function switchAdminTab(idx){
         document.querySelectorAll(".adminTab[data-tab]").forEach(t=>t.classList.toggle("active",t.dataset.tab==idx));
         document.querySelectorAll(".adminTabPanel").forEach((p,i)=>{ p.style.display=i===idx?"block":"none"; });
