@@ -870,7 +870,7 @@ color: var(--text);
     }
 
     function playoffRoundPoints(denom){
-      const map = { 32:20, 16:30, 8:40, 4:60, 2:80 };
+      const map = { 32:40, 16:60, 8:80, 4:120, 2:160 };
       return map[denom] ?? null;
     }
     function extractPlayoffDenom(text){
@@ -935,6 +935,31 @@ color: var(--text);
         return { points: total, explain: `Civ: революция 100 + год ${y} → ${yearPts} = ${total}` };
       }
 
+      /* Феодалы: звание (до 100) + результат "Судной ночи" (0 или 100), максимум 200. Звание берём из label,
+         результат "Судной ночи" — из place_or_result. Идёт до eligibleForScoring, т.к. строка со званием
+         может не иметь place_or_result. */
+      if (t === "Life is Feudal"){
+        const a = String(row.score_or_attendance ?? "").trim();
+        if (a !== "0") return { points: null, explain: "Феодалы: не начисляем (нужно 0 в посещаемости)" };
+
+        const rankMap = { "лорд": 100, "сержант": 55, "рядовой": 25 };
+        const rankRaw = String(row.label ?? "").trim();
+        const rankPts = rankMap[rankRaw.toLowerCase()] ?? null;
+
+        const resultRaw = String(row.place_or_result ?? "").trim().toLowerCase();
+        let nightPts = 0, nightNote = "Судная ночь: не участвовал → 0";
+        if (includesAny(resultRaw, ["побед", "win"])) { nightPts = 100; nightNote = "Судная ночь: победа → 100"; }
+        else if (includesAny(resultRaw, ["провед", "проигр", "loss", "пораж"])) { nightPts = 0; nightNote = "Судная ночь: поражение → 0"; }
+
+        if (rankPts === null && !resultRaw){
+          return { points: null, explain: "Феодалы: нет звания и результата «Судной ночи» — баллы не посчитаны" };
+        }
+
+        const rankNote = rankPts !== null ? `Звание «${rankRaw}» → ${rankPts}` : "Звание не указано → 0";
+        const total = (rankPts ?? 0) + nightPts;
+        return { points: total, explain: `${rankNote}; ${nightNote}; итого ${total} из 200` };
+      }
+
       if (!eligibleForScoring(row)){
         return { points: null, explain: "Не начисляем: нет подтверждения участия (нужно 0 в посещаемости)" };
       }
@@ -961,7 +986,7 @@ color: var(--text);
         if (includesAny(stage, ["групп", "group"])){
           const win = includesAny(blobAll, ["побед", "win"]);
           const lose = includesAny(blobAll, ["проиг", "loss", "пораж", "выбыл"]);
-          if (win) return { points: 100, explain: "Пейнтбол (группа): Победа → 100" };
+          if (win) return { points: 200, explain: "Пейнтбол (группа): Победа → 200" };
           if (lose) return { points: 0, explain: "Пейнтбол (группа): Поражение/выбыл → 0" };
           return { points: null, explain: "Пейнтбол (группа): нет результата" };
         }
@@ -971,7 +996,7 @@ color: var(--text);
           if (lose) return { points: 0, explain: "Пейнтбол (плей-офф): выбыл/проигрыш → 0" };
 
           const win = includesAny(blobAll, ["побед", "win"]);
-          if (win) return { points: 100, explain: "Пейнтбол (плей-офф): Победа → 100" };
+          if (win) return { points: 200, explain: "Пейнтбол (плей-офф): Победа → 200" };
 
           const denom = extractPlayoffDenom(blobAll);
           if (denom){
@@ -983,6 +1008,15 @@ color: var(--text);
         }
 
         return { points: null, explain: "Пейнтбол: не зачётный этап" };
+      }
+
+      /* Бенди: 4 матча за сезон, победа в каждом → 50 баллов, максимум 4×50=200 */
+      if (t === "Бенди"){
+        const win = includesAny(blobAll, ["побед", "win"]);
+        const lose = includesAny(blobAll, ["провед", "проигр", "loss", "пораж"]);
+        if (win) return { points: 50, explain: "Бенди: победа в матче → 50 из 200" };
+        if (lose) return { points: 0, explain: "Бенди: поражение в матче → 0 из 200" };
+        return { points: null, explain: "Бенди: нет результата матча" };
       }
 
       return { points: null, explain: "Пока не начисляем (добавим позже)" };
@@ -1017,6 +1051,19 @@ color: var(--text);
           });
         }
       }
+
+      // Business Cats: масштабируем баллы по местам так, чтобы сумма по всем играм
+      // студента не превышала 200, независимо от того, сколько игр у него засчитано.
+      const bcRows = out.filter(x=>x.tournamentKey==="Business Cats");
+      if (bcRows.length){
+        const n = bcRows.length;
+        bcRows.forEach(x=>{
+          const rescaled = Math.round(x.points * 2 / n);
+          x.explain = `${x.explain}; пересчёт на ${n} игр (максимум за этап 200) → ${rescaled}`;
+          x.points = rescaled;
+        });
+      }
+
       out.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
       return out;
     }
