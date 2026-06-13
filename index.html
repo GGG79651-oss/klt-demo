@@ -909,7 +909,7 @@ color: var(--text);
       return false;
     }
 
-    function scoreSession(row){
+    function scoreSession(row, opts = {}){
       const t = normTournamentKey(row.tournament);
       const stage = String(row.stage || row.label || "").toLowerCase();
       const placeText = String(row.place_or_result || "").trim();
@@ -931,11 +931,12 @@ color: var(--text);
           return { points: 0, explain: "Civ: не защитился → 0" };
         }
 
-        // Если в "Результат/место" нет фактического результата (пусто/—/-/0/Н/Д) —
-        // защиты не было, даже если в label указан год (там хранится текущий/стартовый год партии).
-        const pr = String(row.place_or_result ?? "").trim();
-        if (isNoResultMark(pr) || pr === "0"){
-          return { points: 0, explain: "Civ: нет результата защиты (Результат/место не указано) → 0" };
+        // label = год: засчитывается как защита только если партия по этому турниру
+        // (Solo/DUEL) отыграна от 1-й до последней недели (см. civComplete в
+        // computeScoredSessions) — иначе год в label — это текущий/целевой год
+        // партии, а не фактический результат защиты.
+        if (!opts.civComplete){
+          return { points: 0, explain: "Civ: партия не завершена (нет 1-й или последней недели) → 0" };
         }
 
         // Защитился: 100 за революцию + 0..100 за год
@@ -1037,6 +1038,25 @@ color: var(--text);
     function computeScoredSessions(id){
       const rawSessions = DB.sessionsById.get(id) || [];
 
+      /* Civilization: защита (label=год) засчитывается только если по этому турниру
+         (Solo/DUEL) есть строка session_no=1 с реальной датой И строка с максимальным
+         session_no тоже имеет реальную дату — партия отыграна от начала до конца,
+         а не "в процессе" (год в label у "в процессе" партий — это текущий/целевой
+         год, а не результат защиты). */
+      const civStats = new Map(); // tournamentKey -> {hasFirst, maxNo, maxHasDate}
+      for (const s of rawSessions){
+        const tKey = normTournamentKey(s.tournament);
+        if (tKey !== "Civilization: Solo" && tKey !== "Civilization: DUEL") continue;
+        if (!civStats.has(tKey)) civStats.set(tKey, { hasFirst:false, maxNo:-Infinity, maxHasDate:false });
+        const st = civStats.get(tKey);
+        const no = Number(s.session_no) || 0;
+        const realDate = String(s.date ?? "").trim() !== "00.01.1900";
+        if (no === 1 && realDate) st.hasFirst = true;
+        if (no >= st.maxNo){ st.maxNo = no; st.maxHasDate = realDate; }
+      }
+      const civCompleteByKey = new Map();
+      civStats.forEach((st,k)=> civCompleteByKey.set(k, st.hasFirst && st.maxHasDate));
+
       /* Business Cats: каждый рейтинговый раунд (session_no) записан как 2 строки
          (game_no=1 и game_no=2) с одинаковым результатом — это одна игра.
          Оставляем по одной строке на (stage="rating", session_no), отдавая
@@ -1074,7 +1094,7 @@ color: var(--text);
           }
         }
 
-        const scored = scoreSession(s);
+        const scored = scoreSession(s, { civComplete: civCompleteByKey.get(tKey) || false });
         if (typeof scored.points === "number" && Number.isFinite(scored.points)){
           out.push({
             ...s,
@@ -2024,46 +2044,6 @@ color: var(--text);
       }
     }
 
-    // data: [{label, wins, losses}] — сгруппированный бар побед/поражений
-    function drawPBWinLossChart(id, data){
-      const pack = setupCanvas(id);
-      if (!pack) return;
-      const {ctx, w, h} = pack;
-      ctx.clearRect(0,0,w,h);
-      if (!data.length) return;
-      const isLight = document.body.classList.contains("light");
-      const textColor = isLight ? "rgba(90,100,133,.7)" : "rgba(169,180,214,.7)";
-      const maxV = Math.max(...data.map(d=>d.wins+d.losses), 1);
-      const pad={l:10,r:10,t:20,b:56};
-      const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
-      const gap=cw/data.length;
-      const bw=Math.min(gap*0.36, 18);
-      // legend
-      ctx.fillStyle="#25c26e"; ctx.font="bold 10px sans-serif"; ctx.textAlign="left";
-      ctx.fillText("■ Победы", pad.l, 14);
-      ctx.fillStyle="#ff4d6d";
-      ctx.fillText("■ Поражения", pad.l+72, 14);
-      for (let i=0;i<data.length;i++){
-        const d=data[i];
-        const cx=pad.l+i*gap+gap/2;
-        // wins
-        const wH=(d.wins/maxV)*ch;
-        const g1=ctx.createLinearGradient(0,pad.t+ch-wH,0,pad.t+ch);
-        g1.addColorStop(0,"#25c26e"); g1.addColorStop(1,"#25c26e55");
-        ctx.fillStyle=g1;
-        roundRect(ctx,cx-bw-1,pad.t+ch-wH,bw,Math.max(wH,2),3); ctx.fill();
-        // losses
-        const lH=(d.losses/maxV)*ch;
-        const g2=ctx.createLinearGradient(0,pad.t+ch-lH,0,pad.t+ch);
-        g2.addColorStop(0,"#ff4d6d"); g2.addColorStop(1,"#ff4d6d55");
-        ctx.fillStyle=g2;
-        roundRect(ctx,cx+1,pad.t+ch-lH,bw,Math.max(lH,2),3); ctx.fill();
-        // name
-        ctx.fillStyle=textColor; ctx.font="bold 9px sans-serif"; ctx.textAlign="center";
-        ctx.fillText(d.label.slice(0,9), cx, h-pad.b+13);
-      }
-    }
-
     // yearEntries: [[year, count], ...] — гистограмма лет революций CIV
     // Groups raw year entries into decades for readability
     function drawCIVYearsChart(id, yearEntries){
@@ -2157,6 +2137,47 @@ color: var(--text);
         <div class="ac">${sub}</div>
         ${pct!==undefined?`<div class="abar"><div class="abar-fill" style="width:${pct}%"></div></div>`:""}
       </div>`;
+
+    // Пейнтбол: до какого этапа плей-офф дошли (session_no=7) + групповой этап
+    // (session_no 2-4, Победа/Проигрыш) — считаем по сырым сессиям, не по scoreSession.
+    function computePaintballStats(ids){
+      const order=[
+        ["Победа в финале","#f6c343"],
+        ["1/2 финала","#7c5cff"],
+        ["1/4 финала","#21d4ff"],
+        ["1/8 финала","#25c26e"],
+        ["1/16 финала","#a9b4d6"],
+        ["1/32 финала","#5a6485"],
+        ["Выбыл с плей-офф","#ff4d6d"],
+        ["Нет данных","#3a4060"],
+      ];
+      const dist=new Map(order.map(([label])=>[label,0]));
+      const winners=[];
+      let groupWins=0, groupLosses=0;
+
+      ids.forEach(id=>{
+        (DB.sessionsById.get(id)||[]).forEach(s=>{
+          if (normTournamentKey(s.tournament) !== "Пейнтбол") return;
+          const no=Number(s.session_no);
+          const result=String(s.place_or_result ?? "").trim();
+
+          if (no===7){
+            const key=dist.has(result)?result:"Нет данных";
+            dist.set(key,(dist.get(key)||0)+1);
+            if (result==="Победа в финале") winners.push({id, student:DB.studentsById.get(id)});
+          } else if (no===2 || no===3 || no===4){
+            if (result==="Победа") groupWins++;
+            else if (result==="Проигрыш") groupLosses++;
+          }
+        });
+      });
+
+      return {
+        playoffDist: order.map(([label,color])=>({label,value:dist.get(label)||0,color})),
+        winners,
+        groupWins, groupLosses
+      };
+    }
 
     // Посещаемость и зачётные сессии по списку студентов (id[])
     function computeAttendanceAndScores(ids){
@@ -2275,15 +2296,18 @@ color: var(--text);
       /* ══ Paintball ═══════════════════════════════════ */
       const pbScored=scoredByT.get("Пейнтбол")||[];
       const pbAtt=attByT.get("Пейнтбол")||{present:0,total:0};
-      const pbWins=pbScored.filter(s=>s.points===100).length;
+      const pbStats=computePaintballStats(activeIds);
+      const pbWins=pbStats.winners.length;
       const pbWinRate=pbScored.length?Math.round(pbWins/pbScored.length*100):0;
+      const pbGroupTotal=pbStats.groupWins+pbStats.groupLosses;
+      const pbGroupWinRate=pbGroupTotal?Math.round(pbStats.groupWins/pbGroupTotal*100):0;
       const pbByStudent=new Map();
       pbScored.forEach(s=>{
-        if(!pbByStudent.has(s.id)) pbByStudent.set(s.id,{id:s.id,student:s.student,wins:0,losses:0,pts:[]});
-        const x=pbByStudent.get(s.id); if(s.points===100) x.wins++; else x.losses++; x.pts.push(s.points);
+        if(!pbByStudent.has(s.id)) pbByStudent.set(s.id,{id:s.id,student:s.student,stage:s.place_or_result,pts:[]});
+        pbByStudent.get(s.id).pts.push(s.points);
       });
       const pbTopStudents=Array.from(pbByStudent.values())
-        .map(x=>({...x,total:x.pts.reduce((a,b)=>a+b,0),wr:x.wins+x.losses?Math.round(x.wins/(x.wins+x.losses)*100):0}))
+        .map(x=>({...x,total:x.pts.reduce((a,b)=>a+b,0)}))
         .sort((a,b)=>b.total-a.total).slice(0,10);
 
       /* ══ CIV ════════════════════════════════════════ */
@@ -2318,11 +2342,9 @@ color: var(--text);
       // CIV Duel record — earliest revolution year in team mode
       const duelYears=civDuelScored.filter(s=>s.points>0).map(s=>parseYearFromRow(s)).filter(Boolean);
       const recCivDuel=duelYears.length?Math.min(...duelYears):null;
-      // Paintball — student with most wins (max wins count)
-      const pbMaxWins=pbTopStudents.length?Math.max(...pbTopStudents.map(x=>x.wins)):0;
-      const pbRecordHolder=pbTopStudents.find(x=>x.wins===pbMaxWins);
-      const recPbWins=pbMaxWins||null;
-      const recPbName=pbRecordHolder?(pbRecordHolder.student?.name_short||pbRecordHolder.id):null;
+      // Paintball — победитель(и) финала плей-офф
+      const recPbWins=pbStats.winners.length||null;
+      const recPbName=recPbWins?(pbStats.winners[0].student?.name_short||pbStats.winners[0].id):null;
       // BC — max score per game (group by student+game_no, sum 2-day pairs)
       const bcGameMap=new Map();
       bcScored.forEach(s=>{
@@ -2433,7 +2455,7 @@ color: var(--text);
         <div class="adminRow adminRow4" style="margin-bottom:10px">
           ${kpiCard("abd","⚔️","Рекорд CIV (соло)",recCivSolo?`<span style="color:var(--accent2)">${recCivSolo} г.</span>`:"—","самый ранний год революции")}
           ${kpiCard("abd","⚔️","Рекорд CIV (команда)",recCivDuel?`<span style="color:var(--accent2)">${recCivDuel} г.</span>`:"—","самый ранний год революции")}
-          ${kpiCard("abd","🔫","Пейнтбол — лидер по победам",recPbName?`<span style="color:#25c26e">${esc(recPbName)}</span>`:"—",recPbWins?`${recPbWins} ${ruPlural(recPbWins,"победа","победы","побед")}`:"нет данных")}
+          ${kpiCard("abd","🔫","Пейнтбол — победитель финала",recPbName?`<span style="color:#f6c343">${esc(recPbName)}</span>`:"—",recPbWins>1?`и ещё ${recPbWins-1} ${ruPlural(recPbWins-1,"победитель","победителя","победителей")}`:(recPbWins?"победитель финала":"нет данных"))}
           ${kpiCard("aok","🐱","Business Cats — рекорд за игру",recBcMax?`<span style="color:var(--ok)">${recBcMax}</span>`:"—","баллов суммарно за 2 дня игры")}
         </div>`;
 
@@ -2472,42 +2494,39 @@ color: var(--text);
         </div>`;
 
       /* ══ Tab 2: Paintball ════════════════════════════ */
-      const pbLosses=pbScored.length-pbWins;
       const tab2=`
         <div class="adminRow adminRow4" style="margin-bottom:10px">
-          ${kpiCard("","🎯","Матчей сыграно",pbScored.length,"зачётных результатов")}
-          ${kpiCard("","✅","Побед",`<span style="color:#25c26e">${pbWins}</span>`,`поражений: ${pbLosses}`)}
-          ${kpiCard("","📊","Процент побед",pbWinRate+"%","от всех матчей",pbWinRate)}
+          ${kpiCard("","🎯","Дошли до плей-офф",pbScored.length,"зачётных результатов")}
+          ${kpiCard("","🏆","Победителей финала",`<span style="color:#f6c343">${pbWins}</span>`,`из ${pbScored.length} в плей-офф`,pbWinRate)}
+          ${kpiCard("","🤝","Групповой этап",pbGroupWinRate+"%",`побед: ${pbStats.groupWins} · поражений: ${pbStats.groupLosses}`,pbGroupWinRate)}
           ${kpiCard("","👥","Участников",pbByStudent.size,`посещ. ${pbAtt.total?Math.round(pbAtt.present/pbAtt.total*100):0}%`)}
         </div>
         <div class="adminRow adminRow2" style="margin-bottom:10px">
           <div class="adminKpi">
-            <div class="ak">Победы / Поражения по игрокам (топ-10)</div>
-            <canvas id="pbWinLossChart" style="height:190px;width:100%;display:block;margin-top:8px"></canvas>
+            <div class="ak">До какого этапа плей-офф дошли</div>
+            <canvas id="pbPlayoffChart" style="height:190px;width:100%;display:block;margin-top:8px"></canvas>
           </div>
-          <div class="adminKpi" style="display:flex;flex-direction:column;align-items:center">
-            <div class="ak" style="align-self:flex-start;width:100%">Соотношение побед и поражений</div>
-            <canvas id="pbDonutChart" style="width:140px;height:140px;display:block;margin:12px auto 0"></canvas>
-            <div style="margin-top:12px;font-size:13px;font-weight:900;line-height:2.2;width:100%;max-width:200px">
-              <div style="display:flex;justify-content:space-between"><span><span style="color:#25c26e">●</span> Победы</span><b>${pbWins}</b></div>
-              <div style="display:flex;justify-content:space-between"><span><span style="color:#ff4d6d">●</span> Поражения</span><b>${pbLosses}</b></div>
-              <div class="divider" style="margin:4px 0"></div>
-              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Win rate</span><b>${pbWinRate}%</b></div>
+          <div class="adminKpi">
+            <div class="ak">🏆 Группа победителей Пейнтбола (${pbStats.winners.length})</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:190px;overflow-y:auto">
+              ${pbStats.winners.length ? pbStats.winners.map(w=>html`
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:10px;background:rgba(246,195,67,.12);border:1px solid rgba(246,195,67,.25)">
+                  <span style="cursor:pointer;font-weight:900" data-topid="${esc(w.id)}">${esc((w.student?.name_short||"—").trim())}</span>
+                  <span class="muted" style="font-size:12px">${esc((w.student?.group||"—").trim())}</span>
+                </div>`).join("") : `<div class="notice">Пока нет победителей финала</div>`}
             </div>
           </div>
         </div>
         <div class="adminKpi">
           <div class="ak">Топ-10 игроков Пейнтбол</div>
           <table class="adminTable">
-            <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Побед</th><th>Потерь</th><th>Win%</th><th>Баллы</th></tr></thead>
+            <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Этап плей-офф</th><th>Баллы</th></tr></thead>
             <tbody>${pbTopStudents.map((x,i)=>html`
               <tr>
                 <td><b>${esc(i+1)}</b></td>
                 <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
                 <td class="muted">${esc((x.student?.group||"—").trim())}</td>
-                <td style="color:#25c26e;font-weight:900">${esc(x.wins)}</td>
-                <td style="color:#ff4d6d">${esc(x.losses)}</td>
-                <td><b>${esc(x.wr)}%</b></td>
+                <td>${esc(x.stage||"—")}</td>
                 <td><b>${esc(x.total)}</b></td>
               </tr>`).join("")}</tbody>
           </table>
@@ -2608,8 +2627,7 @@ color: var(--text);
       }
       function drawTab2Charts(){
         requestAnimationFrame(()=>{
-          drawPBWinLossChart("pbWinLossChart", pbTopStudents.map(x=>({label:(x.student?.name_short||x.id).trim().slice(0,10),wins:x.wins,losses:x.losses})));
-          drawAdminLeagueDonut("pbDonutChart",[{n:pbWins,color:"#25c26e"},{n:pbLosses,color:"#ff4d6d"}]);
+          drawHorizBars("pbPlayoffChart", pbStats.playoffDist);
         });
       }
       function drawTab3Charts(){
