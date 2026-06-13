@@ -1079,7 +1079,10 @@ color: var(--text);
 
       const out = [];
 
-      /* ✅ CHANGED (CIV ONLY): count civ revolution only once per tournament (Solo/Duel) */
+      /* ✅ CHANGED (CIV ONLY): один раз на турнир (Solo/Duel) — берём строку
+         последней недели (maxNo): при civComplete=true у неё гарантированно
+         реальная дата (а не "00.01.1900"), так что в "Начисление баллов"
+         показывается дата завершения партии, а не случайной недели. */
       const civSeen = new Set();
 
       for (const s of sessions){
@@ -1088,9 +1091,9 @@ color: var(--text);
         if ((tKey === "Civilization: Solo" || tKey === "Civilization: DUEL") && isCivRevolutionRow(s)){
           const a = String(s.score_or_attendance ?? "").trim();
           if (a === "0"){
-            const key = tKey; // once per tournament
-            if (civSeen.has(key)) continue;
-            civSeen.add(key);
+            const isLastWeek = Number(s.session_no) === civStats.get(tKey)?.maxNo;
+            if (!isLastWeek || civSeen.has(tKey)) continue;
+            civSeen.add(tKey);
           }
         }
 
@@ -1635,7 +1638,7 @@ color: var(--text);
         const s = hit.data;
         const title = `${s.tournamentKey || normTournamentKey(s.tournament)} • ${formatDateRU(s.date || "—")}`;
         const stage = (s.stage || s.label || "—");
-        const res = (s.place_or_result || s.score_or_attendance || "—");
+        const res = (s.place_or_result || s.label || s.score_or_attendance || "—");
         tip.innerHTML = `${esc(title)}<br><span style="color:rgba(169,180,214,.9)">${esc(stage)} • ${esc(res)}</span><br><b>${esc(s.points)} баллов</b>`;
         tip.style.display = "block";
         tip.style.left = (e.clientX + 12) + "px";
@@ -3139,7 +3142,7 @@ const dash = document.getElementById("dash");
                         <td>${esc(formatDateRU(s.date || "—"))}</td>
                         <td><b>${esc(s.tournamentKey)}</b></td>
                         <td class="muted">${esc(s.stage || s.label || "—")}</td>
-                        <td class="muted">${esc(s.place_or_result || s.score_or_attendance || "—")}</td>
+                        <td class="muted">${esc(s.place_or_result || s.label || s.score_or_attendance || "—")}</td>
                         <td><b>${esc(s.points)}</b></td>
                         <td class="muted">${esc(s.explain)}</td>
                       </tr>
