@@ -803,18 +803,23 @@ color: var(--text);
       return null;
     }
 
+    // "Нет результата": пусто, прочерк или Н/Д в Результат/место.
+    // Используется в eligibleForScoring и отдельно в проверке Civ ниже.
+    function isNoResultMark(text){
+      const v = String(text ?? "").trim();
+      if (!v || v === "—" || v === "-") return true;
+      if (v === "#Н/Д" || v === "#N/A" || v.toLowerCase().includes("н/д")) return true;
+      return false;
+    }
+
     function eligibleForScoring(row){
-  const a = String(row.score_or_attendance ?? "").trim();
-  if (a !== "0") return false;
+      const a = String(row.score_or_attendance ?? "").trim();
+      if (a !== "0") return false;
 
-  const pr = String(row.place_or_result ?? "").trim();
-
-  // ✅ если результата нет (пусто или прочерк) — баллы не считаем
-  if (!pr || pr === "—" || pr === "-") return false;
-
-  if (pr === "#Н/Д" || pr === "#N/A" || pr.toLowerCase().includes("н/д")) return false;
-  return true;
-}
+      const pr = String(row.place_or_result ?? "").trim();
+      if (isNoResultMark(pr)) return false;
+      return true;
+    }
 
     function normTournamentKey(name){
       const s = String(name ?? "").toLowerCase();
@@ -926,6 +931,13 @@ color: var(--text);
           return { points: 0, explain: "Civ: не защитился → 0" };
         }
 
+        // Если в "Результат/место" нет фактического результата (пусто/—/-/0/Н/Д) —
+        // защиты не было, даже если в label указан год (там хранится текущий/стартовый год партии).
+        const pr = String(row.place_or_result ?? "").trim();
+        if (isNoResultMark(pr) || pr === "0"){
+          return { points: 0, explain: "Civ: нет результата защиты (Результат/место не указано) → 0" };
+        }
+
         // Защитился: 100 за революцию + 0..100 за год
         const y = parseYearFromRow(row);
         if (!y) return { points: null, explain: "Civ: нет года революции — баллы не посчитаны" };
@@ -979,7 +991,7 @@ color: var(--text);
         const p = parsePlaceNumber(placeText) ?? parsePlaceNumber(comment);
         if (p === null) return { points: null, explain: "Нет места — баллы не посчитаны" };
         const pts = bcPointsFromPlace(p);
-        return { points: pts, explain: `Business Cats: место ${p} → ${pts} баллов` };
+        return { points: pts, explain: `Business Cats: место ${p} → ${pts} из 100 (за игру)` };
       }
 
       if (t === "Пейнтбол"){
@@ -1023,7 +1035,28 @@ color: var(--text);
     }
 
     function computeScoredSessions(id){
-      const sessions = DB.sessionsById.get(id) || [];
+      const rawSessions = DB.sessionsById.get(id) || [];
+
+      /* Business Cats: каждый рейтинговый раунд (session_no) записан как 2 строки
+         (game_no=1 и game_no=2) с одинаковым результатом — это одна игра.
+         Оставляем по одной строке на (stage="rating", session_no), отдавая
+         предпочтение строке с score_or_attendance="0". */
+      const bcByRound = new Map();
+      const sessions = [];
+      for (const s of rawSessions){
+        if (normTournamentKey(s.tournament) === "Business Cats" && String(s.stage || "").trim().toLowerCase() === "rating"){
+          const key = String(s.session_no ?? "");
+          const a = String(s.score_or_attendance ?? "").trim();
+          const existing = bcByRound.get(key);
+          if (!existing || (a === "0" && String(existing.score_or_attendance ?? "").trim() !== "0")){
+            bcByRound.set(key, s);
+          }
+          continue;
+        }
+        sessions.push(s);
+      }
+      for (const s of bcByRound.values()) sessions.push(s);
+
       const out = [];
 
       /* ✅ CHANGED (CIV ONLY): count civ revolution only once per tournament (Solo/Duel) */
@@ -1050,18 +1083,6 @@ color: var(--text);
             explain: scored.explain
           });
         }
-      }
-
-      // Business Cats: масштабируем баллы по местам так, чтобы сумма по всем играм
-      // студента не превышала 200, независимо от того, сколько игр у него засчитано.
-      const bcRows = out.filter(x=>x.tournamentKey==="Business Cats");
-      if (bcRows.length){
-        const n = bcRows.length;
-        bcRows.forEach(x=>{
-          const rescaled = Math.round(x.points * 2 / n);
-          x.explain = `${x.explain}; пересчёт на ${n} игр (максимум за этап 200) → ${rescaled}`;
-          x.points = rescaled;
-        });
       }
 
       out.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
