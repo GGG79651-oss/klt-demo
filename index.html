@@ -409,8 +409,8 @@ color: var(--text);
         linear-gradient(180deg,#dce5ff 0%,#eef2ff 40%,#dce5ff 100%);
     }
     body.light .topbar{background:rgba(220,229,255,.90);}
-    body.light input[type=”text”]{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.18);color:#1a1f3e;}
-    body.light input[type=”text”]::placeholder{color:rgba(50,60,110,.45);}
+    body.light input[type="text"]{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.18);color:#1a1f3e;}
+    body.light input[type="text"]::placeholder{color:rgba(50,60,110,.45);}
     body.light .card,body.light .chartCard,body.light .kpi,
     body.light .notice,body.light .supportBox{
       background:rgba(255,255,255,.72); border-color:rgba(0,0,0,.09);
@@ -589,9 +589,19 @@ color: var(--text);
       u.search = "";
       return u.toString();
     }
+    // Дата последнего обновления CSV-файлов (site_students.csv / site_sessions.csv).
+    // После загрузки новых файлов на сайт — поменяйте эту дату (формат ДД.ММ.ГГГГ).
+    // Это покажет новую дату на сайте и заставит браузеры скачать свежие файлы
+    // вместо старых, сохранённых в кеше.
+    const DATA_VERSION = "15.03.2026";
+    function withVersion(relPath){
+      const u = new URL(relPath, baseNoHash());
+      u.searchParams.set("v", DATA_VERSION);
+      return u.toString();
+    }
     const DATA_URLS = {
-      students: new URL("./site_students.csv", baseNoHash()).toString(),
-      sessions: new URL("./site_sessions.csv", baseNoHash()).toString(),
+      students: withVersion("./site_students.csv"),
+      sessions: withVersion("./site_sessions.csv"),
     };
 
     const DB = {
@@ -602,6 +612,7 @@ color: var(--text);
       sessionsById: new Map(),
       totalsById: new Map(),
       leagueById: new Map(),
+      rankById: new Map(),
       thresholds: { goldN:0, silverN:0, totalN:0 },
     };
 
@@ -632,6 +643,13 @@ color: var(--text);
     const esc = (s)=> String(s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
     const html = (strings, ...vals)=> strings.map((s,i)=> s + (vals[i] ?? "")).join("");
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    function ruPlural(n, one, few, many){
+      const mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return one;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+      return many;
+    }
 
     const normalizeId = (v) => {
       const raw = String(v ?? "").trim().replace(/\D/g,"");
@@ -1022,9 +1040,11 @@ color: var(--text);
 
       DB.totalsById.clear();
       DB.leagueById.clear();
+      DB.rankById.clear();
 
       totals.forEach((x, idx)=>{
         DB.totalsById.set(x.id, x.total);
+        DB.rankById.set(x.id, idx + 1);
         let league = "Бронзовая";
         if (idx < goldN) league = "Золотая";
         else if (idx < silverN) league = "Серебряная";
@@ -1049,14 +1069,8 @@ color: var(--text);
     }
 
     function getRankPlaceOnly(id){
-      const list = Array.from(DB.studentsById.keys())
-        .filter(sid => !isExpelledStatus(DB.studentsById.get(sid)?.status))
-        .map(sid => ({ sid, total: computeStudentTotalPoints(sid) }))
-        .sort((a,b)=> b.total - a.total);
-
-      const idx = list.findIndex(x=>x.sid===id);
-      if (idx < 0) return "—";
-      return String(idx+1);
+      const rank = DB.rankById.get(id);
+      return rank ? String(rank) : "—";
     }
 
     function calcTrackers(student, sessions, scored){
@@ -1578,7 +1592,7 @@ color: var(--text);
     async function fetchTextOrThrow(url, label){
       let res;
       try{
-        res = await fetch(url, { cache:"no-store" });
+        res = await fetch(url);
       }catch(e){
         throw new Error(`${label}: сеть/доступ заблокирован (${String(e?.message || e)})`);
       }
@@ -2369,10 +2383,10 @@ color: var(--text);
           <canvas id="adminScoresChart" style="height:180px;width:100%;display:block;margin-top:8px"></canvas>
         </div>
         <div class="adminRow adminRow4" style="margin-bottom:10px">
-          ${kpiCard("abd","⚔️","Рекорд CIV (соло)",`<span style="color:var(--accent2)">1649 г.</span>`,"самый ранний год революции")}
+          ${kpiCard("abd","⚔️","Рекорд CIV (соло)",recCivSolo?`<span style="color:var(--accent2)">${recCivSolo} г.</span>`:"—","самый ранний год революции")}
           ${kpiCard("abd","⚔️","Рекорд CIV (команда)",recCivDuel?`<span style="color:var(--accent2)">${recCivDuel} г.</span>`:"—","самый ранний год революции")}
-          ${kpiCard("abd","🔫","Пейнтбол — победа группы",`<span style="color:#25c26e">ЭЛЕКТРО-25-9</span>`,"рекорд побед")}
-          ${kpiCard("aok","🐱","Монеты в котах — максимум",`<span style="color:var(--ok)">17 908</span>`,"баллов — абсолютный рекорд")}
+          ${kpiCard("abd","🔫","Пейнтбол — лидер по победам",recPbName?`<span style="color:#25c26e">${esc(recPbName)}</span>`:"—",recPbWins?`${recPbWins} ${ruPlural(recPbWins,"победа","победы","побед")}`:"нет данных")}
+          ${kpiCard("aok","🐱","Business Cats — рекорд за игру",recBcMax?`<span style="color:var(--ok)">${recBcMax}</span>`:"—","баллов суммарно за 2 дня игры")}
         </div>`;
 
       /* ══ Tab 1: Business Cats ═════════════════════════ */
@@ -2652,7 +2666,7 @@ const dash = document.getElementById("dash");
         <div class="muted" style="font-weight:800; line-height:1.65">
           В «Алабуга Политех» командно-лидерский турнир — не просто мероприятие, а неотъемлемая часть образовательного процесса, формирующая будущих профессионалов и лидеров.
         </div>
-        <div class="small" style="margin-top:10px">Дата последнего обновления: <b>01.04.2026</b></div>
+        <div class="small" style="margin-top:10px">Дата последнего обновления: <b>${esc(DATA_VERSION)}</b></div>
       </div>
 
       <div class="card preSlider">
