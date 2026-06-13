@@ -609,6 +609,7 @@ color: var(--text);
       loading: false,
       loadError: "",
       studentsById: new Map(),
+      studentsByGroup: new Map(),
       sessionsById: new Map(),
       totalsById: new Map(),
       leagueById: new Map(),
@@ -1647,6 +1648,14 @@ color: var(--text);
           });
         }
 
+        DB.studentsByGroup.clear();
+        DB.studentsById.forEach((student, id)=>{
+          const grp = (student.group||"").trim();
+          if (!grp || grp==="-") return;
+          if (!DB.studentsByGroup.has(grp)) DB.studentsByGroup.set(grp, []);
+          DB.studentsByGroup.get(grp).push(id);
+        });
+
         const c_id = findHeader(sesHeader, ["id"]);
         const c_t = findHeader(sesHeader, ["tournament","турнир"]);
         const c_stage = findHeader(sesHeader, ["stage","этап","стадия"]);
@@ -1757,6 +1766,8 @@ color: var(--text);
     document.addEventListener("click", (e)=>{
       if (e.target.closest("#themeToggle")){ toggleTheme(); return; }
       if (e.target.closest("#adminBtn")||e.target.closest("#adminBtnMobile")){ showAdminLogin(); return; }
+      const topidEl = e.target.closest("[data-topid]");
+      if (topidEl){ location.hash = `#/rating?id=${topidEl.dataset.topid}`; return; }
       if (e.target.closest("#adminLoginBtn")){
         const login = (document.getElementById("adminLogin")?.value || "").trim();
         const pass  = (document.getElementById("adminPass")?.value  || "").trim();
@@ -1808,65 +1819,6 @@ color: var(--text);
       ctx.font = `bold ${Math.round(r*0.4)}px sans-serif`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(total, cx, cy);
-    }
-
-    function drawAdminRadar(id, labels, values){
-      const pack = setupCanvas(id);
-      if (!pack) return;
-      const {ctx, w, h} = pack;
-      ctx.clearRect(0,0,w,h);
-      const n = labels.length;
-      const cx = w/2, cy = h/2 + 10;
-      const maxR = Math.min(w,h)*0.30;
-      const isLight = document.body.classList.contains("light");
-      const gridColor = isLight ? "rgba(0,0,0,.10)" : "rgba(255,255,255,.10)";
-      const labelColor = isLight ? "rgba(91,63,255,.9)" : "rgba(33,212,255,.9)";
-      const mutedColor = isLight ? "rgba(90,100,133,.6)" : "rgba(169,180,214,.55)";
-      ctx.lineWidth = 1;
-      for (const f of [0.25,0.5,0.75,1]){
-        ctx.beginPath();
-        for (let i=0;i<n;i++){
-          const a=(i/n)*Math.PI*2-Math.PI/2;
-          const x=cx+Math.cos(a)*maxR*f, y=cy+Math.sin(a)*maxR*f;
-          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-        }
-        ctx.closePath();
-        ctx.strokeStyle = gridColor; ctx.stroke();
-        if (f<1){
-          ctx.fillStyle=mutedColor; ctx.font="9px sans-serif"; ctx.textAlign="center";
-          ctx.fillText(Math.round(f*100)+"%",cx,cy-maxR*f-3);
-        }
-      }
-      for (let i=0;i<n;i++){
-        const a=(i/n)*Math.PI*2-Math.PI/2;
-        ctx.beginPath(); ctx.moveTo(cx,cy);
-        ctx.lineTo(cx+Math.cos(a)*maxR,cy+Math.sin(a)*maxR);
-        ctx.strokeStyle=gridColor; ctx.stroke();
-        const lx=cx+Math.cos(a)*(maxR+20), ly=cy+Math.sin(a)*(maxR+20);
-        ctx.fillStyle=labelColor; ctx.font="bold 10px sans-serif";
-        ctx.textAlign=Math.abs(Math.cos(a))<0.15?"center":Math.cos(a)<0?"right":"left";
-        ctx.textBaseline="middle";
-        ctx.fillText(labels[i],lx,ly);
-      }
-      // data shape
-      ctx.beginPath();
-      for (let i=0;i<n;i++){
-        const a=(i/n)*Math.PI*2-Math.PI/2;
-        const rv=maxR*(values[i]||0)/100;
-        i===0?ctx.moveTo(cx+Math.cos(a)*rv,cy+Math.sin(a)*rv)
-             :ctx.lineTo(cx+Math.cos(a)*rv,cy+Math.sin(a)*rv);
-      }
-      ctx.closePath();
-      ctx.fillStyle="rgba(124,92,255,.25)"; ctx.fill();
-      ctx.strokeStyle="rgba(124,92,255,.75)"; ctx.lineWidth=2; ctx.stroke();
-      // dots
-      for (let i=0;i<n;i++){
-        const a=(i/n)*Math.PI*2-Math.PI/2;
-        const rv=maxR*(values[i]||0)/100;
-        ctx.beginPath();
-        ctx.arc(cx+Math.cos(a)*rv,cy+Math.sin(a)*rv,3,0,Math.PI*2);
-        ctx.fillStyle="#7c5cff"; ctx.fill();
-      }
     }
 
     function drawAdminAttByTournament(id, attData){
@@ -2126,23 +2078,25 @@ color: var(--text);
       `;
     }
 
-    function renderAdmin(){
-      /* ══ Вычисляем статистику из CSV ══════════════════ */
-      const totalStudents = DB.studentsById.size;
-      const activeCount   = Array.from(DB.studentsById.values()).filter(s=>!isExpelledStatus(s.status)).length;
-      const expelledCount = totalStudents - activeCount;
+    const tColors={"Business Cats":"#ff4d6d","Пейнтбол":"#25c26e","Civilization: Solo":"#7c5cff","Civilization: DUEL":"#21d4ff","Бенди":"#f6c343","Life is Feudal":"#cd7f32"};
+    const tIcons ={"Business Cats":"🐱","Пейнтбол":"🔫","Civilization: Solo":"⚔","Civilization: DUEL":"⚔","Бенди":"🏒","Life is Feudal":"🏰"};
 
-      let goldCount=0, silverCount=0, bronzeCount=0;
-      DB.leagueById.forEach(l=>{ if(l==="Золотая") goldCount++; else if(l==="Серебряная") silverCount++; else bronzeCount++; });
+    const kpiCard=(cls,emoji,title,value,sub,pct)=>`
+      <div class="adminKpi ${cls}">
+        <span class="adminEmoji">${emoji}</span>
+        <div class="ak">${title}</div>
+        <div class="av">${value}</div>
+        <div class="ac">${sub}</div>
+        ${pct!==undefined?`<div class="abar"><div class="abar-fill" style="width:${pct}%"></div></div>`:""}
+      </div>`;
 
-      // Посещаемость и зачётные сессии по всем турнирам
+    // Посещаемость и зачётные сессии по списку студентов (id[])
+    function computeAttendanceAndScores(ids){
       let totalAtt=0, totalPresent=0;
-      const attByT   = new Map(); // tk -> {present,total}
+      const attByT = new Map(); // tk -> {present,total}
       const scoredByT = new Map(); // tk -> [{...session, id, student}]
-
-      DB.sessionsById.forEach((sessions,id)=>{
-        if(isExpelledStatus(DB.studentsById.get(id)?.status)) return;
-        sessions.forEach(s=>{
+      ids.forEach(id=>{
+        (DB.sessionsById.get(id)||[]).forEach(s=>{
           if(isAttendanceValue(s.score_or_attendance)){
             totalAtt++;
             if(attendanceIsPresent(s.score_or_attendance)===true) totalPresent++;
@@ -2158,36 +2112,12 @@ color: var(--text);
           scoredByT.get(tk).push({...s, id, student:DB.studentsById.get(id)});
         });
       });
+      return { totalAtt, totalPresent, attByT, scoredByT };
+    }
 
-      const avgAttPct = totalAtt?Math.round(totalPresent/totalAtt*100):0;
-      const totalScoredCount = Array.from(scoredByT.values()).reduce((a,v)=>a+v.length,0);
-
-      // Лидирующая группа (по среднему числу баллов)
-      const groupStats=new Map();
-      DB.studentsById.forEach((student,id)=>{
-        if(isExpelledStatus(student.status)) return;
-        const grp=(student.group||"").trim(); if(!grp||grp==="-") return;
-        const pts=DB.totalsById.get(id)||0;
-        if(!groupStats.has(grp)) groupStats.set(grp,{pts:[],n:0});
-        groupStats.get(grp).pts.push(pts); groupStats.get(grp).n++;
-      });
-      let leadingGroup="—", leadingGroupAvg=0;
-      groupStats.forEach((s,grp)=>{
-        if(s.n < 5) return; // skip dissolved/tiny groups
-        const avg=s.pts.reduce((a,b)=>a+b,0)/s.pts.length;
-        if(avg>leadingGroupAvg){leadingGroupAvg=avg;leadingGroup=grp;}
-      });
-
-      // Топ-10 студентов
-      const topStudents=Array.from(DB.studentsById.keys())
-        .filter(id=>!isExpelledStatus(DB.studentsById.get(id)?.status))
-        .map(id=>({id,total:DB.totalsById.get(id)||0,s:DB.studentsById.get(id)}))
-        .sort((a,b)=>b.total-a.total).slice(0,10);
-
-      const tColors={"Business Cats":"#ff4d6d","Пейнтбол":"#25c26e","Civilization: Solo":"#7c5cff","Civilization: DUEL":"#21d4ff","Бенди":"#f6c343","Life is Feudal":"#cd7f32"};
-      const tIcons ={"Business Cats":"🐱","Пейнтбол":"🔫","Civilization: Solo":"⚔","Civilization: DUEL":"⚔","Бенди":"🏒","Life is Feudal":"🏰"};
-
-      const tournamentRows=[];
+    // Сводная таблица по турнирам: посещаемость + баллы
+    function buildTournamentRows(attByT, scoredByT){
+      const rows=[];
       attByT.forEach((att,tk)=>{
         const sc=scoredByT.get(tk)||[];
         const pts=sc.map(x=>x.points);
@@ -2195,13 +2125,63 @@ color: var(--text);
         const avg=sc.length?Math.round(sum/sc.length):0;
         const max=sc.length?Math.max(...pts):0;
         const attPct=att.total?Math.round(att.present/att.total*100):0;
-        tournamentRows.push({tk,attPct,attPresent:att.present,attTotal:att.total,scoredN:sc.length,sum,avg,max,color:tColors[tk]||"#a9b4d6",icon:tIcons[tk]||"🎮"});
+        rows.push({tk,attPct,attPresent:att.present,attTotal:att.total,scoredN:sc.length,sum,avg,max,color:tColors[tk]||"#a9b4d6",icon:tIcons[tk]||"🎮"});
       });
-      tournamentRows.sort((a,b)=>b.attTotal-a.attTotal);
+      rows.sort((a,b)=>b.attTotal-a.attTotal);
+      return rows;
+    }
 
-      const radarLabels=["BC","Пейнтбол","Civ Solo","Civ Duel","Бенди","Феодалы"];
-      const radarKeys  =["Business Cats","Пейнтбол","Civilization: Solo","Civilization: DUEL","Бенди","Life is Feudal"];
-      const radarVals  =radarKeys.map(k=>{ const a=attByT.get(k); return a&&a.total?Math.round(a.present/a.total*100):0; });
+    // Рейтинг групп по среднему баллу (активные студенты; группы с числом студентов >= minSize)
+    function computeGroupLeaderboard(minSize){
+      const stats = new Map(); // group -> {sum,n}
+      DB.studentsById.forEach((student,id)=>{
+        if(isExpelledStatus(student.status)) return;
+        const grp=(student.group||"").trim(); if(!grp||grp==="-") return;
+        if(!stats.has(grp)) stats.set(grp,{sum:0,n:0});
+        const s=stats.get(grp);
+        s.sum += DB.totalsById.get(id)||0; s.n++;
+      });
+      return Array.from(stats.entries())
+        .filter(([,s])=>s.n>=minSize)
+        .map(([group,s])=>({group, avg: s.sum/s.n, n: s.n}))
+        .sort((a,b)=>b.avg-a.avg);
+    }
+
+    function renderAdmin(){
+      /* ══ Вычисляем статистику из CSV ══════════════════ */
+      const totalStudents = DB.studentsById.size;
+      const activeCount   = Array.from(DB.studentsById.values()).filter(s=>!isExpelledStatus(s.status)).length;
+      const expelledCount = totalStudents - activeCount;
+
+      let goldCount=0, silverCount=0, bronzeCount=0;
+      DB.leagueById.forEach(l=>{ if(l==="Золотая") goldCount++; else if(l==="Серебряная") silverCount++; else bronzeCount++; });
+
+      // Посещаемость, зачётные сессии и статистика по турнирам (активные студенты)
+      const activeIds = Array.from(DB.studentsById.keys()).filter(id=>!isExpelledStatus(DB.studentsById.get(id)?.status));
+      const { totalAtt, totalPresent, attByT, scoredByT } = computeAttendanceAndScores(activeIds);
+      const avgAttPct = totalAtt?Math.round(totalPresent/totalAtt*100):0;
+      const totalScoredCount = Array.from(scoredByT.values()).reduce((a,v)=>a+v.length,0);
+      const tournamentRows = buildTournamentRows(attByT, scoredByT);
+
+      // Лидирующая группа (по среднему числу баллов; группы с числом студентов < 5 не учитываются)
+      const groupLeaderboard = computeGroupLeaderboard(5);
+      const leadingGroup = groupLeaderboard[0]?.group || "—";
+      const leadingGroupAvg = groupLeaderboard[0]?.avg || 0;
+
+      // Топ-10 студентов
+      const topStudents=Array.from(DB.studentsById.keys())
+        .filter(id=>!isExpelledStatus(DB.studentsById.get(id)?.status))
+        .map(id=>({id,total:DB.totalsById.get(id)||0,s:DB.studentsById.get(id)}))
+        .sort((a,b)=>b.total-a.total).slice(0,10);
+
+      // Топ-8 групп по среднему баллу — данные для графика "Рейтинг групп"
+      const groupChartData = groupLeaderboard.slice(0,8).map((g,i)=>({
+        label: g.group, value: Math.round(g.avg), color: i===0?"#f6c343":"#7c5cff", group: g.group,
+      }));
+
+      // Список групп для поиска (с числовой сортировкой: 1С-25-2 перед 1С-25-10)
+      const groupOptions = Array.from(DB.studentsByGroup.keys()).sort((a,b)=>a.localeCompare(b,"ru",{numeric:true}));
+      const groupHintHtml = `<div class="notice">Выберите группу из списка (например, <b>${esc(groupOptions[0]||"1С-25-5")}</b>) и нажмите «Показать группу», либо кликните на столбец в графике «Рейтинг групп» справа.</div>`;
 
       /* ══ Business Cats ═══════════════════════════════ */
       const bcScored=scoredByT.get("Business Cats")||[];
@@ -2284,16 +2264,6 @@ color: var(--text);
       });
       const recBcMax=bcGameMap.size?Math.max(...bcGameMap.values()):0;
 
-      /* ══ Вспомогательные HTML-блоки ═══════════════════ */
-      const kpiCard=(cls,emoji,title,value,sub,pct)=>`
-        <div class="adminKpi ${cls}">
-          <span class="adminEmoji">${emoji}</span>
-          <div class="ak">${title}</div>
-          <div class="av">${value}</div>
-          <div class="ac">${sub}</div>
-          ${pct!==undefined?`<div class="abar"><div class="abar-fill" style="width:${pct}%"></div></div>`:""}
-        </div>`;
-
       /* ══ Tab 0: Сводка ════════════════════════════════ */
       const tab0=`
         <div class="adminRow adminRow4">
@@ -2374,9 +2344,19 @@ color: var(--text);
             <canvas id="adminAttChart" style="height:190px;width:100%;display:block;margin-top:8px"></canvas>
           </div>
           <div class="adminKpi">
-            <div class="ak">Диаграмма активности (посещ. %)</div>
-            <canvas id="adminRadarChart" style="height:190px;width:100%;display:block;margin-top:4px"></canvas>
+            <div class="ak">Рейтинг групп — топ-8 по среднему баллу (нажмите для подробностей)</div>
+            <canvas id="adminGroupsChart" style="height:190px;width:100%;display:block;margin-top:4px;cursor:pointer"></canvas>
           </div>
+        </div>
+        <div class="adminKpi" style="margin-bottom:10px">
+          <div class="ak">Поиск по группе</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px">
+            <input type="text" id="groupSearchInput" list="groupsDatalist" placeholder="Например: ${esc(groupOptions[0]||"1С-25-5")}" style="flex:1 1 240px">
+            <datalist id="groupsDatalist">${groupOptions.map(g=>`<option value="${esc(g)}"></option>`).join("")}</datalist>
+            <button class="btn" id="groupSearchBtn" style="padding:12px 16px">Показать группу</button>
+            <button class="btn secondary" id="groupSearchClear" style="padding:12px 16px;display:none">Сбросить</button>
+          </div>
+          <div id="groupDetailPanel" style="margin-top:10px">${groupHintHtml}</div>
         </div>
         <div class="adminKpi" style="margin-bottom:10px">
           <div class="ak">Сумма баллов по турнирам (ср. балл за сессию подписан ниже)</div>
@@ -2545,7 +2525,7 @@ color: var(--text);
       function drawTab0Charts(){
         requestAnimationFrame(()=>{
           drawAdminLeagueDonut("adminLeagueChart", leagueSegs);
-          drawAdminRadar("adminRadarChart", radarLabels, radarVals);
+          drawHorizBars("adminGroupsChart", groupChartData);
           drawAdminAttByTournament("adminAttChart", attChartData);
           drawAdminScoresBars("adminScoresChart", scoresChartData);
         });
@@ -2584,11 +2564,127 @@ color: var(--text);
       document.getElementById("adminLogoutTab")?.addEventListener("click",()=>{
         sessionStorage.removeItem("kltAdminAuth"); location.hash="#/rating";
       });
-      document.querySelectorAll("[data-topid]").forEach(td=>{
-        td.addEventListener("click",()=>{ location.hash=`#/rating?id=${td.dataset.topid}`; });
+
+      document.getElementById("groupSearchBtn")?.addEventListener("click",()=>{
+        selectGroup(document.getElementById("groupSearchInput")?.value || "");
+      });
+      document.getElementById("groupSearchInput")?.addEventListener("keydown",(e)=>{
+        if(e.key==="Enter"){ e.preventDefault(); selectGroup(e.target.value); }
+      });
+      document.getElementById("groupSearchClear")?.addEventListener("click",()=>{
+        const input=document.getElementById("groupSearchInput");
+        if(input) input.value="";
+        const clearBtn=document.getElementById("groupSearchClear");
+        if(clearBtn) clearBtn.style.display="none";
+        const panel=document.getElementById("groupDetailPanel");
+        if(panel) panel.innerHTML=groupHintHtml;
+      });
+      const groupsCanvas=document.getElementById("adminGroupsChart");
+      groupsCanvas?.addEventListener("click",(e)=>{
+        if(!groupChartData.length) return;
+        const rect=groupsCanvas.getBoundingClientRect();
+        const idx=Math.floor((e.clientY-rect.top)/(rect.height/groupChartData.length));
+        const entry=groupChartData[idx];
+        if(entry) selectGroup(entry.group);
       });
 
       switchAdminTab(0);
+    }
+
+    /* ── Поиск по группам: детальная панель ───────────── */
+    function renderGroupDetail(groupName){
+      const panel = document.getElementById("groupDetailPanel");
+      if(!panel) return;
+
+      const ids = DB.studentsByGroup.get(groupName) || [];
+      const activeIds = ids.filter(id=>!isExpelledStatus(DB.studentsById.get(id)?.status));
+      const expelledN = ids.length - activeIds.length;
+
+      if(!activeIds.length){
+        panel.innerHTML = `<div class="notice bad">В группе «${esc(groupName)}» нет активных студентов с данными по рейтингу.</div>`;
+        return;
+      }
+
+      const totals = activeIds
+        .map(id=>({id, total: DB.totalsById.get(id)||0, s: DB.studentsById.get(id)}))
+        .sort((a,b)=>b.total-a.total);
+      const avgPts = Math.round(totals.reduce((a,x)=>a+x.total,0)/totals.length);
+
+      let gold=0, silver=0, bronze=0;
+      activeIds.forEach(id=>{
+        const l = DB.leagueById.get(id);
+        if(l==="Золотая") gold++; else if(l==="Серебряная") silver++; else bronze++;
+      });
+
+      const { totalAtt, totalPresent, attByT, scoredByT } = computeAttendanceAndScores(activeIds);
+      const attPct = totalAtt ? Math.round(totalPresent/totalAtt*100) : 0;
+      const rows = buildTournamentRows(attByT, scoredByT);
+
+      const leaderboard = computeGroupLeaderboard(5);
+      const rankIdx = leaderboard.findIndex(x=>x.group===groupName);
+      const groupRankText = rankIdx>=0 ? `#${rankIdx+1} из ${leaderboard.length}` : `вне рейтинга (группы &lt;5 чел. не участвуют)`;
+
+      panel.innerHTML = html`
+        <div class="divider" style="margin:14px 0 12px"></div>
+        <div class="adminRow adminRow4" style="margin-bottom:10px">
+          ${kpiCard("ap","👥",`Группа ${esc(groupName)}`, ids.length, `Активных: <b>${activeIds.length}</b> · Отчисл.: ${expelledN}`)}
+          ${kpiCard("ac2","🏆","Средний балл", avgPts, `место среди групп: ${groupRankText}`)}
+          ${kpiCard("aok","📊","Посещаемость", attPct+"%", `${totalPresent} / ${totalAtt} сессий`, attPct)}
+          ${kpiCard("awk","🥇","Лиги (З / С / Б)", `${gold} / ${silver} / ${bronze}`, "Золотая / Серебряная / Бронзовая")}
+        </div>
+        <div class="adminKpi" style="margin-bottom:10px">
+          <div class="ak">Лучшие в группе ${esc(groupName)}</div>
+          <table class="adminTable">
+            <thead><tr><th>#</th><th>Имя</th><th>Баллы</th><th>Лига</th><th>Место в общем зачёте</th></tr></thead>
+            <tbody>${totals.map((x,i)=>{
+              const lb=leagueBadge(DB.leagueById.get(x.id)||"Бронзовая");
+              return html`
+              <tr>
+                <td><b>${esc(i+1)}</b></td>
+                <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.s?.name_short||"—").trim())}</td>
+                <td><b>${esc(x.total)}</b></td>
+                <td><span class="badge ${esc(lb.cls)}" style="font-size:10px">${esc(lb.label)}</span></td>
+                <td class="muted">${esc(DB.rankById.get(x.id) ?? "—")}</td>
+              </tr>`;
+            }).join("")}</tbody>
+          </table>
+        </div>
+        <div class="adminKpi">
+          <div class="ak">Статистика по турнирам — группа ${esc(groupName)}</div>
+          <table class="adminTable">
+            <thead><tr><th>Турнир</th><th>Посещ.%</th><th>Присут.</th><th>Зачётных</th><th>Сумма</th><th>Ср. балл</th><th>Макс.</th><th style="width:80px">Явка</th></tr></thead>
+            <tbody>${rows.map(r=>html`
+              <tr>
+                <td><b>${esc(r.icon)} ${esc(r.tk)}</b></td>
+                <td><b style="color:${esc(r.color)}">${esc(r.attPct)}%</b></td>
+                <td class="muted">${esc(r.attPresent)}/${esc(r.attTotal)}</td>
+                <td>${esc(r.scoredN)}</td>
+                <td><b>${esc(r.sum)}</b></td>
+                <td>${esc(r.avg)}</td>
+                <td>${esc(r.max)}</td>
+                <td><div class="adminTbar"><div class="adminTbar-fill" style="width:${esc(r.attPct)}%;background:${esc(r.color)}"></div></div></td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function selectGroup(groupName){
+      const name = (groupName||"").trim();
+      const panel = document.getElementById("groupDetailPanel");
+      const input = document.getElementById("groupSearchInput");
+      const clearBtn = document.getElementById("groupSearchClear");
+      if(!panel || !name) return;
+
+      const exact = Array.from(DB.studentsByGroup.keys()).find(g=>g.toLowerCase()===name.toLowerCase());
+      if(!exact){
+        panel.innerHTML = `<div class="notice bad">Группа «${esc(name)}» не найдена. Выберите название из списка.</div>`;
+        if(clearBtn) clearBtn.style.display="inline-flex";
+        return;
+      }
+      if(input) input.value = exact;
+      if(clearBtn) clearBtn.style.display="inline-flex";
+      renderGroupDetail(exact);
+      panel.scrollIntoView({behavior:"smooth", block:"nearest"});
     }
 
     function renderRatingSkeleton(){
