@@ -2248,18 +2248,25 @@ color: var(--text);
 
     // Бенди: победы/поражения по матчам
     function computeBandyStats(ids){
-      let wins=0, losses=0;
+      let played=0, absent=0;
       const participants = new Set();
+      const perStudent = new Map();
       ids.forEach(id=>{
         (DB.sessionsById.get(id)||[]).forEach(s=>{
           if (normTournamentKey(s.tournament) !== "Бенди") return;
           participants.add(id);
-          const res = String(s.place_or_result ?? "").trim().toLowerCase();
-          if (includesAny(res,["побед","win"])) wins++;
-          else if (includesAny(res,["пораж","проигр","loss"])) losses++;
+          if (!perStudent.has(id)) perStudent.set(id, {played:0, absent:0});
+          const att = String(s.score_or_attendance ?? "").trim();
+          if (att === "-1"){
+            absent++;
+            perStudent.get(id).absent++;
+          } else if (att !== ""){
+            played++;
+            perStudent.get(id).played++;
+          }
         });
       });
-      return { total:participants.size, wins, losses };
+      return { total:participants.size, played, absent, perStudent };
     }
 
     // Посещаемость и зачётные сессии по списку студентов (id[])
@@ -2432,17 +2439,13 @@ color: var(--text);
       const feudalAvgPts=feudalScored.length?Math.round(feudalScored.reduce((a,s)=>a+s.points,0)/feudalScored.length):0;
 
       /* ══ Бенди ════════════════════════════════════════ */
-      const bandyScored=scoredByT.get("Бенди")||[];
       const bandyStats=computeBandyStats(activeIds);
-      const bandyTotal=bandyStats.wins+bandyStats.losses;
-      const bandyWinRate=bandyTotal?Math.round(bandyStats.wins/bandyTotal*100):0;
-      const bandyByStudent=new Map();
-      bandyScored.forEach(s=>{
-        if(!bandyByStudent.has(s.id)) bandyByStudent.set(s.id,{id:s.id,student:s.student,pts:0,wins:0});
-        bandyByStudent.get(s.id).pts+=s.points;
-        if(s.points===50) bandyByStudent.get(s.id).wins++;
-      });
-      const bandyTopStudents=Array.from(bandyByStudent.values()).sort((a,b)=>b.pts-a.pts).slice(0,10);
+      const bandyTotal=bandyStats.played+bandyStats.absent;
+      const bandyAttRate=bandyTotal?Math.round(bandyStats.played/bandyTotal*100):0;
+      const bandyTopStudents=Array.from(bandyStats.perStudent.entries())
+        .map(([id,v])=>({id, student:DB.studentsById.get(id), played:v.played, absent:v.absent}))
+        .sort((a,b)=>b.played-a.played)
+        .slice(0,10);
 
       /* ══ Рекорды ════════════════════════════════════════ */
       // CIV Solo record — earliest revolution year (smallest = harder & rarer)
@@ -2731,26 +2734,26 @@ color: var(--text);
       const tab5=`
         <div class="adminRow adminRow4" style="margin-bottom:10px">
           ${kpiCard("","🏒","Участников",bandyStats.total||"—","в Бенди")}
-          ${kpiCard("","✅","Побед",bandyStats.wins,`из ${bandyTotal} матчей`,bandyWinRate)}
-          ${kpiCard("","❌","Поражений",bandyStats.losses,`win rate: ${bandyWinRate}%`)}
-          ${kpiCard("","📊","Матчей сыграно",bandyTotal,"суммарно")}
+          ${kpiCard("","✅","Сыграно матчей",bandyStats.played,`из ${bandyTotal} явок`,bandyAttRate)}
+          ${kpiCard("","❌","Пропущено матчей",bandyStats.absent,`явка: ${bandyAttRate}%`)}
+          ${kpiCard("","📊","Матчей всего",bandyTotal,"суммарно")}
         </div>
         <div class="adminKpi" style="margin-bottom:10px">
-          <div class="ak">Победы и поражения</div>
+          <div class="ak">Посещаемость матчей</div>
           <canvas id="bandyWinChart" style="height:80px;width:100%;display:block;margin-top:8px"></canvas>
         </div>
         <div class="adminKpi">
           <div class="ak">Топ-10 игроков Бенди</div>
           ${bandyTopStudents.length
             ? html`<table class="adminTable">
-                <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Побед</th><th>Баллы</th></tr></thead>
+                <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Сыграно</th><th>Пропущено</th></tr></thead>
                 <tbody>${bandyTopStudents.map((x,i)=>html`
                   <tr>
                     <td><b>${esc(i+1)}</b></td>
                     <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
                     <td class="muted">${esc((x.student?.group||"—").trim())}</td>
-                    <td>${esc(x.wins)}</td>
-                    <td><b>${esc(x.pts)}</b></td>
+                    <td><b>${esc(x.played)}</b></td>
+                    <td class="muted">${esc(x.absent)}</td>
                   </tr>`).join("")}</tbody>
               </table>`
             : `<div class="notice" style="margin-top:10px">Данных по Бенди пока нет — добавьте строки в CSV.</div>`}
@@ -2823,8 +2826,8 @@ color: var(--text);
       function drawTab5Charts(){
         requestAnimationFrame(()=>{
           drawHorizBars("bandyWinChart",[
-            {label:"Победы",value:bandyStats.wins,color:"#f6c343"},
-            {label:"Поражения",value:bandyStats.losses,color:"#ff4d6d"},
+            {label:"Сыграно",value:bandyStats.played,color:"#21d4ff"},
+            {label:"Пропущено",value:bandyStats.absent,color:"#ff4d6d"},
           ]);
         });
       }
