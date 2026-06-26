@@ -1057,6 +1057,33 @@ color: var(--text);
       const civCompleteByKey = new Map();
       civStats.forEach((st,k)=> civCompleteByKey.set(k, st.hasFirst && st.maxHasDate));
 
+      /* Феодалы: из всех строк с score_or_attendance="0" выбираем ровно одну —
+         с лучшим результатом (Победа в Судной ночи > Поражение > последняя
+         посещённая неделя). Это гарантирует, что звание+Судная ночь считаются
+         единожды, а не за каждую из 10 недель в отдельности. */
+      const feudalBestRow = new Map(); // tKey → выбранная строка
+      for (const s of rawSessions){
+        const tKey = normTournamentKey(s.tournament);
+        if (tKey !== "Life is Feudal") continue;
+        if (String(s.score_or_attendance ?? "").trim() !== "0") continue;
+        const res = String(s.place_or_result ?? "").trim().toLowerCase();
+        const thisScore = includesAny(res, ["побед","win"]) ? 2
+                        : includesAny(res, ["пораж","проигр","loss"]) ? 1 : 0;
+        const no = Number(s.session_no) || 0;
+        const cur = feudalBestRow.get(tKey);
+        if (!cur){
+          feudalBestRow.set(tKey, s);
+        } else {
+          const curRes = String(cur.place_or_result ?? "").trim().toLowerCase();
+          const curScore = includesAny(curRes, ["побед","win"]) ? 2
+                          : includesAny(curRes, ["пораж","проигр","loss"]) ? 1 : 0;
+          const curNo = Number(cur.session_no) || 0;
+          if (thisScore > curScore || (thisScore === curScore && no >= curNo))
+            feudalBestRow.set(tKey, s);
+        }
+      }
+      const feudalSeen = new Set();
+
       /* Business Cats: каждый рейтинговый раунд (session_no) записан как 2 строки
          (game_no=1 и game_no=2) с одинаковым результатом — это одна игра.
          Оставляем по одной строке на (stage="rating", session_no), отдавая
@@ -1087,6 +1114,14 @@ color: var(--text);
 
       for (const s of sessions){
         const tKey = normTournamentKey(s.tournament);
+
+        if (tKey === "Life is Feudal"){
+          const a = String(s.score_or_attendance ?? "").trim();
+          if (a === "0"){
+            if (s !== feudalBestRow.get(tKey) || feudalSeen.has(tKey)) continue;
+            feudalSeen.add(tKey);
+          }
+        }
 
         if ((tKey === "Civilization: Solo" || tKey === "Civilization: DUEL") && isCivRevolutionRow(s)){
           const a = String(s.score_or_attendance ?? "").trim();
@@ -2182,6 +2217,50 @@ color: var(--text);
       };
     }
 
+    // Феодалы: звание / Судная ночь / должность — по сырым сессиям
+    function computeFeudaStats(ids){
+      const zvanieDist = new Map([["Лорд",0],["Сержант",0],["Рядовой",0]]);
+      const profDist = new Map();
+      const nightWinners = [];
+      let total = 0;
+      ids.forEach(id=>{
+        const rows = (DB.sessionsById.get(id)||[]).filter(s=>normTournamentKey(s.tournament)==="Life is Feudal");
+        if (!rows.length) return;
+        total++;
+        const zvanie = String(rows[0].label ?? "").trim();
+        const prof   = String(rows[0].extra  ?? "").trim();
+        const zKey = zvanie ? (zvanie[0].toUpperCase()+zvanie.slice(1).toLowerCase()) : null;
+        if (zKey && zvanieDist.has(zKey)) zvanieDist.set(zKey, zvanieDist.get(zKey)+1);
+        if (prof) profDist.set(prof,(profDist.get(prof)||0)+1);
+        const hasWin = rows.some(s=>includesAny(String(s.place_or_result??"").trim().toLowerCase(),["побед","win"]));
+        if (hasWin) nightWinners.push({id, student:DB.studentsById.get(id), zvanie});
+      });
+      return {
+        total,
+        zvanieDist:[["Лорд","#f6c343"],["Сержант","#a9b4d6"],["Рядовой","#cd7f32"]]
+          .map(([l,c])=>({label:l,value:zvanieDist.get(l)||0,color:c})),
+        nightWinners,
+        profDist:Array.from(profDist.entries()).sort((a,b)=>b[1]-a[1])
+          .map(([l,v])=>({label:l,value:v,color:"#cd7f32"})),
+      };
+    }
+
+    // Бенди: победы/поражения по матчам
+    function computeBandyStats(ids){
+      let wins=0, losses=0;
+      const participants = new Set();
+      ids.forEach(id=>{
+        (DB.sessionsById.get(id)||[]).forEach(s=>{
+          if (normTournamentKey(s.tournament) !== "Бенди") return;
+          participants.add(id);
+          const res = String(s.place_or_result ?? "").trim().toLowerCase();
+          if (includesAny(res,["побед","win"])) wins++;
+          else if (includesAny(res,["пораж","проигр","loss"])) losses++;
+        });
+      });
+      return { total:participants.size, wins, losses };
+    }
+
     // Посещаемость и зачётные сессии по списку студентов (id[])
     function computeAttendanceAndScores(ids){
       let totalAtt=0, totalPresent=0;
@@ -2337,6 +2416,32 @@ color: var(--text);
       const civYearsWithData=civAll.filter(s=>s.points>0).map(s=>parseYearFromRow(s)).filter(Boolean);
       const civAvgYear=civYearsWithData.length?Math.round(civYearsWithData.reduce((a,b)=>a+b,0)/civYearsWithData.length):0;
       const civAttPct=civTotalAtt?Math.round(civPresentAtt/civTotalAtt*100):0;
+
+      /* ══ Life is Feudal ══════════════════════════════════ */
+      const feudalScored=scoredByT.get("Life is Feudal")||[];
+      const feudalStats=computeFeudaStats(activeIds);
+      const feudalNightWins=feudalStats.nightWinners.length;
+      const feudalLordCount=feudalStats.zvanieDist.find(z=>z.label==="Лорд")?.value||0;
+      const feudalByStudent=new Map();
+      feudalScored.forEach(s=>{
+        if(!feudalByStudent.has(s.id)) feudalByStudent.set(s.id,{id:s.id,student:s.student,zvanie:s.label,pts:0});
+        feudalByStudent.get(s.id).pts+=s.points;
+      });
+      const feudalTopStudents=Array.from(feudalByStudent.values()).sort((a,b)=>b.pts-a.pts).slice(0,10);
+      const feudalAvgPts=feudalScored.length?Math.round(feudalScored.reduce((a,s)=>a+s.points,0)/feudalScored.length):0;
+
+      /* ══ Бенди ════════════════════════════════════════ */
+      const bandyScored=scoredByT.get("Бенди")||[];
+      const bandyStats=computeBandyStats(activeIds);
+      const bandyTotal=bandyStats.wins+bandyStats.losses;
+      const bandyWinRate=bandyTotal?Math.round(bandyStats.wins/bandyTotal*100):0;
+      const bandyByStudent=new Map();
+      bandyScored.forEach(s=>{
+        if(!bandyByStudent.has(s.id)) bandyByStudent.set(s.id,{id:s.id,student:s.student,pts:0,wins:0});
+        bandyByStudent.get(s.id).pts+=s.points;
+        if(s.points===50) bandyByStudent.get(s.id).wins++;
+      });
+      const bandyTopStudents=Array.from(bandyByStudent.values()).sort((a,b)=>b.pts-a.pts).slice(0,10);
 
       /* ══ Рекорды ════════════════════════════════════════ */
       // CIV Solo record — earliest revolution year (smallest = harder & rarer)
@@ -2573,6 +2678,83 @@ color: var(--text);
           </table>
         </div>`;
 
+      /* ══ Tab 4: Феодалы ══════════════════════════════════ */
+      const tab4=`
+        <div class="adminRow adminRow4" style="margin-bottom:10px">
+          ${kpiCard("","🏰","Участников",feudalStats.total||"—","в Феодалах")}
+          ${kpiCard("","👑","Лордов",feudalLordCount,`из ${feudalStats.total} участников`)}
+          ${kpiCard("","⚔️","Победители Судной ночи",feudalNightWins,"финалистов")}
+          ${kpiCard("","📊","Средний балл",feudalAvgPts||"—","за Феодалов")}
+        </div>
+        <div class="adminRow adminRow2" style="margin-bottom:10px">
+          <div class="adminKpi">
+            <div class="ak">Распределение по званию</div>
+            <canvas id="feudalZvanieChart" style="height:110px;width:100%;display:block;margin-top:8px"></canvas>
+          </div>
+          <div class="adminKpi">
+            <div class="ak">Распределение по должности</div>
+            ${feudalStats.profDist.length
+              ? `<canvas id="feudalProfChart" style="height:${Math.min(feudalStats.profDist.length*32+20,220)}px;width:100%;display:block;margin-top:8px"></canvas>`
+              : `<div class="notice" style="margin-top:10px">Нет данных о должностях</div>`}
+          </div>
+        </div>
+        ${feudalStats.nightWinners.length ? `
+        <div class="adminKpi" style="margin-bottom:10px">
+          <div class="ak">⚔️ Победители Судной ночи (${feudalNightWins})</div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto">
+            ${feudalStats.nightWinners.map(w=>html`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:10px;background:rgba(205,127,50,.12);border:1px solid rgba(205,127,50,.25)">
+                <span style="cursor:pointer;font-weight:900" data-topid="${esc(w.id)}">${esc((w.student?.name_short||"—").trim())}</span>
+                <span class="muted" style="font-size:12px">${esc((w.student?.group||"—").trim())} · ${esc(w.zvanie||"—")}</span>
+              </div>`).join("")}
+          </div>
+        </div>` : ""}
+        <div class="adminKpi">
+          <div class="ak">Топ-10 участников Феодалов</div>
+          ${feudalTopStudents.length
+            ? html`<table class="adminTable">
+                <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Звание</th><th>Баллы</th></tr></thead>
+                <tbody>${feudalTopStudents.map((x,i)=>html`
+                  <tr>
+                    <td><b>${esc(i+1)}</b></td>
+                    <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
+                    <td class="muted">${esc((x.student?.group||"—").trim())}</td>
+                    <td>${esc(x.zvanie||"—")}</td>
+                    <td><b>${esc(x.pts)}</b></td>
+                  </tr>`).join("")}</tbody>
+              </table>`
+            : `<div class="notice" style="margin-top:10px">Данных по Феодалам пока нет — добавьте строки в CSV.</div>`}
+        </div>`;
+
+      /* ══ Tab 5: Бенди ═════════════════════════════════ */
+      const tab5=`
+        <div class="adminRow adminRow4" style="margin-bottom:10px">
+          ${kpiCard("","🏒","Участников",bandyStats.total||"—","в Бенди")}
+          ${kpiCard("","✅","Побед",bandyStats.wins,`из ${bandyTotal} матчей`,bandyWinRate)}
+          ${kpiCard("","❌","Поражений",bandyStats.losses,`win rate: ${bandyWinRate}%`)}
+          ${kpiCard("","📊","Матчей сыграно",bandyTotal,"суммарно")}
+        </div>
+        <div class="adminKpi" style="margin-bottom:10px">
+          <div class="ak">Победы и поражения</div>
+          <canvas id="bandyWinChart" style="height:80px;width:100%;display:block;margin-top:8px"></canvas>
+        </div>
+        <div class="adminKpi">
+          <div class="ak">Топ-10 игроков Бенди</div>
+          ${bandyTopStudents.length
+            ? html`<table class="adminTable">
+                <thead><tr><th>#</th><th>Имя</th><th>Группа</th><th>Побед</th><th>Баллы</th></tr></thead>
+                <tbody>${bandyTopStudents.map((x,i)=>html`
+                  <tr>
+                    <td><b>${esc(i+1)}</b></td>
+                    <td style="cursor:pointer;font-weight:900" data-topid="${esc(x.id)}">${esc((x.student?.name_short||"—").trim())}</td>
+                    <td class="muted">${esc((x.student?.group||"—").trim())}</td>
+                    <td>${esc(x.wins)}</td>
+                    <td><b>${esc(x.pts)}</b></td>
+                  </tr>`).join("")}</tbody>
+              </table>`
+            : `<div class="notice" style="margin-top:10px">Данных по Бенди пока нет — добавьте строки в CSV.</div>`}
+        </div>`;
+
       /* ══ Рендер HTML ══════════════════════════════════ */
       app.innerHTML = `
         <div class="crumbs">КЛТ / Администратор</div>
@@ -2583,7 +2765,8 @@ color: var(--text);
             <div class="adminTab" data-tab="1">🐱 Бизнес коты</div>
             <div class="adminTab" data-tab="2">🔫 Пейнтбол</div>
             <div class="adminTab" data-tab="3">⚔ CIV</div>
-            <div class="adminTab" data-tab="4" style="opacity:.55">🏰 Феодалы</div>
+            <div class="adminTab" data-tab="4">🏰 Феодалы</div>
+            <div class="adminTab" data-tab="5">🏒 Бенди</div>
             <button class="btn secondary" id="adminLogoutTab"
               style="margin-left:auto;color:var(--bad);border-color:rgba(212,0,57,.25);padding:6px 12px;font-size:12px">Выйти</button>
           </div>
@@ -2592,18 +2775,8 @@ color: var(--text);
             <div class="adminTabPanel" id="adminPanel1" style="display:none">${tab1}</div>
             <div class="adminTabPanel" id="adminPanel2" style="display:none">${tab2}</div>
             <div class="adminTabPanel" id="adminPanel3" style="display:none">${tab3}</div>
-            <div class="adminTabPanel" id="adminPanel4" style="display:none">
-              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:16px;text-align:center">
-                <div style="font-size:56px;line-height:1">🏰</div>
-                <div style="font-size:22px;font-weight:1000;letter-spacing:-.3px">Феодалы — в разработке</div>
-                <div style="font-size:14px;color:var(--muted);max-width:380px;line-height:1.6;font-weight:800">
-                  Статистика по турниру <b>Life is Feudal</b> появится здесь после накопления достаточного количества данных. Следите за обновлениями!
-                </div>
-                <div style="margin-top:8px;padding:8px 20px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:900;color:var(--muted);background:rgba(255,255,255,.04)">
-                  🚧 Скоро
-                </div>
-              </div>
-            </div>
+            <div class="adminTabPanel" id="adminPanel4" style="display:none">${tab4}</div>
+            <div class="adminTabPanel" id="adminPanel5" style="display:none">${tab5}</div>
           </div>
         </div>`;
 
@@ -2640,8 +2813,23 @@ color: var(--text);
         });
       }
 
+      function drawTab4Charts(){
+        requestAnimationFrame(()=>{
+          drawHorizBars("feudalZvanieChart", feudalStats.zvanieDist);
+          if (feudalStats.profDist.length) drawHorizBars("feudalProfChart", feudalStats.profDist);
+        });
+      }
+      function drawTab5Charts(){
+        requestAnimationFrame(()=>{
+          drawHorizBars("bandyWinChart",[
+            {label:"Победы",value:bandyStats.wins,color:"#f6c343"},
+            {label:"Поражения",value:bandyStats.losses,color:"#ff4d6d"},
+          ]);
+        });
+      }
+
       /* ══ Переключение вкладок ════════════════════════ */
-      const drawFns=[drawTab0Charts,drawTab1Charts,drawTab2Charts,drawTab3Charts,null];
+      const drawFns=[drawTab0Charts,drawTab1Charts,drawTab2Charts,drawTab3Charts,drawTab4Charts,drawTab5Charts];
       function switchAdminTab(idx){
         document.querySelectorAll(".adminTab[data-tab]").forEach(t=>t.classList.toggle("active",t.dataset.tab==idx));
         document.querySelectorAll(".adminTabPanel").forEach((p,i)=>{ p.style.display=i===idx?"block":"none"; });
